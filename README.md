@@ -68,4 +68,4 @@ These cert files are for local development only and should not be committed.
 ## Notes
 
 - This is a POC project created in 2025
-- clouflare R2 setup will be required to deploy the web app
+- cloudflare R2 setup will be required to deploy the web app
