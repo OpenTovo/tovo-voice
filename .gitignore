@@ -1,0 +1,54 @@
+# See https://help.github.com/articles/ignoring-files/ for more about ignoring files.
+
+# Dependencies
+node_modules
+.pnp
+.pnp.js
+
+# Local env files
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# Testing
+coverage
+
+# Turbo
+.turbo
+
+# Vercel
+.vercel
+
+# Build Outputs
+.next/
+out/
+build
+dist
+.open-next/
+.wrangler/
+
+
+# Debug
+npm-debug.log*
+
+# Misc
+.DS_Store
+*.pem
+*.key
+*.crt
+*.p12
+*.pfx
+
+.env*.local
+.dev.vars
+.dev.vars.*
+
+# Editor settings
+.vscode/
+
+# Local dev certificates
+certs/
+**/certs/
+

@@ -1,0 +1,11 @@
+# Ignore built Sherpa-ONNX model folders
+sherpa-models/
+sherpa-onnx-*/
+
+# Temporary build files
+*.tmp
+*.log
+
+# deployment scripts
+sherpa/
+whisper/

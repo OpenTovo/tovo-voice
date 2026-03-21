@@ -1,0 +1,270 @@
+<!doctype html>
+<html>
+  <head>
+    <title>WASM Cross-Origin Isolation Test</title>
+    <script src="/coi-serviceworker.js" defer></script>
+    <style>
+      body {
+        font-family:
+          -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+        padding: 20px;
+        max-width: 800px;
+        margin: 0 auto;
+        background: #f5f5f5;
+      }
+      .test-card {
+        background: white;
+        border-radius: 8px;
+        padding: 20px;
+        margin: 10px 0;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+      }
+      .status {
+        padding: 8px 12px;
+        border-radius: 4px;
+        font-weight: bold;
+        margin: 5px 0;
+      }
+      .success {
+        background: #d4edda;
+        color: #155724;
+      }
+      .error {
+        background: #f8d7da;
+        color: #721c24;
+      }
+      .warning {
+        background: #fff3cd;
+        color: #856404;
+      }
+      .info {
+        background: #d1ecf1;
+        color: #0c5460;
+      }
+      button {
+        background: #007bff;
+        color: white;
+        border: none;
+        padding: 12px 20px;
+        border-radius: 4px;
+        cursor: pointer;
+        font-size: 16px;
+        margin: 5px;
+      }
+      button:hover {
+        background: #0056b3;
+      }
+      button:disabled {
+        background: #6c757d;
+        cursor: not-allowed;
+      }
+      .log {
+        background: #f8f9fa;
+        border: 1px solid #dee2e6;
+        border-radius: 4px;
+        padding: 10px;
+        margin: 10px 0;
+        font-family: monospace;
+        font-size: 12px;
+        max-height: 300px;
+        overflow-y: auto;
+        white-space: pre-wrap;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>WASM & Cross-Origin Isolation Test</h1>
+    <div class="test-card">
+      <h3>Environment Information:</h3>
+      <p>Protocol: <span id="protocol">❓</span></p>
+      <p>Hostname: <span id="hostname">❓</span></p>
+      <p>Secure Context: <span id="secure-context">❓</span></p>
+      <p>
+        User Agent:
+        <span id="user-agent" style="font-size: 10px; word-break: break-all"
+          >❓</span
+        >
+      </p>
+      <div
+        id="https-warning"
+        style="
+          display: none;
+          margin-top: 10px;
+          padding: 10px;
+          background-color: #fff3cd;
+          border: 1px solid #ffeaa7;
+          border-radius: 5px;
+        "
+      >
+        <h4 style="color: #856404; margin: 0 0 10px 0">
+          ⚠️ HTTPS Required for Mobile Testing
+        </h4>
+        <p style="color: #856404; margin: 0">
+          For iPhone/mobile testing, you need HTTPS. Please:
+          <br />1. Stop the current server <br />2. Run:
+          <code>npm run dev:https</code> <br />3. Visit:
+          <code>https://YOUR_LOCAL_IP:3003/wasm-test.html</code> <br />4. Accept
+          the security warning (self-signed certificate) <br /><br />💡
+          <strong>Desktop testing:</strong> Use <code>npm run dev</code> (HTTP
+          is fine)
+        </p>
+      </div>
+    </div>
+
+    <div class="test-card">
+      <h3>Cross-Origin Isolation Status:</h3>
+      <p>crossOriginIsolated: <span id="coi-isolated">❓</span></p>
+      <p>SharedArrayBuffer: <span id="sab-support">❓</span></p>
+      <p>COI ServiceWorker: <span id="coi-sw-status">❓</span></p>
+    </div>
+
+    <div class="test-card">
+      <h3>WASM Module Test:</h3>
+      <button onclick="testWASM()">Test WASM Loading</button>
+      <button onclick="clearResults()">Clear Results</button>
+      <div id="wasm-result"></div>
+    </div>
+
+    <div class="test-card">
+      <h3>Test Log:</h3>
+      <div id="test-log" class="log"></div>
+    </div>
+
+    <script>
+      // Logging utility
+      function log(message) {
+        const timestamp = new Date().toLocaleTimeString()
+        const logDiv = document.getElementById("test-log")
+        logDiv.textContent += `[${timestamp}] ${message}\n`
+        logDiv.scrollTop = logDiv.scrollHeight
+        console.log(`[WASM Test] ${message}`)
+      }
+
+      function clearResults() {
+        document.getElementById("wasm-result").innerHTML = ""
+        document.getElementById("test-log").textContent = ""
+      }
+
+      function checkCOIStatus() {
+        // Environment information
+        document.getElementById("protocol").textContent =
+          window.location.protocol
+        document.getElementById("hostname").textContent =
+          window.location.hostname
+        document.getElementById("secure-context").textContent =
+          window.isSecureContext ? "✅ Secure" : "❌ Not Secure"
+        document.getElementById("user-agent").textContent = navigator.userAgent
+
+        // Show HTTPS warning for mobile devices on HTTP
+        const isMobile =
+          /Android|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(
+            navigator.userAgent
+          )
+        const httpsWarning = document.getElementById("https-warning")
+        if (!window.isSecureContext && isMobile) {
+          httpsWarning.style.display = "block"
+        } else {
+          httpsWarning.style.display = "none"
+        }
+
+        // COI status
+        const coiEnabled = window.crossOriginIsolated
+        const sabAvailable = typeof SharedArrayBuffer !== "undefined"
+
+        document.getElementById("coi-isolated").textContent = coiEnabled
+          ? "✅ Enabled"
+          : "❌ Disabled"
+        document.getElementById("sab-support").textContent = sabAvailable
+          ? "✅ Available"
+          : "❌ Unavailable"
+
+        // Check if COI ServiceWorker is controlling the page
+        const coiServiceWorkerActive =
+          navigator.serviceWorker && navigator.serviceWorker.controller
+        document.getElementById("coi-sw-status").textContent =
+          coiServiceWorkerActive ? "✅ Active" : "❓ Checking..."
+
+        // Enhanced logging
+        log(`Protocol: ${window.location.protocol}`)
+        log(`Hostname: ${window.location.hostname}`)
+        log(`Secure Context: ${window.isSecureContext ? "Yes" : "No"}`)
+        log(`Cross-Origin Isolation: ${coiEnabled ? "Enabled" : "Disabled"}`)
+        log(`SharedArrayBuffer: ${sabAvailable ? "Available" : "Unavailable"}`)
+        log(
+          `COI ServiceWorker: ${coiServiceWorkerActive ? "Active" : "Not active"}`
+        )
+
+        if (!window.isSecureContext) {
+          log("❌ HTTPS required for ServiceWorker registration on mobile")
+          log("💡 Try using: npm run dev:https")
+        } else if (!coiEnabled && sabAvailable) {
+          log("✅ COI ServiceWorker appears to be working!")
+        } else if (!coiEnabled && !sabAvailable) {
+          log("⚠️ Warning: Neither COI headers nor ServiceWorker are working")
+        } else if (coiEnabled) {
+          log(
+            "✅ Cross-Origin Isolation enabled (server headers or ServiceWorker)"
+          )
+        }
+      }
+
+      async function testWASM() {
+        const resultDiv = document.getElementById("wasm-result")
+        resultDiv.innerHTML = "Testing WASM loading..."
+        log("Starting WASM module test...")
+
+        try {
+          const isMobile =
+            /Android|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(
+              navigator.userAgent
+            )
+          const wasmPath =
+            isMobile || !window.crossOriginIsolated
+              ? "/wasm/stream-mobile.js"
+              : "/wasm/stream.js"
+
+          resultDiv.innerHTML += `<br>Selected WASM: ${wasmPath}`
+          resultDiv.innerHTML += `<br>Mobile: ${isMobile}`
+          resultDiv.innerHTML += `<br>COI: ${window.crossOriginIsolated}`
+
+          log(`Selected WASM module: ${wasmPath}`)
+          log(`Mobile device: ${isMobile}`)
+          log(`Cross-Origin Isolated: ${window.crossOriginIsolated}`)
+
+          // Check if WASM file exists
+          const response = await fetch(wasmPath, { method: "HEAD" })
+          if (!response.ok) {
+            throw new Error(`WASM file not found: ${response.status}`)
+          }
+
+          log("WASM file exists, attempting to load...")
+
+          const script = document.createElement("script")
+          script.src = wasmPath
+          script.onload = () => {
+            resultDiv.innerHTML += "<br>✅ WASM module loaded successfully"
+            log("WASM module loaded successfully")
+          }
+          script.onerror = (error) => {
+            resultDiv.innerHTML += "<br>❌ WASM module failed to load"
+            log(`WASM module failed to load: ${error}`)
+          }
+          document.head.appendChild(script)
+        } catch (error) {
+          resultDiv.innerHTML += `<br>❌ Error: ${error.message}`
+          log(`Error during WASM test: ${error.message}`)
+        }
+      }
+
+      // Initial check with delay to allow COI ServiceWorker to initialize
+      log("WASM test page initialized")
+      log("Waiting for COI ServiceWorker to initialize...")
+
+      // Check COI status multiple times with increasing delays
+      setTimeout(checkCOIStatus, 100)
+      setTimeout(checkCOIStatus, 500)
+      setTimeout(checkCOIStatus, 1000)
+      setTimeout(checkCOIStatus, 2000)
+    </script>
+  </body>
+</html>

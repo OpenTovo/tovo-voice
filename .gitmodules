@@ -1,0 +1,8 @@
+[submodule "whisper.cpp"]
+	path = whisper.cpp
+	url = https://github.com/qiweiii/whisper.cpp.git
+	branch = tovo-custom-wasm
+[submodule "sherpa-onnx"]
+	path = sherpa-onnx
+	url = https://github.com/qiweiii/sherpa-onnx.git
+	branch = master

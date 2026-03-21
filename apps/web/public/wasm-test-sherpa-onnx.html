@@ -1,0 +1,1035 @@
+<!doctype html>
+<!--
+Sherpa-ONNX WASM Integration Test Page
+
+Features implemented:
+- ✅ Audio output disabled (no feedback to speakers during transcription)
+- ✅ Improved partial/final result handling with state tracking
+- ✅ Real-time statistics display (utterances, timing, state)
+- ✅ Visual indicators for recording state with pulse animation
+- ✅ Robust result display logic that properly replaces partials with finals
+- ✅ Reduced logging verbosity to prevent console spam
+- ✅ Utterance tracking and processing time measurement
+- ✅ Memory and state management for continuous transcription
+
+This serves as a prototype for the main app integration, demonstrating
+best practices for handling real-time transcription results.
+-->
+<html>
+  <head>
+    <title>Sherpa-ONNX WASM Test</title>
+    <script src="/coi-serviceworker.js" defer></script>
+    <style>
+      body {
+        font-family:
+          -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+        padding: 20px;
+        max-width: 1000px;
+        margin: 0 auto;
+        background: #f5f5f5;
+      }
+      .test-card {
+        background: white;
+        border-radius: 8px;
+        padding: 20px;
+        margin: 10px 0;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+      }
+      .status {
+        padding: 8px 12px;
+        border-radius: 4px;
+        font-weight: bold;
+        margin: 5px 0;
+      }
+      .success {
+        background: #d4edda;
+        color: #155724;
+      }
+      .error {
+        background: #f8d7da;
+        color: #721c24;
+      }
+      .warning {
+        background: #fff3cd;
+        color: #856404;
+      }
+      .info {
+        background: #d1ecf1;
+        color: #0c5460;
+      }
+
+      button {
+        background: #007bff;
+        color: white;
+        border: none;
+        padding: 12px 20px;
+        border-radius: 4px;
+        cursor: pointer;
+        font-size: 16px;
+        margin: 5px;
+      }
+      button:hover {
+        background: #0056b3;
+      }
+      button:disabled {
+        background: #6c757d;
+        cursor: not-allowed;
+      }
+
+      .log {
+        background: #f8f9fa;
+        border: 1px solid #dee2e6;
+        border-radius: 4px;
+        padding: 10px;
+        margin: 10px 0;
+        font-family: monospace;
+        font-size: 12px;
+        max-height: 300px;
+        overflow-y: auto;
+        white-space: pre-wrap;
+      }
+
+      textarea {
+        width: 100%;
+        height: 200px;
+        padding: 10px;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+        font-family: monospace;
+        font-size: 14px;
+      }
+
+      .controls {
+        display: flex;
+        gap: 10px;
+        align-items: center;
+        margin: 10px 0;
+        flex-wrap: wrap;
+      }
+
+      .stats {
+        background: #e9ecef;
+        border-radius: 4px;
+        padding: 10px;
+        margin: 10px 0;
+        font-family: monospace;
+        font-size: 12px;
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+        gap: 10px;
+      }
+
+      .stat-item {
+        display: flex;
+        justify-content: space-between;
+      }
+
+      .recording-indicator {
+        display: inline-flex;
+        align-items: center;
+        gap: 5px;
+        font-weight: bold;
+      }
+
+      .pulse {
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        background: #dc3545;
+        animation: pulse 1s infinite;
+      }
+
+      @keyframes pulse {
+        0% {
+          opacity: 1;
+          transform: scale(1);
+        }
+        50% {
+          opacity: 0.5;
+          transform: scale(1.2);
+        }
+        100% {
+          opacity: 1;
+          transform: scale(1);
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <h1>Sherpa-ONNX WebAssembly Test</h1>
+
+    <div class="test-card">
+      <h3>Environment Check</h3>
+      <div id="env-status"></div>
+    </div>
+
+    <div class="test-card">
+      <h3>Sherpa-ONNX Module Test</h3>
+      <button onclick="testSherpaModule()">Test Sherpa Module</button>
+      <div id="sherpa-status" class="status info" style="display: none">
+        Initializing...
+      </div>
+      <div id="sherpa-log" class="log" style="display: none"></div>
+    </div>
+
+    <div class="test-card" id="transcription-test" style="display: none">
+      <h3>Real-time Transcription Test</h3>
+      <div class="controls">
+        <button id="startBtn" disabled>Start Recording</button>
+        <button id="stopBtn" disabled>Stop Recording</button>
+        <button id="testBtn" disabled>Test Recognition</button>
+        <button id="clearBtn">Clear Results</button>
+        <span id="recording-status" class="recording-indicator"></span>
+      </div>
+      <div class="stats" id="transcription-stats" style="display: none">
+        <div class="stat-item">
+          <span>Utterances:</span>
+          <span id="stat-utterances">0</span>
+        </div>
+        <div class="stat-item">
+          <span>Final Results:</span>
+          <span id="stat-finals">0</span>
+        </div>
+        <div class="stat-item">
+          <span>Current State:</span>
+          <span id="stat-state">Idle</span>
+        </div>
+        <div class="stat-item">
+          <span>Processing Time:</span>
+          <span id="stat-timing">-</span>
+        </div>
+      </div>
+      <div>
+        <h4>Transcription Results:</h4>
+        <textarea
+          id="results"
+          placeholder="Transcription results will appear here..."
+          readonly
+        ></textarea>
+      </div>
+    </div>
+
+    <script>
+      const SHERPA_BASE_URL =
+        new URLSearchParams(window.location.search).get("baseUrl") ||
+        "https://r2.tovo.dev"
+      const SHERPA_MODEL_PATH = `${SHERPA_BASE_URL}/sherpa-onnx-bilingual`
+      const SHERPA_SHARED_PATH = `${SHERPA_BASE_URL}/sherpa-onnx-shared`
+
+      let logDiv
+      let sherpaModule = null
+      let recognizer = null
+      let recognizerStream = null
+      let audioContext = null
+      let mediaStream = null
+      let processor = null
+      let isRecording = false
+      let statsUpdateInterval = null
+
+      // Track transcription state
+      window.transcriptionState = {
+        lastPartialResult: "",
+        lastFinalResult: "",
+        partialStartTime: null,
+        finalResultCount: 0,
+        currentUtteranceId: 0,
+      }
+
+      function log(message) {
+        console.log(message)
+        if (logDiv) {
+          logDiv.textContent +=
+            new Date().toLocaleTimeString() + ": " + message + "\\n"
+          logDiv.scrollTop = logDiv.scrollHeight
+        }
+      }
+
+      function updateStatus(elementId, message, className = "info") {
+        const element = document.getElementById(elementId)
+        element.textContent = message
+        element.className = `status ${className}`
+        element.style.display = "block"
+      }
+
+      function checkEnvironment() {
+        const envDiv = document.getElementById("env-status")
+        let html = ""
+
+        html += `<p>Protocol: <strong>${location.protocol}</strong></p>`
+        html += `<p>Cross-Origin Isolated: <strong>${window.crossOriginIsolated ? "Yes" : "No"}</strong></p>`
+        html += `<p>SharedArrayBuffer: <strong>${typeof SharedArrayBuffer !== "undefined" ? "Available" : "Not Available"}</strong></p>`
+        html += `<p>AudioContext: <strong>${window.AudioContext ? "Available" : "Not Available"}</strong></p>`
+        html += `<p>MediaDevices: <strong>${navigator.mediaDevices ? "Available" : "Not Available"}</strong></p>`
+
+        envDiv.innerHTML = html
+      }
+
+      async function testSherpaModule() {
+        logDiv = document.getElementById("sherpa-log")
+        logDiv.style.display = "block"
+        updateStatus("sherpa-status", "Loading Sherpa-ONNX module...", "info")
+
+        log("Starting Sherpa-ONNX module test...")
+
+        try {
+          // First check if files exist
+          log("Checking for Sherpa-ONNX files...")
+
+          const filesToCheck = [
+            `${SHERPA_MODEL_PATH}/sherpa-onnx-wasm-main-asr.js`,
+            `${SHERPA_MODEL_PATH}/sherpa-onnx-asr.js`,
+            `${SHERPA_MODEL_PATH}/sherpa-onnx-wasm-main-asr.wasm`,
+            `${SHERPA_SHARED_PATH}/sherpa-onnx-wasm-main-asr.data`,
+          ]
+
+          for (const file of filesToCheck) {
+            try {
+              const response = await fetch(file, { method: "HEAD" })
+              if (response.ok) {
+                log(`✅ Found: ${file}`)
+              } else {
+                log(`❌ Missing: ${file} (${response.status})`)
+              }
+            } catch (error) {
+              log(`❌ Error checking ${file}: ${error.message}`)
+            }
+          }
+
+          // Set up Module configuration before loading WASM
+          log("Configuring Module...")
+          window.Module = {}
+
+          // Resolve model files from the shared R2 bucket.
+          window.Module.locateFile = function (path, scriptDirectory = "") {
+            log(`Locating file: ${path}, scriptDirectory: ${scriptDirectory}`)
+            if (path.endsWith(".data")) {
+              return `${SHERPA_SHARED_PATH}/${path}`
+            }
+            if (path.endsWith(".wasm")) {
+              return `${SHERPA_MODEL_PATH}/${path}`
+            }
+            return scriptDirectory + path
+          }
+
+          // Set up status callback
+          window.Module.setStatus = function (status) {
+            log(`Module status: ${status}`)
+          }
+
+          // Set up print callback
+          window.Module.print = function (text) {
+            log(`Module print: ${text}`)
+            // Check for model loading messages
+            if (
+              text.includes("model") ||
+              text.includes("loaded") ||
+              text.includes("error")
+            ) {
+              log(`🔍 Important: ${text}`)
+            }
+          }
+
+          // Set up error callback
+          window.Module.printErr = function (text) {
+            log(`Module error: ${text}`)
+          }
+
+          // Set up ready callback
+          window.Module.onRuntimeInitialized = function () {
+            log("✅ Module runtime initialized!")
+            sherpaModule = window.Module
+            enableRecordingButtons()
+          }
+
+          // Try to load the main module
+          log("Attempting to load Sherpa-ONNX WASM module...")
+
+          // Load the JavaScript API first
+          await loadScript(`${SHERPA_MODEL_PATH}/sherpa-onnx-asr.js`)
+          log("✅ Loaded sherpa-onnx-asr.js")
+
+          // Load the main WASM module
+          await loadScript(`${SHERPA_MODEL_PATH}/sherpa-onnx-wasm-main-asr.js`)
+          log("✅ Loaded sherpa-onnx-wasm-main-asr.js")
+
+          updateStatus(
+            "sherpa-status",
+            "Module loaded successfully!",
+            "success"
+          )
+          document.getElementById("transcription-test").style.display = "block"
+        } catch (error) {
+          log(`❌ Error: ${error.message}`)
+          updateStatus("sherpa-status", `Error: ${error.message}`, "error")
+        }
+      }
+
+      function loadScript(src) {
+        return new Promise((resolve, reject) => {
+          const script = document.createElement("script")
+          script.src = src
+          script.onload = resolve
+          script.onerror = () => reject(new Error(`Failed to load ${src}`))
+          document.head.appendChild(script)
+        })
+      }
+
+      // Initialize page
+      window.addEventListener("load", () => {
+        checkEnvironment()
+
+        // Set up UI handlers (these will be implemented once we have the module working)
+        document
+          .getElementById("startBtn")
+          .addEventListener("click", startRecording)
+        document
+          .getElementById("stopBtn")
+          .addEventListener("click", stopRecording)
+        document
+          .getElementById("testBtn")
+          .addEventListener("click", testRecognition)
+        document
+          .getElementById("clearBtn")
+          .addEventListener("click", clearResults)
+      })
+
+      async function startRecording() {
+        if (isRecording) {
+          log("❌ Already recording")
+          return
+        }
+
+        if (!recognizer || !recognizerStream) {
+          log("❌ Recognizer or stream not available")
+          return
+        }
+
+        try {
+          log("🎤 Starting recording...")
+
+          // Request microphone access
+          mediaStream = await navigator.mediaDevices.getUserMedia({
+            audio: {
+              channelCount: 1,
+              sampleRate: 16000,
+              sampleSize: 16,
+              echoCancellation: true,
+              noiseSuppression: true,
+              autoGainControl: true,
+            },
+          })
+
+          // Create audio context
+          audioContext = new (window.AudioContext || window.webkitAudioContext)(
+            {
+              sampleRate: 16000,
+            }
+          )
+
+          log(`📊 Audio context sample rate: ${audioContext.sampleRate}Hz`)
+
+          // Create audio source from microphone
+          const source = audioContext.createMediaStreamSource(mediaStream)
+
+          // Load and create audio worklet
+          try {
+            await audioContext.audioWorklet.addModule(
+              "/audio-processor/sherpa-audio-processor.js"
+            )
+            processor = new AudioWorkletNode(
+              audioContext,
+              "sherpa-audio-processor"
+            )
+
+            // Handle audio data from worklet
+            processor.port.onmessage = (event) => {
+              if (event.data.type === "audioData") {
+                handleAudioData(event.data)
+              }
+            }
+
+            // Connect audio nodes (but don't connect to destination to avoid audio output)
+            source.connect(processor)
+            // Disabled audio output to speakers during transcription
+            // processor.connect(audioContext.destination);
+
+            isRecording = true
+            document.getElementById("startBtn").disabled = true
+            document.getElementById("stopBtn").disabled = false
+            document.getElementById("recording-status").innerHTML =
+              '<span class="pulse"></span> Recording...'
+            document.getElementById("transcription-stats").style.display =
+              "block"
+
+            log("✅ Recording started successfully")
+            updateStats()
+
+            // Start real-time stats updates
+            statsUpdateInterval = setInterval(updateStats, 500)
+          } catch (workletError) {
+            log(`❌ AudioWorklet error: ${workletError.message}`)
+            log("Falling back to ScriptProcessorNode...")
+            await startRecordingFallback(source)
+          }
+        } catch (error) {
+          log(`❌ Error starting recording: ${error.message}`)
+          stopRecording()
+        }
+      }
+
+      async function startRecordingFallback(source) {
+        // Fallback using ScriptProcessorNode (deprecated but more compatible)
+        const bufferSize = 4096
+        processor = audioContext.createScriptProcessor(bufferSize, 1, 1)
+
+        processor.onaudioprocess = (event) => {
+          const inputBuffer = event.inputBuffer
+          const inputData = inputBuffer.getChannelData(0)
+
+          // Convert to the format expected by sherpa
+          const audioData = new Float32Array(inputData)
+
+          handleAudioData({
+            data: audioData,
+            sampleRate: audioContext.sampleRate,
+            timestamp: Date.now(),
+            duration: inputData.length / audioContext.sampleRate,
+            chunkSize: inputData.length,
+          })
+        }
+
+        source.connect(processor)
+        processor.connect(audioContext.destination)
+
+        isRecording = true
+        document.getElementById("startBtn").disabled = true
+        document.getElementById("stopBtn").disabled = false
+        document.getElementById("recording-status").innerHTML =
+          '<span class="pulse"></span> Recording (fallback)...'
+
+        log("✅ Recording started with fallback method")
+        updateStats()
+      }
+
+      function handleAudioData(audioData) {
+        if (!recognizerStream || !isRecording) {
+          return
+        }
+
+        try {
+          // Use fixed sample rate of 16000 Hz as expected by sherpa-onnx
+          const expectedSampleRate = 16000
+
+          // Reduce logging frequency to avoid spam
+          if (Math.random() < 0.01) {
+            // Log only 1% of audio chunks
+            log(
+              `🔊 Processing audio chunk: ${audioData.data.length} samples at ${expectedSampleRate}Hz`
+            )
+          }
+
+          // Feed audio to sherpa recognizer stream with correct API
+          recognizerStream.acceptWaveform(expectedSampleRate, audioData.data)
+
+          // Process all ready frames (use while loop as in the example)
+          while (recognizer.isReady(recognizerStream)) {
+            recognizer.decode(recognizerStream)
+          }
+
+          // Get partial results (real-time transcription)
+          const result = recognizer.getResult(recognizerStream)
+
+          // Debug: log the raw result structure
+          if (result) {
+            // Check what's actually in the text property
+            const textValue = result.text
+            const textLength = textValue ? textValue.length : 0
+            const trimmedText = textValue ? textValue.trim() : ""
+
+            if (Math.random() < 0.1) {
+              // Log 10% of results for debugging
+              log(
+                `🔍 Text value: "${textValue}" (length: ${textLength}, trimmed: "${trimmedText}")`
+              )
+              log(
+                `🔍 Other properties: tokens=${result.tokens?.length}, is_final=${result.is_final}, segment=${result.segment}`
+              )
+            }
+
+            if (result.text && result.text.trim()) {
+              const resultText = result.text.trim()
+
+              // Only update if the result has actually changed
+              if (resultText !== window.transcriptionState.lastPartialResult) {
+                log(`📝 New partial result: "${resultText}"`)
+                updateTranscriptionResults(resultText, false)
+                window.transcriptionState.lastPartialResult = resultText
+
+                // Track when we first get a partial for this utterance
+                if (!window.transcriptionState.partialStartTime) {
+                  window.transcriptionState.partialStartTime = Date.now()
+                }
+              }
+            } else if (result.tokens && result.tokens.length > 0) {
+              // Maybe the text is in tokens instead
+              log(`🔍 Tokens array: ${JSON.stringify(result.tokens)}`)
+            }
+          } else {
+            log(`🔍 No result object returned`)
+          }
+
+          // Check for endpoint (end of utterance)
+          const isEndpoint = recognizer.isEndpoint(recognizerStream)
+          if (isEndpoint) {
+            log(
+              `🎯 Endpoint detected! Utterance ${window.transcriptionState.currentUtteranceId} complete`
+            )
+            const finalResult = recognizer.getResult(recognizerStream)
+            log(`🔍 Final result object:`, JSON.stringify(finalResult, null, 2))
+
+            if (finalResult && finalResult.text && finalResult.text.trim()) {
+              const finalText = finalResult.text.trim()
+
+              // Calculate timing info
+              const processingTime = window.transcriptionState.partialStartTime
+                ? Date.now() - window.transcriptionState.partialStartTime
+                : 0
+
+              updateTranscriptionResults(finalText, true, {
+                utteranceId: window.transcriptionState.currentUtteranceId,
+                processingTime: processingTime,
+              })
+
+              window.transcriptionState.lastFinalResult = finalText
+              window.transcriptionState.finalResultCount++
+
+              log(
+                `🎯 Final result #${window.transcriptionState.finalResultCount}: "${finalText}" (processed in ${processingTime}ms)`
+              )
+            }
+
+            // Reset stream for next utterance
+            recognizer.reset(recognizerStream)
+
+            // Reset state for next utterance
+            window.transcriptionState.lastPartialResult = ""
+            window.transcriptionState.partialStartTime = null
+            window.transcriptionState.currentUtteranceId++
+          }
+        } catch (error) {
+          log(`❌ Error processing audio: ${error.message}`)
+          log(`Error details: ${error.stack}`)
+        }
+      }
+
+      function updateStats() {
+        document.getElementById("stat-utterances").textContent =
+          window.transcriptionState.currentUtteranceId
+        document.getElementById("stat-finals").textContent =
+          window.transcriptionState.finalResultCount
+
+        const state = isRecording
+          ? window.transcriptionState.lastPartialResult
+            ? "Speaking"
+            : "Listening"
+          : "Idle"
+        document.getElementById("stat-state").textContent = state
+
+        const timing = window.transcriptionState.partialStartTime
+          ? `${Date.now() - window.transcriptionState.partialStartTime}ms`
+          : "-"
+        document.getElementById("stat-timing").textContent = timing
+      }
+
+      function updateTranscriptionResults(text, isFinal, metadata = {}) {
+        const resultsTextarea = document.getElementById("results")
+        const timestamp = new Date().toLocaleTimeString()
+
+        if (isFinal) {
+          // Final result - replace any existing partial and add as final
+          let lines = resultsTextarea.value.split("\n")
+
+          // Remove the last partial result if it exists (to replace with final)
+          if (
+            lines.length > 0 &&
+            lines[lines.length - 2] &&
+            lines[lines.length - 2].includes("[PARTIAL]")
+          ) {
+            lines.splice(-2, 1) // Remove the partial line
+          }
+
+          // Add final result with metadata
+          const metadataStr =
+            metadata.utteranceId !== undefined
+              ? ` (utterance #${metadata.utteranceId}, ${metadata.processingTime}ms)`
+              : ""
+          const newEntry = `[${timestamp}] FINAL: ${text}${metadataStr}\n`
+          lines.push(newEntry)
+
+          resultsTextarea.value = lines.join("\n")
+          log(
+            `🎯 Final #${window.transcriptionState.finalResultCount}: ${text}`
+          )
+        } else {
+          // Partial result - update in place or add new
+          let lines = resultsTextarea.value.split("\n")
+          const partialPrefix = `[${timestamp}] PARTIAL: `
+          const partialLine = partialPrefix + text
+
+          // Check if the last non-empty line is a partial result
+          let lastLineIndex = lines.length - 1
+          while (lastLineIndex >= 0 && !lines[lastLineIndex].trim()) {
+            lastLineIndex--
+          }
+
+          if (
+            lastLineIndex >= 0 &&
+            lines[lastLineIndex].includes("[PARTIAL]")
+          ) {
+            // Update existing partial result
+            lines[lastLineIndex] = partialLine
+          } else {
+            // Add new partial result
+            if (lastLineIndex >= 0 && lines[lastLineIndex].trim()) {
+              lines.push("") // Add empty line before partial if previous line has content
+            }
+            lines.push(partialLine)
+          }
+
+          resultsTextarea.value = lines.join("\n")
+
+          // Less verbose logging for partials
+          if (Math.random() < 0.2) {
+            // Log only 20% of partials to reduce spam
+            log(
+              `📝 Partial update: ${text.substring(0, 50)}${text.length > 50 ? "..." : ""}`
+            )
+          }
+        }
+
+        // Auto-scroll to bottom
+        resultsTextarea.scrollTop = resultsTextarea.scrollHeight
+
+        // Update stats
+        updateStats()
+      }
+
+      function stopRecording() {
+        if (!isRecording) {
+          log("❌ Not currently recording")
+          return
+        }
+
+        log("🛑 Stopping recording...")
+
+        try {
+          // Stop audio processing
+          if (processor) {
+            processor.disconnect()
+            processor = null
+          }
+
+          // Stop microphone
+          if (mediaStream) {
+            mediaStream.getTracks().forEach((track) => track.stop())
+            mediaStream = null
+          }
+
+          // Close audio context
+          if (audioContext) {
+            audioContext.close()
+            audioContext = null
+          }
+
+          // Get final result from recognizer
+          if (recognizer && recognizerStream) {
+            const finalResult = recognizer.getResult(recognizerStream)
+            if (finalResult && finalResult.text && finalResult.text.trim()) {
+              updateTranscriptionResults(finalResult.text.trim(), true)
+            }
+          }
+
+          isRecording = false
+          document.getElementById("startBtn").disabled = false
+          document.getElementById("stopBtn").disabled = true
+          document.getElementById("recording-status").textContent = ""
+
+          log("✅ Recording stopped")
+          updateStats()
+
+          // Stop stats updates
+          if (statsUpdateInterval) {
+            clearInterval(statsUpdateInterval)
+            statsUpdateInterval = null
+          }
+        } catch (error) {
+          log(`❌ Error stopping recording: ${error.message}`)
+        }
+      }
+
+      function clearResults() {
+        document.getElementById("results").value = ""
+
+        // Reset transcription state
+        window.transcriptionState = {
+          lastPartialResult: "",
+          lastFinalResult: "",
+          partialStartTime: null,
+          finalResultCount: 0,
+          currentUtteranceId: 0,
+        }
+
+        // Reset recognizer stream if available
+        if (recognizer && recognizerStream) {
+          try {
+            recognizer.reset(recognizerStream)
+            log("🔄 Recognizer stream reset")
+          } catch (error) {
+            log(`❌ Error resetting recognizer: ${error.message}`)
+          }
+        }
+        log("🗑️ Results and state cleared")
+      }
+
+      function testRecognition() {
+        if (!recognizer || !recognizerStream) {
+          log("❌ Recognizer or stream not available")
+          return
+        }
+
+        log("🧪 Testing recognition with synthetic audio...")
+
+        try {
+          // Create a simple test audio signal (sine wave)
+          const sampleRate = 16000
+          const duration = 2.0 // 2 seconds
+          const frequency = 440 // A4 note
+          const samples = Math.floor(sampleRate * duration)
+          const audioData = new Float32Array(samples)
+
+          // Generate sine wave
+          for (let i = 0; i < samples; i++) {
+            audioData[i] =
+              0.1 * Math.sin((2 * Math.PI * frequency * i) / sampleRate)
+          }
+
+          log(`📊 Generated ${samples} samples of test audio`)
+
+          // Feed to recognizer
+          recognizerStream.acceptWaveform(sampleRate, audioData)
+
+          // Process
+          while (recognizer.isReady(recognizerStream)) {
+            recognizer.decode(recognizerStream)
+          }
+
+          // Check result
+          const result = recognizer.getResult(recognizerStream)
+          log(`🧪 Test result: ${JSON.stringify(result)}`)
+
+          // Force endpoint to see if we get final results
+          log("🧪 Forcing input finished...")
+          recognizerStream.inputFinished()
+
+          while (recognizer.isReady(recognizerStream)) {
+            recognizer.decode(recognizerStream)
+          }
+
+          const finalResult = recognizer.getResult(recognizerStream)
+          log(`🧪 Final test result: ${JSON.stringify(finalResult)}`)
+
+          // Reset for next use
+          recognizer.reset(recognizerStream)
+        } catch (error) {
+          log(`❌ Test error: ${error.message}`)
+        }
+      }
+
+      function enableRecordingButtons() {
+        log("Enabling recording buttons...")
+        document.getElementById("startBtn").disabled = false
+        document.getElementById("stopBtn").disabled = false
+        document.getElementById("testBtn").disabled = false
+
+        // Test creating a recognizer
+        try {
+          log("Testing recognizer creation...")
+          testRecognizerCreation()
+        } catch (error) {
+          log(`❌ Error testing recognizer: ${error.message}`)
+        }
+      }
+
+      function testRecognizerCreation() {
+        // Comprehensive function discovery
+        log("🔍 Analyzing available functions...")
+
+        // Check all global functions
+        const allGlobals = Object.getOwnPropertyNames(window)
+        const recognizerGlobals = allGlobals.filter(
+          (name) =>
+            name.toLowerCase().includes("recognizer") ||
+            name.toLowerCase().includes("sherpa") ||
+            name.toLowerCase().includes("online") ||
+            name.toLowerCase().includes("create")
+        )
+        log("Relevant global functions:", recognizerGlobals)
+
+        // Check Module functions if available
+        if (sherpaModule) {
+          const moduleKeys = Object.keys(sherpaModule)
+          const recognizerModuleFunctions = moduleKeys.filter(
+            (name) =>
+              typeof sherpaModule[name] === "function" &&
+              (name.toLowerCase().includes("recognizer") ||
+                name.toLowerCase().includes("create") ||
+                name.toLowerCase().includes("online"))
+          )
+          log("Module recognizer functions:", recognizerModuleFunctions)
+
+          // Log all module functions for reference
+          log(
+            "All module functions:",
+            moduleKeys.filter((key) => typeof sherpaModule[key] === "function")
+          )
+        }
+
+        // Try to find a working recognizer creation function
+        const candidateFunctions = [
+          "createOnlineRecognizer",
+          "CreateOnlineRecognizer",
+          "SherpaOnnxCreateOnlineRecognizer",
+          "OnlineRecognizer",
+          "newOnlineRecognizer",
+        ]
+
+        let workingFunction = null
+        let functionSource = null
+
+        // Check global scope
+        for (const funcName of candidateFunctions) {
+          if (typeof window[funcName] === "function") {
+            log(`✅ Found global function: ${funcName}`)
+            workingFunction = window[funcName]
+            functionSource = "global"
+            break
+          }
+        }
+
+        // Check module scope if no global function found
+        if (!workingFunction && sherpaModule) {
+          for (const funcName of candidateFunctions) {
+            if (typeof sherpaModule[funcName] === "function") {
+              log(`✅ Found module function: ${funcName}`)
+              workingFunction = sherpaModule[funcName]
+              functionSource = "module"
+              break
+            }
+          }
+        }
+
+        if (!workingFunction) {
+          log("❌ No recognizer creation function found")
+          log(
+            "This suggests the WASM module may not be properly loaded or the function names have changed"
+          )
+          return
+        }
+
+        // Now try to create a recognizer with various configs
+        log(
+          `🚀 Attempting to create recognizer using ${functionSource} function...`
+        )
+
+        const configs = [
+          // Config 1: Just the module (for embedded models)
+          null,
+
+          // Config 2: Empty config
+          {},
+
+          // Config 3: Minimal config
+          {
+            modelConfig: {
+              transducer: { encoder: "", decoder: "", joiner: "" },
+              tokens: "",
+            },
+          },
+
+          // Config 4: Basic config with sample rate
+          {
+            featConfig: { sampleRate: 16000, featureDim: 80 },
+            modelConfig: {
+              transducer: { encoder: "", decoder: "", joiner: "" },
+              tokens: "",
+              numThreads: 1,
+              provider: "cpu",
+            },
+          },
+        ]
+
+        for (let i = 0; i < configs.length; i++) {
+          const config = configs[i]
+          log(`\n--- Trying config ${i + 1} ---`)
+
+          try {
+            let args = []
+            if (functionSource === "global" && i === 0) {
+              // For global functions, first arg is usually the module
+              args = config === null ? [sherpaModule] : [sherpaModule, config]
+            } else {
+              // For other cases, just pass the config
+              args = config === null ? [] : [config]
+            }
+
+            log("Function arguments:", args)
+
+            recognizer = workingFunction.apply(null, args)
+
+            if (recognizer) {
+              log(`✅ SUCCESS! Recognizer created with config ${i + 1}`)
+              log("Recognizer type:", typeof recognizer)
+              log(
+                "Recognizer properties:",
+                Object.getOwnPropertyNames(recognizer)
+              )
+
+              // Try to create a stream
+              const streamMethods = [
+                "createStream",
+                "CreateStream",
+                "newStream",
+              ]
+              for (const method of streamMethods) {
+                if (typeof recognizer[method] === "function") {
+                  try {
+                    log(`Trying ${method}()...`)
+                    recognizerStream = recognizer[method]()
+                    if (recognizerStream) {
+                      log("✅ Stream created successfully!")
+                      log("Stream type:", typeof recognizerStream)
+                      log(
+                        "Stream properties:",
+                        Object.getOwnPropertyNames(recognizerStream)
+                      )
+                      return // Success!
+                    }
+                  } catch (streamError) {
+                    log(`❌ ${method} failed: ${streamError.message}`)
+                  }
+                }
+              }
+
+              log("⚠️ Recognizer created but stream creation failed")
+              return
+            }
+          } catch (error) {
+            log(`❌ Config ${i + 1} failed: ${error.message}`)
+          }
+        }
+
+        log("❌ All recognizer creation attempts failed")
+      }
+    </script>
+  </body>
+</html>

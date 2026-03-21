@@ -1,0 +1,51 @@
+{
+  "name": "web",
+  "version": "0.0.3",
+  "type": "module",
+  "private": true,
+  "scripts": {
+    "dev": "next dev --turbopack --port 3003 --experimental-https --experimental-https-key ./certs/key.pem --experimental-https-cert ./certs/cert.pem",
+    "dev:http": "next dev --turbopack --port 3003",
+    "prebuild": "../../scripts/update-version.sh",
+    "build": "next build",
+    "build:cf": "opennextjs-cloudflare build && node ../../scripts/prune-cloudflare-assets.mjs .",
+    "start": "next start",
+    "preview": "pnpm run build:cf && opennextjs-cloudflare preview",
+    "deploy": "pnpm run build:cf && opennextjs-cloudflare deploy",
+    "cf-typegen": "wrangler types --env-interface CloudflareEnv cloudflare-env.d.ts",
+    "lint": "biome lint . --files-ignore-unknown=true",
+    "lint:fix": "biome check --write . --files-ignore-unknown=true",
+    "check-types": "tsc --noEmit",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@mlc-ai/web-llm": "^0.2.79",
+    "@next/third-parties": "^15.5.12",
+    "@supabase/ssr": "^0.6.1",
+    "@supabase/supabase-js": "^2.51.0",
+    "@workspace/ui": "workspace:*",
+    "comlink": "^4.4.2",
+    "idb": "^8.0.3",
+    "jotai": "^2.12.5",
+    "lucide-react": "^0.475.0",
+    "next": "^15.5.12",
+    "next-themes": "^0.4.6",
+    "react": "19.0.1",
+    "react-dom": "19.0.1",
+    "react-markdown": "^10.1.0",
+    "rehype-katex": "^7.0.1",
+    "remark-gfm": "^4.0.1",
+    "remark-math": "^6.0.0",
+    "server-only": "^0.0.1"
+  },
+  "devDependencies": {
+    "@opennextjs/cloudflare": "^1.17.1",
+    "@tailwindcss/postcss": "^4.0.8",
+    "@types/node": "^20.19.8",
+    "@types/react": "19.0.1",
+    "@types/react-dom": "19.0.1",
+    "@workspace/typescript-config": "workspace:*",
+    "typescript": "^5.7.3",
+    "wrangler": "^4.38.0"
+  }
+}
