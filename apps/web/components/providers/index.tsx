@@ -3,7 +3,6 @@
 import { Provider as JotaiProvider } from "jotai"
 import { ThemeProvider as NextThemesProvider } from "next-themes"
 import type * as React from "react"
-import { AuthProvider } from "./auth"
 import { ModelLoaderProvider } from "./model-loader"
 
 export function Providers({ children }: { children: React.ReactNode }) {
@@ -16,9 +15,7 @@ export function Providers({ children }: { children: React.ReactNode }) {
         disableTransitionOnChange
         enableColorScheme
       >
-        <AuthProvider>
-          <ModelLoaderProvider>{children}</ModelLoaderProvider>
-        </AuthProvider>
+        <ModelLoaderProvider>{children}</ModelLoaderProvider>
       </NextThemesProvider>
     </JotaiProvider>
   )

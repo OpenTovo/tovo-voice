@@ -24,7 +24,7 @@
     "@workspace/typescript-config": "workspace:*",
     "eslint": "^9.39.4",
     "husky": "^9.1.7",
-    "lint-staged": "^16.1.2",
+    "lint-staged": "^16.4.0",
     "turbo": "^2.5.5",
     "typescript": "5.7.3"
   },
@@ -39,8 +39,20 @@
   },
   "pnpm": {
     "overrides": {
-      "lodash": "4.17.23",
-      "mdast-util-to-hast": "13.2.1"
+      "@dotenvx/dotenvx>picomatch": "4.0.4",
+      "@aws-sdk/xml-builder>fast-xml-parser": "5.7.1",
+      "flatted": "3.4.2",
+      "lint-staged>picomatch": "4.0.4",
+      "lint-staged>yaml": "2.8.3",
+      "lodash": "4.18.1",
+      "mdast-util-to-hast": "13.2.1",
+      "micromatch>picomatch": "2.3.2",
+      "minimatch@10.2.4>brace-expansion": "5.0.5",
+      "minimatch@3.1.5>brace-expansion": "1.1.13",
+      "minimatch@8.0.7>brace-expansion": "2.0.3",
+      "router@2.2.0>path-to-regexp": "8.4.2",
+      "tinyglobby>picomatch": "4.0.4",
+      "yaml": "2.8.3"
     },
     "onlyBuiltDependencies": [
       "esbuild",

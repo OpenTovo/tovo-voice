@@ -3,7 +3,9 @@
   "main": ".open-next/worker.js",
   "name": "tovo-pwa",
   "compatibility_date": "2026-03-20",
-  "compatibility_flags": ["nodejs_compat"],
+  "compatibility_flags": [
+    "nodejs_compat"
+  ],
   "assets": {
     "directory": ".open-next/assets",
     "binding": "ASSETS"

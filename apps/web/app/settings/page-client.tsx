@@ -4,8 +4,6 @@ import { Button } from "@workspace/ui/components/button"
 import { Skeleton } from "@workspace/ui/components/skeleton"
 import { getDefaultStore, useAtom } from "jotai"
 import { useEffect, useState } from "react"
-import { useAuth } from "@/components/providers/auth"
-import { useRouteGuard } from "@/hooks/use-route-guard"
 import {
   defaultAnalysisModelAtom,
   defaultTranscriptionModelAtom,
@@ -35,7 +33,6 @@ import { getModelShortName } from "@/lib/transcription/sherpa/sherpa-model"
 import { getModelsForEngine } from "@/lib/transcription/unified-models"
 import { smartReload } from "@/lib/utils/pwa"
 import {
-  AccountManagement,
   AddToHomeScreen,
   ContactSupport,
   DefaultModelsConfig,
@@ -47,8 +44,7 @@ import {
 } from "./components"
 
 export default function SettingsPageClient() {
-  const { user, signOut } = useAuth()
-  const { isReady } = useRouteGuard({ requireAuth: true })
+  const isReady = true
 
   const [defaultTranscriptionModel, setDefaultTranscriptionModel] = useAtom(
     defaultTranscriptionModelAtom
@@ -326,18 +322,6 @@ export default function SettingsPageClient() {
     )
   }
 
-  const handleSignOut = async () => {
-    try {
-      await signOut()
-    } catch (error) {
-      console.error("Sign out error:", error)
-    }
-  }
-
-  if (!user || !isReady) {
-    return null
-  }
-
   return (
     <div className="flex h-full flex-col">
       <div className="hidden flex-shrink-0 p-4 pb-2 md:block">
@@ -351,7 +335,6 @@ export default function SettingsPageClient() {
               General
             </h2>
             <div className="space-y-0">
-              <AccountManagement user={{ email: user.email || "No email" }} />
               <ThemeManagement />
               <AddToHomeScreen />
             </div>
@@ -423,16 +406,6 @@ export default function SettingsPageClient() {
               <VersionManagement />
               <ContactSupport />
             </div>
-          </div>
-
-          <div className="py-2">
-            <Button
-              onClick={handleSignOut}
-              variant="destructive"
-              className="w-full"
-            >
-              Sign Out
-            </Button>
           </div>
         </div>
       </div>

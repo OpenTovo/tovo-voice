@@ -15,8 +15,6 @@ import { ArrowLeft, Bot, Clock, MessageSquare, Mic } from "lucide-react"
 import { useParams, useRouter } from "next/navigation"
 import { useCallback, useEffect, useRef, useState } from "react"
 import { AIResponseMarkdown } from "@/components/ai/ai-response-markdown"
-import { useAuth } from "@/components/providers/auth"
-import { useRouteGuard } from "@/hooks/use-route-guard"
 import { tovoDB } from "@/lib/tovo-idb"
 import type { SessionHistory } from "@/lib/transcription/transcription-history-manager"
 
@@ -50,8 +48,6 @@ function formatTime(timestamp: number) {
 }
 
 export default function SessionDetailsPageClient() {
-  const { user } = useAuth()
-  const { isReady } = useRouteGuard({ requireAuth: true })
   const router = useRouter()
   const params = useParams()
   const sessionId = params.id as string
@@ -113,10 +109,10 @@ export default function SessionDetailsPageClient() {
   }, [sessionId, router])
 
   useEffect(() => {
-    if (user && sessionId) {
+    if (sessionId) {
       loadSessionDetails()
     }
-  }, [user, sessionId, loadSessionDetails])
+  }, [sessionId, loadSessionDetails])
 
   const handleScroll = (
     source: "transcription" | "ai",
@@ -172,32 +168,6 @@ export default function SessionDetailsPageClient() {
       setIsEditingTitle(false)
       setEditTitle(session?.title || "")
     }
-  }
-
-  if (!isReady) {
-    return (
-      <div className="mx-auto flex h-full max-w-6xl flex-col">
-        <div className="flex-shrink-0 p-4 pb-2">
-          <div className="flex items-center gap-4">
-            <Skeleton className="h-10 w-10" />
-            <div className="flex-1">
-              <Skeleton className="mb-2 h-6 w-48" />
-              <Skeleton className="h-4 w-32" />
-            </div>
-          </div>
-        </div>
-        <div className="flex-1 px-4 pb-4">
-          <div className="grid h-full grid-cols-1 gap-4 md:grid-cols-2">
-            <Skeleton className="h-full w-full" />
-            <Skeleton className="h-full w-full" />
-          </div>
-        </div>
-      </div>
-    )
-  }
-
-  if (!user) {
-    return null
   }
 
   if (loading) {

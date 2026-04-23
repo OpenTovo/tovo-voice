@@ -12,8 +12,7 @@ import { cn } from "@workspace/ui/lib/utils"
 import { useAtom } from "jotai"
 import { ChevronLeft, History, Menu, Pause, Plus, Settings } from "lucide-react"
 import { usePathname, useRouter } from "next/navigation"
-import React, { useState } from "react"
-import { useAuth } from "@/components/providers/auth"
+import { useState } from "react"
 import { useSessionNavigationGuard } from "@/hooks/use-session-navigation-guard"
 import { SessionStatus, sessionStatusAtom, type TabType } from "@/lib/atoms"
 import { sideMenuExpandedAtom } from "@/lib/atoms/tabs"
@@ -25,23 +24,12 @@ interface NavigationProps {
 }
 
 export function ResponsiveNavigation({ mobileOnly = false }: NavigationProps) {
-  const { user, loading } = useAuth()
   const router = useRouter()
   const pathname = usePathname()
   const [sessionStatus] = useAtom(sessionStatusAtom)
   const [sideMenuExpanded, setSideMenuExpanded] = useAtom(sideMenuExpandedAtom)
   const { navigateWithGuard } = useSessionNavigationGuard()
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
-
-  // Don't show navigation while loading
-  if (loading) {
-    return null
-  }
-
-  // Only show navigation if user is authenticated
-  if (!user) {
-    return null
-  }
 
   // Determine current tab from pathname
   const getCurrentTab = (): TabType => {
