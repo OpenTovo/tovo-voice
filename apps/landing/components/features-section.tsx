@@ -15,12 +15,12 @@ const features = [
     icon: Shield,
     title: "100% Private",
     description:
-      "All processing happens on your device. Private conversations.",
+      "All processing happens on your device. Your conversations never leave it.",
   },
   {
     icon: Zap,
     title: "Works Offline",
-    description: "Works without internet. Your conversations stay yours.",
+    description: "Runs without internet. Your conversations stay yours.",
   },
   {
     icon: Users,
@@ -29,13 +29,14 @@ const features = [
   },
   {
     icon: Headphones,
-    title: "No type and send",
-    description: "Auto extra key points from your conversation.",
+    title: "No Type & Send",
+    description:
+      "Auto extracts key points from your conversation in real time.",
   },
   {
     icon: MessageSquare,
     title: "Smart Transcription",
-    description: "Real-time speech-to-text with AI understanding.",
+    description: "Real-time speech-to-text with AI understanding built in.",
   },
   {
     icon: Mic,
@@ -46,7 +47,7 @@ const features = [
 
 export default function FeaturesSection() {
   return (
-    <section className="px-4 py-24">
+    <section className="px-4 py-28">
       <div className="mx-auto max-w-6xl">
         <motion.div
           initial={{ opacity: 0, y: 40 }}
@@ -55,15 +56,19 @@ export default function FeaturesSection() {
           viewport={{ once: true }}
           className="mb-16 text-center"
         >
+          <span className="mb-4 inline-block text-xs font-semibold uppercase tracking-[0.18em] text-[#0090EE]">
+            Features
+          </span>
           <h2 className="mb-5 text-4xl font-bold tracking-tight md:text-5xl">
-            Why Choose <span className="text-zima">Tovo</span>?
+            Why choose <span className="text-gradient-zima">Tovo</span>?
           </h2>
           <p className="mx-auto max-w-2xl text-lg text-neutral-500">
-            Complete privacy and local AI capabilities—no cloud, no compromise.
+            Complete privacy and local AI capabilities — no cloud, no
+            compromise.
           </p>
         </motion.div>
 
-        <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
+        <div className="grid grid-cols-1 gap-5 md:grid-cols-2 lg:grid-cols-3">
           {features.map((feature, index) => (
             <motion.div
               key={feature.title}
@@ -72,9 +77,9 @@ export default function FeaturesSection() {
               transition={{ duration: 0.5, delay: index * 0.08 }}
               viewport={{ once: true }}
               whileHover={{ y: -6 }}
-              className="glow-card glass group rounded-2xl p-8"
+              className="glow-card glass group rounded-2xl p-8 transition-colors duration-300 hover:border-white/10"
             >
-              <div className="mb-5 inline-flex h-12 w-12 items-center justify-center rounded-xl bg-[#0090EE]/10 transition-colors duration-300 group-hover:bg-[#0090EE]/20">
+              <div className="mb-5 inline-flex h-12 w-12 items-center justify-center rounded-xl bg-[#0090EE]/10 ring-1 ring-[#0090EE]/20 transition-colors duration-300 group-hover:bg-[#0090EE]/20">
                 <feature.icon className="h-6 w-6 text-[#0090EE]" />
               </div>
               <h3 className="mb-3 text-lg font-semibold text-white">

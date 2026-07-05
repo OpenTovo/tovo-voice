@@ -10,7 +10,7 @@ import {
 } from "@workspace/ui/components/drawer"
 import { cn } from "@workspace/ui/lib/utils"
 import { useAtom } from "jotai"
-import { ChevronLeft, History, Menu, Pause, Plus, Settings } from "lucide-react"
+import { ChevronLeft, Github, History, Menu, Pause, Plus, Settings } from "lucide-react"
 import { usePathname, useRouter } from "next/navigation"
 import { useState } from "react"
 import { useSessionNavigationGuard } from "@/hooks/use-session-navigation-guard"
@@ -150,6 +150,20 @@ export function ResponsiveNavigation({ mobileOnly = false }: NavigationProps) {
           </DrawerHeader>
           <div className="flex flex-col space-y-2 p-6 pt-0">
             <NavItems onItemClick={() => setMobileMenuOpen(false)} />
+            <Button
+              variant="ghost"
+              asChild
+              className="flex w-full items-center justify-start gap-3"
+            >
+              <a
+                href="https://github.com/OpenTovo/tovo-voice"
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                <Github className="h-5 w-5" />
+                <span className="font-medium">GitHub</span>
+              </a>
+            </Button>
           </div>
         </DrawerContent>
       </Drawer>
@@ -190,6 +204,29 @@ export function ResponsiveNavigation({ mobileOnly = false }: NavigationProps) {
       >
         <NavItems collapsed={!sideMenuExpanded} />
       </nav>
+      <div
+        className={cn(
+          "flex items-center",
+          !sideMenuExpanded ? "justify-center p-2" : "justify-start gap-3 p-4",
+        )}
+      >
+        <Button
+          variant="ghost"
+          size="sm"
+          asChild
+          className={cn(!sideMenuExpanded ? "p-2.5" : "gap-2")}
+          title="View source on GitHub"
+        >
+          <a
+            href="https://github.com/OpenTovo/tovo-voice"
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            <Github className="h-5 w-5" />
+            {sideMenuExpanded && <span className="font-medium">GitHub</span>}
+          </a>
+        </Button>
+      </div>
     </div>
   )
 }

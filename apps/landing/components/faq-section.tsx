@@ -1,7 +1,7 @@
 "use client"
 
 import { motion } from "framer-motion"
-import { ChevronDown, ChevronUp } from "lucide-react"
+import { ChevronDown } from "lucide-react"
 import { useState } from "react"
 
 const faqs = [
@@ -55,7 +55,7 @@ export default function FAQSection() {
   }
 
   return (
-    <section className="px-4 py-24">
+    <section className="px-4 py-28">
       <div className="mx-auto max-w-3xl">
         <motion.div
           initial={{ opacity: 0, y: 40 }}
@@ -64,8 +64,12 @@ export default function FAQSection() {
           viewport={{ once: true }}
           className="mb-16 text-center"
         >
+          <span className="mb-4 inline-block text-xs font-semibold uppercase tracking-[0.18em] text-[#0090EE]">
+            FAQ
+          </span>
           <h2 className="mb-5 text-4xl font-bold tracking-tight md:text-5xl">
-            Frequently Asked <span className="text-zima">Questions</span>
+            Frequently asked{" "}
+            <span className="text-gradient-zima">questions</span>
           </h2>
           <p className="text-lg text-neutral-500">
             Get answers to common questions about Tovo
@@ -75,25 +79,26 @@ export default function FAQSection() {
         <div className="space-y-3">
           {faqs.map((faq, index) => (
             <motion.div
-              key={index}
+              key={faq.question}
               initial={{ opacity: 0, y: 16 }}
               whileInView={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.4, delay: index * 0.06 }}
               viewport={{ once: true }}
-              className="glass overflow-hidden rounded-xl"
+              className="glass overflow-hidden rounded-xl transition-colors duration-300 hover:border-white/10"
             >
               <button
+                type="button"
                 onClick={() => toggleFAQ(index)}
-                className="flex w-full items-center justify-between p-5 text-left transition-colors hover:bg-white/[0.03]"
+                className="flex w-full items-center justify-between gap-4 p-5 text-left transition-colors hover:bg-white/[0.03]"
               >
-                <h3 className="pr-4 text-base font-medium text-neutral-200">
+                <h3 className="text-base font-medium text-neutral-100">
                   {faq.question}
                 </h3>
-                {openIndex === index ? (
-                  <ChevronUp className="h-4 w-4 flex-shrink-0 text-[#0090EE]" />
-                ) : (
-                  <ChevronDown className="h-4 w-4 flex-shrink-0 text-neutral-600" />
-                )}
+                <ChevronDown
+                  className={`h-4 w-4 flex-shrink-0 text-[#0090EE] transition-transform duration-300 ${
+                    openIndex === index ? "rotate-180" : ""
+                  }`}
+                />
               </button>
 
               <motion.div
