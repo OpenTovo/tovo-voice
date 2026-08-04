@@ -77,7 +77,9 @@ export function WebLLMModelsManagement({
     }
 
     if (globalDownloadProgress.isDownloading) {
-      return `Downloading... ${globalDownloadProgress.progress}%`
+      return globalDownloadProgress.isIndeterminate
+        ? "Downloading..."
+        : `Downloading... ${globalDownloadProgress.progress}%`
     }
 
     return "Manage local LLMs"

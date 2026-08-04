@@ -188,6 +188,7 @@ This model will be cached locally for offline use. Download may take several min
     setGlobalDownloadProgress({
       modelName,
       progress: 0,
+      isIndeterminate: true,
       isDownloading: true,
       status: "Initializing download...",
     })
@@ -203,6 +204,7 @@ This model will be cached locally for offline use. Download may take several min
           setGlobalDownloadProgress({
             modelName,
             progress: progress.progress,
+            isIndeterminate: progress.isIndeterminate,
             isDownloading: true,
             status: progress.text,
           })
@@ -211,6 +213,7 @@ This model will be cached locally for offline use. Download may take several min
           setGlobalDownloadProgress({
             modelName,
             progress: 100,
+            isIndeterminate: false,
             isDownloading: true,
             status: "Download complete!",
           })
@@ -236,6 +239,7 @@ This model will be cached locally for offline use. Download may take several min
         setGlobalDownloadProgress({
           modelName: null,
           progress: 0,
+          isIndeterminate: false,
           isDownloading: false,
           status: "",
         })
@@ -246,6 +250,7 @@ This model will be cached locally for offline use. Download may take several min
       setGlobalDownloadProgress({
         modelName,
         progress: 0,
+        isIndeterminate: false,
         isDownloading: false,
         status: `Download failed: ${errorMessage}`,
       })
@@ -366,9 +371,19 @@ This will permanently remove the model from your device. You can download it aga
         <div className="flex-shrink-0 space-y-2">
           <div className="flex items-center justify-between text-sm">
             <span>{loadingStatus}</span>
-            <span>{downloadProgress}%</span>
+            <span>
+              {globalDownloadProgress.isIndeterminate
+                ? "Downloading..."
+                : `${downloadProgress}%`}
+            </span>
           </div>
-          <Progress value={downloadProgress} className="h-2" />
+          {globalDownloadProgress.isIndeterminate ? (
+            <div className="bg-primary/20 h-2 w-full overflow-hidden rounded-full">
+              <div className="bg-primary h-full w-1/3 rounded-full animate-[progress-indeterminate_1.5s_ease-in-out_infinite]" />
+            </div>
+          ) : (
+            <Progress value={downloadProgress} className="h-2" />
+          )}
         </div>
       )}
 

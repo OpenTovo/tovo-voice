@@ -50,11 +50,13 @@ export const transcriptionDownloadProgressAtom = atom<{
 export const webllmDownloadProgressAtom = atom<{
   modelName: string | null
   progress: number
+  isIndeterminate: boolean
   isDownloading: boolean
   status: string
 }>({
   modelName: null,
   progress: 0,
+  isIndeterminate: false,
   isDownloading: false,
   status: "",
 })

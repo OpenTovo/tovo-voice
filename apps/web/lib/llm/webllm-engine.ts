@@ -41,6 +41,7 @@ export interface WebLLMModelInfo {
 export interface WebLLMDownloadProgress {
   modelId: string
   progress: number
+  isIndeterminate: boolean
   text: string
   isComplete: boolean
 }
@@ -315,10 +316,14 @@ export async function downloadWebLLMModel(
         ? (report) => {
             // Parse progress from WebLLM progress text
             const progressValue = Math.round(report.progress * 100)
+            // WebLLM reports 0% until the first model shard finishes.
+            const isIndeterminate = report.progress <= 0
 
             // Customize progress text for better UX
             let customText = report.text
-            if (report.text.includes("Loading model from cache")) {
+            if (report.text.includes("Start to fetch params")) {
+              customText = "Downloading model files..."
+            } else if (report.text.includes("Loading model from cache")) {
               customText = "Loading model from cache..."
             } else if (report.text.includes("Initializing")) {
               customText = "Initializing..."
@@ -337,6 +342,7 @@ export async function downloadWebLLMModel(
             onProgress({
               modelId: modelName,
               progress: progressValue,
+              isIndeterminate,
               text: customText,
               isComplete: progressValue >= 100,
             })
