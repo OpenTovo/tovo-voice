@@ -54,8 +54,17 @@ export function PWAPrompt({ isLoggedIn }: PWAPromptProps) {
     setDismissed(true)
   }
 
+  // Persist dismissal for any close action (X, overlay click, Esc)
+  const handleOpenChange = (open: boolean) => {
+    setShowDialog(open)
+    if (!open) {
+      setDismissed(true)
+    }
+  }
+
   const handleGoToSettings = () => {
     setShowDialog(false)
+    setDismissed(true)
     router.push("/settings")
   }
 
@@ -63,7 +72,7 @@ export function PWAPrompt({ isLoggedIn }: PWAPromptProps) {
   const isIOS = deviceType === "ios"
 
   return (
-    <Dialog open={showDialog} onOpenChange={setShowDialog}>
+    <Dialog open={showDialog} onOpenChange={handleOpenChange}>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
