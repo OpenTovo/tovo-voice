@@ -10,7 +10,15 @@ import {
 } from "@workspace/ui/components/drawer"
 import { cn } from "@workspace/ui/lib/utils"
 import { useAtom } from "jotai"
-import { ChevronLeft, Github, History, Menu, Pause, Plus, Settings } from "lucide-react"
+import {
+  ChevronLeft,
+  Github,
+  History,
+  Menu,
+  Pause,
+  Plus,
+  Settings,
+} from "lucide-react"
 import { usePathname, useRouter } from "next/navigation"
 import { useState } from "react"
 import { useSessionNavigationGuard } from "@/hooks/use-session-navigation-guard"
@@ -179,7 +187,9 @@ export function ResponsiveNavigation({ mobileOnly = false }: NavigationProps) {
       )}
     >
       <div className="flex items-center justify-between p-4">
-        {sideMenuExpanded && <h2 className="text-lg font-semibold">Tovo</h2>}
+        {sideMenuExpanded && (
+          <h2 className="text-lg font-semibold">Tovo Voice</h2>
+        )}
         <div className="flex items-center gap-2">
           {sideMenuExpanded && <PWARefreshButton />}
           <Button
@@ -207,7 +217,7 @@ export function ResponsiveNavigation({ mobileOnly = false }: NavigationProps) {
       <div
         className={cn(
           "flex items-center",
-          !sideMenuExpanded ? "justify-center p-2" : "justify-start gap-3 p-4",
+          !sideMenuExpanded ? "justify-center p-2" : "justify-start gap-3 p-4"
         )}
       >
         <Button

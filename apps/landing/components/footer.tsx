@@ -96,7 +96,7 @@ export default function Footer() {
               ))}
             </div>
             <span className="text-sm text-neutral-600">
-              © 2025 Tovo. All rights reserved.
+              © 2025 Tovo Voice. All rights reserved.
             </span>
           </div>
         </motion.div>

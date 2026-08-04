@@ -1,11 +1,8 @@
 "use client"
 
 import { Badge } from "@workspace/ui/components/badge"
-import { useAtom } from "jotai"
 import { useCallback, useEffect, useRef, useState } from "react"
-import { unifiedTranscriptionCurrentModelAtom } from "@/lib/atoms/transcription"
 import type { TranscriptionItem } from "@/lib/transcription/transcription-history-manager"
-import { UNIFIED_MODELS } from "@/lib/transcription/unified-models"
 
 interface StreamingTranscriptionDisplayProps {
   transcriptionRef: React.RefObject<HTMLDivElement | null>
@@ -13,22 +10,17 @@ interface StreamingTranscriptionDisplayProps {
   visibleItems: TranscriptionItem[]
 }
 
-// Enhanced transcription display that shows streaming for Sherpa models
+// Transcription display with Sherpa streaming partial results.
 function StreamingTranscriptionDisplay({
   transcriptionRef,
   handleScroll,
   visibleItems,
 }: StreamingTranscriptionDisplayProps) {
-  const [currentModel] = useAtom(unifiedTranscriptionCurrentModelAtom)
   const [partialText, setPartialText] = useState("")
   const [, setCurrentUtteranceId] = useState<number | null>(null)
   const [isUserScrolling, setIsUserScrolling] = useState(false)
   const [, setLastFinalText] = useState("") // Track last final text to filter out duplicates
   const lastScrollTop = useRef(0)
-
-  // Check if current model is Sherpa
-  const isUsingSherpaModel =
-    currentModel && UNIFIED_MODELS[currentModel]?.engine === "sherpa"
 
   // Auto-scroll function for streaming content (less aggressive)
   const autoScrollToBottom = useCallback(() => {
@@ -120,12 +112,6 @@ function StreamingTranscriptionDisplay({
 
   // Listen for transcription events from the unified manager
   useEffect(() => {
-    if (!isUsingSherpaModel) {
-      setPartialText("")
-      setCurrentUtteranceId(null)
-      return
-    }
-
     // Custom event listener for streaming transcription (partial results)
     const handleStreamingTranscription = (event: CustomEvent) => {
       const { text, isFinal, isPartial, metadata } = event.detail
@@ -176,7 +162,7 @@ function StreamingTranscriptionDisplay({
         handleStreamingTranscription as EventListener
       )
     }
-  }, [isUsingSherpaModel])
+  }, [])
 
   return (
     <div
@@ -203,8 +189,8 @@ function StreamingTranscriptionDisplay({
         </div>
       ))}
 
-      {/* Streaming partial result for Sherpa models */}
-      {isUsingSherpaModel && partialText && (
+      {/* Streaming partial result */}
+      {partialText && (
         <div className="border-l-2 border-blue-400 py-2 pl-3 opacity-70">
           <div className="mb-1 flex items-center gap-2">
             <Badge variant="secondary" className="text-xs">

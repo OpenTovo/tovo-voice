@@ -33,7 +33,8 @@ export default function AddToHomePage() {
           </h1>
 
           <p className="mb-12 text-xl text-slate-400">
-            Install Tovo as a PWA for offline access and a native app experience
+            Install Tovo Voice as a PWA for offline access and a native app
+            experience
           </p>
 
           <div className="space-y-12">
@@ -57,7 +58,7 @@ export default function AddToHomePage() {
                     ⚠️ iOS Not Currently Supported
                   </h3>
                   <p className="text-red-200">
-                    Unfortunately, Tovo doesn't work on iOS devices due to
+                    Unfortunately, Tovo Voice doesn't work on iOS devices due to
                     Safari's memory limitations. Our app requires at least 650MB
                     of memory to run the transcription and AI models, but iOS
                     Safari is limited to 200-400MB depending on the device.
@@ -84,7 +85,7 @@ export default function AddToHomePage() {
                         <strong className="text-slate-300">
                           Safari browser
                         </strong>{" "}
-                        and navigate to Tovo (pwa.tovo.dev)
+                        and navigate to Tovo Voice (pwa.tovo.dev)
                       </span>
                     </li>
                     <li className="flex gap-4">
@@ -154,7 +155,7 @@ export default function AddToHomePage() {
                     <span>
                       Open{" "}
                       <strong className="text-white">Chrome browser</strong> and
-                      navigate to Tovo (pwa.tovo.dev)
+                      navigate to Tovo Voice (pwa.tovo.dev)
                     </span>
                   </li>
                   <li className="flex gap-4">
@@ -229,7 +230,8 @@ export default function AddToHomePage() {
                       1
                     </span>
                     <span>
-                      Open your browser and navigate to Tovo (pwa.tovo.dev)
+                      Open your browser and navigate to Tovo Voice
+                      (pwa.tovo.dev)
                     </span>
                   </li>
                   <li className="flex gap-4">
@@ -265,7 +267,7 @@ export default function AddToHomePage() {
                     <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-purple-500 text-sm font-medium text-white">
                       4
                     </span>
-                    <span>Confirm to add Tovo to your desktop</span>
+                    <span>Confirm to add Tovo Voice to your desktop</span>
                   </li>
                 </ol>
 

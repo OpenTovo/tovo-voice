@@ -97,8 +97,8 @@ function DialogContentBody({
         <div>
           <h3 className="text-lg font-semibold">Already Added!</h3>
           <p className="text-muted-foreground mt-2 text-sm">
-            You're already using Tovo from your home screen. You can access it
-            offline and it works like a native app.
+            You're already using Tovo Voice from your home screen. You can
+            access it offline and it works like a native app.
           </p>
         </div>
       </div>
@@ -108,7 +108,7 @@ function DialogContentBody({
   return (
     <div className="space-y-4">
       <p className="text-muted-foreground text-sm">
-        Add Tovo to your home screen for offline access and a native app
+        Add Tovo Voice to your home screen for offline access and a native app
         experience.
       </p>
 
@@ -135,10 +135,10 @@ function DialogContentBody({
                 ⚠️ iOS Not Currently Supported
               </h4>
               <p className="text-sm text-red-600 dark:text-red-200">
-                Unfortunately, Tovo doesn't work on iOS devices due to Safari's
-                memory limitations. Our app requires at least 650MB of memory to
-                run the transcription and AI models, but iOS Safari is limited
-                to 200-400MB depending on the device.
+                Unfortunately, Tovo Voice doesn't work on iOS devices due to
+                Safari's memory limitations. Our app requires at least 650MB of
+                memory to run the transcription and AI models, but iOS Safari is
+                limited to 200-400MB depending on the device.
               </p>
               <p className="mt-2 text-sm font-medium text-red-600 dark:text-red-200">
                 Please use a desktop computer or Android device instead.
@@ -157,6 +157,7 @@ function DialogContentBody({
                   </span>
                   <span>
                     Open <strong>Safari browser</strong> and navigate to Tovo
+                    Voice
                   </span>
                 </li>
                 <li className="flex gap-3">
@@ -205,6 +206,7 @@ function DialogContentBody({
                 </span>
                 <span>
                   Open <strong>Chrome browser</strong> and navigate to Tovo
+                  Voice
                 </span>
               </li>
               <li className="flex gap-3">
@@ -256,7 +258,7 @@ function DialogContentBody({
                 <span className="bg-primary text-primary-foreground flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-xs font-medium">
                   1
                 </span>
-                <span>Open your browser and navigate to Tovo</span>
+                <span>Open your browser and navigate to Tovo Voice</span>
               </li>
               <li className="flex gap-3">
                 <span className="bg-primary text-primary-foreground flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-xs font-medium">
@@ -287,7 +289,7 @@ function DialogContentBody({
                 <span className="bg-primary text-primary-foreground flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-xs font-medium">
                   4
                 </span>
-                <span>Confirm to add Tovo to your desktop</span>
+                <span>Confirm to add Tovo Voice to your desktop</span>
               </li>
             </ol>
             <div className="rounded-lg bg-purple-50 p-3 text-sm dark:bg-purple-950/20">

@@ -16,6 +16,7 @@
  */
 
 import * as webllm from "@mlc-ai/web-llm"
+import { modelLogger } from "@/lib/logger"
 import { WEBLLM_MODELS, type WebLLMModelName } from "./models"
 
 export interface WebLLMEngineState {
@@ -34,6 +35,7 @@ export interface WebLLMModelInfo {
   webllmId: string // Actual WebLLM model ID
   vramRequired: number // VRAM required in MB
   lowResourceRequired: boolean // Whether it can run on limited devices
+  requiredFeatures: string[]
 }
 
 export interface WebLLMDownloadProgress {
@@ -46,6 +48,13 @@ export interface WebLLMDownloadProgress {
 // Global engine instance for reuse
 let globalEngine: webllm.MLCEngineInterface | null = null
 let globalWorker: Worker | null = null
+let globalCurrentModel: WebLLMModelName | null = null
+
+const WEBLLM_WORKER_INACTIVITY_TIMEOUT_MS = 30_000
+const WEBLLM_APP_CONFIG: webllm.AppConfig = {
+  ...webllm.prebuiltAppConfig,
+  cacheBackend: "cache",
+}
 
 /**
  * Check if a WebLLM model is cached using WebLLM's built-in cache detection
@@ -57,10 +66,10 @@ export async function isWebLLMModelCached(
     const modelConfig = WEBLLM_MODELS[modelName]
     if (!modelConfig?.config) return false
 
-    return await webllm.hasModelInCache(modelConfig.config.model_id, {
-      useIndexedDBCache: true,
-      model_list: webllm.prebuiltAppConfig.model_list,
-    })
+    return await webllm.hasModelInCache(
+      modelConfig.config.model_id,
+      WEBLLM_APP_CONFIG
+    )
   } catch (error) {
     console.warn("Error checking WebLLM model cache:", error)
     return false
@@ -106,6 +115,7 @@ export async function getAvailableWebLLMModels(): Promise<WebLLMModelInfo[]> {
         webllmId: modelConfig.config?.model_id || "",
         vramRequired: vramMB,
         lowResourceRequired: modelConfig.config?.low_resource_required || false,
+        requiredFeatures: modelConfig.config?.required_features || [],
         isDownloaded: cachedModels.includes(id as WebLLMModelName),
       }
     })
@@ -121,58 +131,165 @@ export async function createWebLLMEngine(): Promise<webllm.MLCEngineInterface> {
     return globalEngine
   }
 
-  try {
-    // First try to create engine with web worker for better performance
-    if (isWebWorkerSupported()) {
-      try {
-        // Create worker using our custom worker file
-        globalWorker = new Worker(
-          new URL("./webllm-worker.ts", import.meta.url),
-          { type: "module" }
-        )
-
-        const engineConfig: webllm.MLCEngineConfig = {
-          appConfig: {
-            model_list: webllm.prebuiltAppConfig.model_list,
-            useIndexedDBCache: true, // Enable IndexedDB cache for persistent storage
-          },
-        }
-
-        globalEngine = await webllm.CreateWebWorkerMLCEngine(
-          globalWorker,
-          [], // Empty model list - we'll reload models as needed
-          engineConfig
-        )
-
-        return globalEngine
-      } catch (workerError) {
-        console.warn(
-          "Failed to create web worker engine, falling back to main thread:",
-          workerError
-        )
-
-        // Clean up failed worker
-        if (globalWorker) {
-          globalWorker.terminate()
-          globalWorker = null
-        }
-      }
-    }
-
-    // Fallback to main thread engine
-    const engineConfig: webllm.MLCEngineConfig = {
-      appConfig: {
-        model_list: webllm.prebuiltAppConfig.model_list,
-        useIndexedDBCache: true,
-      },
-    }
-
-    globalEngine = await webllm.CreateMLCEngine([], engineConfig)
+  if (isWebWorkerSupported()) {
+    globalWorker = new Worker(new URL("./webllm-worker.ts", import.meta.url), {
+      type: "module",
+    })
+    globalEngine = new webllm.WebWorkerMLCEngine(globalWorker, {
+      appConfig: WEBLLM_APP_CONFIG,
+    })
+    modelLogger.info("Created WebLLM worker engine", getWebLLMRuntimeInfo())
     return globalEngine
-  } catch (error) {
-    console.error("Failed to create WebLLM engine:", error)
-    throw error
   }
+
+  globalEngine = createMainThreadEngine()
+  modelLogger.info("Created WebLLM main-thread engine", getWebLLMRuntimeInfo())
+  return globalEngine
+}
+
+function createMainThreadEngine(): webllm.MLCEngineInterface {
+  return new webllm.MLCEngine({
+    appConfig: WEBLLM_APP_CONFIG,
+  })
+}
+
+function getWebLLMRuntimeInfo() {
+  if (typeof window === "undefined") {
+    return {}
+  }
+
+  return {
+    userAgent: navigator.userAgent,
+    standalone: window.matchMedia("(display-mode: standalone)").matches,
+    crossOriginIsolated: window.crossOriginIsolated,
+    workerSupported: isWebWorkerSupported(),
+  }
+}
+
+async function reloadWorkerModel(
+  engine: webllm.MLCEngineInterface,
+  worker: Worker,
+  modelId: string,
+  onProgress?: webllm.InitProgressCallback
+): Promise<void> {
+  await new Promise<void>((resolve, reject) => {
+    let timeoutId: ReturnType<typeof setTimeout>
+
+    const stopWaiting = () => {
+      clearTimeout(timeoutId)
+      worker.removeEventListener("error", handleWorkerError)
+      worker.removeEventListener("messageerror", handleWorkerMessageError)
+    }
+
+    const fail = (message: string) => {
+      stopWaiting()
+      reject(new Error(message))
+    }
+
+    const resetTimeout = () => {
+      clearTimeout(timeoutId)
+      timeoutId = setTimeout(() => {
+        fail(
+          `WebLLM worker produced no progress for ${
+            WEBLLM_WORKER_INACTIVITY_TIMEOUT_MS / 1000
+          } seconds`
+        )
+      }, WEBLLM_WORKER_INACTIVITY_TIMEOUT_MS)
+    }
+
+    const handleWorkerError = (event: ErrorEvent) => {
+      fail(event.message || "WebLLM worker failed to start")
+    }
+
+    const handleWorkerMessageError = () => {
+      fail("WebLLM worker returned an unreadable message")
+    }
+
+    worker.addEventListener("error", handleWorkerError)
+    worker.addEventListener("messageerror", handleWorkerMessageError)
+    engine.setInitProgressCallback((report) => {
+      resetTimeout()
+      onProgress?.(report)
+    })
+    resetTimeout()
+
+    engine.reload(modelId).then(
+      () => {
+        stopWaiting()
+        resolve()
+      },
+      (error) => {
+        stopWaiting()
+        reject(error)
+      }
+    )
+  })
+}
+
+async function reloadWebLLMModel(
+  modelName: WebLLMModelName,
+  onProgress?: webllm.InitProgressCallback
+): Promise<webllm.MLCEngineInterface> {
+  if (globalEngine && globalCurrentModel === modelName) {
+    return globalEngine
+  }
+
+  const modelConfig = WEBLLM_MODELS[modelName]
+  if (!modelConfig?.config) {
+    throw new Error(
+      `Model ${modelName} not found in configuration or has invalid config`
+    )
+  }
+
+  let engine = await createWebLLMEngine()
+  modelLogger.info("Loading WebLLM model", {
+    modelName,
+    backend: globalWorker ? "worker" : "main-thread",
+    ...getWebLLMRuntimeInfo(),
+  })
+
+  try {
+    if (globalWorker) {
+      await reloadWorkerModel(
+        engine,
+        globalWorker,
+        modelConfig.config.model_id,
+        onProgress
+      )
+    } else {
+      engine.setInitProgressCallback(onProgress ?? (() => {}))
+      await engine.reload(modelConfig.config.model_id)
+    }
+  } catch (error) {
+    if (!globalWorker) {
+      throw error
+    }
+
+    const workerError =
+      error instanceof Error ? error : new Error("WebLLM worker failed")
+    modelLogger.warn("WebLLM worker unavailable; retrying on main thread", {
+      modelName,
+      error: workerError.message,
+    })
+    globalWorker?.terminate()
+    globalWorker = null
+    globalEngine = createMainThreadEngine()
+    engine = globalEngine
+    onProgress?.({
+      progress: 0,
+      timeElapsed: 0,
+      text: "Web worker unavailable; retrying on main thread...",
+    })
+    engine.setInitProgressCallback(onProgress ?? (() => {}))
+    await engine.reload(modelConfig.config.model_id)
+  }
+
+  globalCurrentModel = modelName
+  modelLogger.info("WebLLM model ready", {
+    modelName,
+    backend: globalWorker ? "worker" : "main-thread",
+  })
+  return engine
 }
 
 /**
@@ -181,7 +298,7 @@ export async function createWebLLMEngine(): Promise<webllm.MLCEngineInterface> {
 export async function downloadWebLLMModel(
   modelName: WebLLMModelName,
   onProgress?: (progress: WebLLMDownloadProgress) => void,
-  onComplete?: () => void,
+  onComplete?: () => void | Promise<void>,
   onError?: (error: Error) => void
 ): Promise<void> {
   try {
@@ -192,53 +309,52 @@ export async function downloadWebLLMModel(
       )
     }
 
-    const engine = await createWebLLMEngine()
+    await reloadWebLLMModel(
+      modelName,
+      onProgress
+        ? (report) => {
+            // Parse progress from WebLLM progress text
+            const progressValue = Math.round(report.progress * 100)
 
-    // Set up progress tracking
-    if (onProgress) {
-      engine.setInitProgressCallback((report) => {
-        // Parse progress from WebLLM progress text
-        const progressMatch = report.text.match(/(\d+)%/)
-        const progressValue = progressMatch
-          ? parseInt(progressMatch[1] || "0")
-          : 0
+            // Customize progress text for better UX
+            let customText = report.text
+            if (report.text.includes("Loading model from cache")) {
+              customText = "Loading model from cache..."
+            } else if (report.text.includes("Initializing")) {
+              customText = "Initializing..."
+            } else if (report.text.includes("Downloading")) {
+              customText = `Downloading model... ${progressValue}%`
+            } else if (report.text.includes("Loading")) {
+              customText = `Loading model... ${progressValue}%`
+            } else if (report.text.includes("Fetching")) {
+              customText = `Fetching model files... ${progressValue}%`
+            } else if (progressValue >= 100) {
+              customText = "Model ready!"
+            } else if (progressValue > 0) {
+              customText = `Preparing model... ${progressValue}%`
+            }
 
-        // Customize progress text for better UX
-        let customText = report.text
-        if (report.text.includes("Loading model from cache")) {
-          customText = "Loading model from cache..."
-        } else if (report.text.includes("Initializing")) {
-          customText = "Initializing..."
-        } else if (report.text.includes("Downloading")) {
-          customText = `Downloading model... ${progressValue}%`
-        } else if (report.text.includes("Loading")) {
-          customText = `Loading model... ${progressValue}%`
-        } else if (report.text.includes("Fetching")) {
-          customText = `Fetching model files... ${progressValue}%`
-        } else if (progressValue >= 100) {
-          customText = "Model ready!"
-        } else if (progressValue > 0) {
-          customText = `Preparing model... ${progressValue}%`
-        }
-
-        onProgress({
-          modelId: modelName,
-          progress: progressValue,
-          text: customText,
-          isComplete: progressValue >= 100,
-        })
-      })
-    }
-
-    // Download and initialize the model using WebLLM's model ID
-    await engine.reload(modelConfig.config.model_id)
+            onProgress({
+              modelId: modelName,
+              progress: progressValue,
+              text: customText,
+              isComplete: progressValue >= 100,
+            })
+          }
+        : undefined
+    )
 
     if (onComplete) {
-      onComplete()
+      await onComplete()
     }
   } catch (error) {
     const err =
       error instanceof Error ? error : new Error("Model download failed")
+    modelLogger.error("WebLLM model download failed", {
+      modelName,
+      error: err.message,
+      ...getWebLLMRuntimeInfo(),
+    })
     if (onError) {
       onError(err)
     }
@@ -263,17 +379,9 @@ export async function initializeWebLLMModel(
       )
     }
 
-    const engine = await createWebLLMEngine()
-
-    // Set progress callback if provided
-    if (onProgress) {
-      engine.setInitProgressCallback((report) => {
-        onProgress(report.text)
-      })
-    }
-
-    // Load the model using WebLLM's model ID
-    await engine.reload(modelConfig.config.model_id)
+    const engine = await reloadWebLLMModel(modelName, (report) => {
+      onProgress?.(report.text)
+    })
 
     if (onComplete) {
       onComplete()
@@ -281,10 +389,10 @@ export async function initializeWebLLMModel(
 
     return engine
   } catch (error) {
-    console.error("❌ WebLLM Initialization Failed:", {
+    modelLogger.error("WebLLM initialization failed", {
       modelName,
       error: error instanceof Error ? error.message : "Unknown error",
-      timestamp: new Date().toISOString(),
+      ...getWebLLMRuntimeInfo(),
     })
 
     const err = error instanceof Error ? error : new Error("Unknown error")
@@ -325,6 +433,7 @@ export async function deleteWebLLMModel(
     if (globalEngine) {
       try {
         await globalEngine.unload()
+        globalCurrentModel = null
       } catch (unloadError) {
         console.warn(
           "Failed to unload engine, continuing with deletion:",
@@ -335,10 +444,10 @@ export async function deleteWebLLMModel(
 
     // Use WebLLM's method to delete all model information from cache
     // This completely removes the model from IndexedDB
-    await webllm.deleteModelAllInfoInCache(modelConfig.config.model_id, {
-      useIndexedDBCache: true,
-      model_list: webllm.prebuiltAppConfig.model_list,
-    })
+    await webllm.deleteModelAllInfoInCache(
+      modelConfig.config.model_id,
+      WEBLLM_APP_CONFIG
+    )
 
     if (onComplete) {
       onComplete()
@@ -366,6 +475,7 @@ export async function clearAllWebLLMModels(): Promise<void> {
     if (globalEngine) {
       try {
         await globalEngine.unload()
+        globalCurrentModel = null
       } catch (unloadError) {
         console.warn(
           "Failed to unload engine, continuing with deletion:",
@@ -379,10 +489,10 @@ export async function clearAllWebLLMModels(): Promise<void> {
       try {
         const modelConfig = WEBLLM_MODELS[modelName]
         if (modelConfig?.config) {
-          await webllm.deleteModelAllInfoInCache(modelConfig.config.model_id, {
-            useIndexedDBCache: true,
-            model_list: webllm.prebuiltAppConfig.model_list,
-          })
+          await webllm.deleteModelAllInfoInCache(
+            modelConfig.config.model_id,
+            WEBLLM_APP_CONFIG
+          )
         }
       } catch (error) {
         console.warn(`Failed to delete model ${modelName}:`, error)
@@ -414,6 +524,7 @@ export async function cleanupWebLLMEngine(): Promise<void> {
     if (globalEngine) {
       await globalEngine.unload()
       globalEngine = null
+      globalCurrentModel = null
     }
 
     if (globalWorker) {
@@ -480,11 +591,11 @@ export async function getWebLLMStorageInfo(): Promise<
 export function getWebLLMEngineState(): {
   hasGlobalEngine: boolean
   engineReady: boolean
-  currentModel: string | null
+  currentModel: WebLLMModelName | null
 } {
   return {
     hasGlobalEngine: globalEngine !== null,
     engineReady: globalEngine !== null,
-    currentModel: null, // WebLLM doesn't expose current model directly
+    currentModel: globalCurrentModel,
   }
 }

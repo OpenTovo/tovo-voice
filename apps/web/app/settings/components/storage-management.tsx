@@ -21,7 +21,6 @@ import {
 
 interface StorageInfo {
   quota?: number
-  whisperModels: Array<{ url: string; size: number; timestamp: number }>
   webllmModels: Array<{
     id: string
     name: string
@@ -65,45 +64,20 @@ This action cannot be undone.`,
       onClearAllCache()
     }
   }
-  // Calculate total storage including Whisper models, WebLLM models, Sherpa models, and session history
-  const whisperModelsSize = storageInfo.whisperModels.reduce(
-    (total, model) => total + model.size,
-    0
-  )
   const webllmModelsSize = storageInfo.webllmModels.reduce(
     (total, model) => total + model.size * 1024 * 1024, // Convert MB to bytes
     0
   )
 
-  // Calculate Sherpa models size more accurately:
-  // - Only count the shared .data file once
-  // - Count individual JS/WASM files for each model
-  const sherpaDataFile = storageInfo.sherpaModels.find(
-    (model) =>
-      model.url.includes("sherpa-onnx-shared") && model.url.includes(".data")
-  )
-  const sherpaOtherFiles = storageInfo.sherpaModels.filter(
-    (model) =>
-      !(model.url.includes("sherpa-onnx-shared") && model.url.includes(".data"))
-  )
-
-  const sherpaDataSize = sherpaDataFile ? sherpaDataFile.size : 0
-  const sherpaOtherFilesSize = sherpaOtherFiles.reduce(
+  const sherpaModelsSize = storageInfo.sherpaModels.reduce(
     (total, model) => total + model.size,
     0
   )
-  const sherpaModelsSize = sherpaDataSize + sherpaOtherFilesSize
 
-  // Combine whisper and sherpa models for display
-  const totalTranscriptionModelsSize = whisperModelsSize + sherpaModelsSize
-  const transcriptionModelsCount =
-    storageInfo.whisperModels.length + storageInfo.sherpaModels.length
+  const transcriptionModelsCount = storageInfo.sherpaModels.length
 
   const totalModelsSize =
-    whisperModelsSize +
-    webllmModelsSize +
-    sherpaModelsSize +
-    storageInfo.sessionHistorySize
+    webllmModelsSize + sherpaModelsSize + storageInfo.sessionHistorySize
   const totalUsage = totalModelsSize
 
   return (
@@ -186,7 +160,7 @@ This action cannot be undone.`,
                       Models for speech recognition
                     </span>
                     <span className="text-muted-foreground">
-                      {formatFileSizeFromBytes(totalTranscriptionModelsSize)}
+                      {formatFileSizeFromBytes(sherpaModelsSize)}
                     </span>
                   </div>
                 </div>

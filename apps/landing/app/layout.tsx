@@ -8,16 +8,16 @@ const outfit = Outfit({ subsets: ["latin"], variable: "--font-outfit" })
 const landingUrl = "https://voice.tovo.dev"
 
 const descLong =
-  "Meet Tovo - a local AI assistant perfect for meetings, interviews, and all kinds of sessions. Listens quietly and helps in real time. No type and send, just real-time voice interaction."
+  "Tovo Voice transcribes speech in real time and turns it into useful AI insights, all locally in your browser."
 
 export const metadata: Metadata = {
-  title: "Tovo - AI Sidekick for Interviews & Meetings",
+  title: "Tovo Voice — Private, On-Device Voice AI",
   description:
-    "Meet Tovo - A privacy-first, local voice AI that listens quietly and helps in real time during interviews, meetings, and sessions.",
+    "Private, on-device transcription and local AI analysis in your browser.",
   keywords: [
     "AI assistant",
-    "interview helper",
-    "meeting assistant",
+    "voice AI",
+    "on-device transcription",
     "privacy-first AI",
     "local AI",
     "voice transcription",
@@ -27,9 +27,9 @@ export const metadata: Metadata = {
     "WebGPU",
     "browser AI",
   ],
-  authors: [{ name: "Tovo Team" }],
-  creator: "Tovo",
-  publisher: "Tovo",
+  authors: [{ name: "Tovo Voice Team" }],
+  creator: "Tovo Voice",
+  publisher: "Tovo Voice",
   category: "Productivity",
   formatDetection: {
     email: false,
@@ -41,16 +41,16 @@ export const metadata: Metadata = {
     canonical: "/",
   },
   openGraph: {
-    title: "Tovo - AI Sidekick for Interviews & Meetings",
+    title: "Tovo Voice — Private, On-Device Voice AI",
     description: descLong,
     type: "website",
     url: landingUrl,
-    siteName: "Tovo",
+    siteName: "Tovo Voice",
     locale: "en_US",
   },
   twitter: {
     card: "summary_large_image",
-    title: "Tovo - AI Sidekick for Interviews & Meetings",
+    title: "Tovo Voice — Private, On-Device Voice AI",
     description: descLong,
     creator: "@buildin_fun",
   },

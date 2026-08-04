@@ -19,7 +19,7 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
-    "@mlc-ai/web-llm": "^0.2.79",
+    "@mlc-ai/web-llm": "0.2.84",
     "@next/third-parties": "^15.5.15",
     "@workspace/ui": "workspace:*",
     "comlink": "^4.4.2",

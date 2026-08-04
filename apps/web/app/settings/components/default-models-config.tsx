@@ -25,7 +25,6 @@ import { formatFileSize } from "@/lib/utils"
 interface DefaultModelsConfigProps {
   defaultTranscriptionModel: string | null
   defaultAnalysisModel: WebLLMModelName | null
-  cachedWhisperModels: string[]
   cachedSherpaModels: string[]
   cachedWebLLMModels: string[]
   onSetDefaultTranscriptionModel: (modelId: string) => void
@@ -35,14 +34,11 @@ interface DefaultModelsConfigProps {
 export function DefaultModelsConfig({
   defaultTranscriptionModel,
   defaultAnalysisModel,
-  cachedWhisperModels,
   cachedSherpaModels,
   cachedWebLLMModels,
   onSetDefaultTranscriptionModel,
   onSetDefaultAnalysisModel,
 }: DefaultModelsConfigProps) {
-  const totalCachedTranscriptionModels =
-    cachedWhisperModels.length + cachedSherpaModels.length
   return (
     <Dialog>
       <DialogTrigger asChild>
@@ -75,28 +71,18 @@ export function DefaultModelsConfig({
             <Select
               value={defaultTranscriptionModel || undefined}
               onValueChange={onSetDefaultTranscriptionModel}
-              disabled={totalCachedTranscriptionModels === 0}
+              disabled={cachedSherpaModels.length === 0}
             >
               <SelectTrigger className="mt-1">
                 <SelectValue
                   placeholder={
-                    totalCachedTranscriptionModels === 0
+                    cachedSherpaModels.length === 0
                       ? "No models downloaded"
                       : "Select a model"
                   }
                 />
               </SelectTrigger>
               <SelectContent>
-                {/* Whisper models */}
-                {getModelsForEngine(TranscriptionEngine.WHISPER)
-                  .filter((model) => cachedWhisperModels.includes(model.id))
-                  .map((model) => (
-                    <SelectItem key={model.id} value={model.id}>
-                      {model.displayName} ({formatFileSize(model.size)})
-                    </SelectItem>
-                  ))}
-
-                {/* Sherpa models */}
                 {getModelsForEngine(TranscriptionEngine.SHERPA)
                   .filter((model) => cachedSherpaModels.includes(model.id))
                   .map((model) => (

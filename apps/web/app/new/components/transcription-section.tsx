@@ -13,14 +13,9 @@ import { ChevronDown, ChevronUp, Mic, Settings } from "lucide-react"
 import { useRouter } from "next/navigation"
 import { useEffect, useRef, useState } from "react"
 import { StreamingTranscriptionDisplay } from "@/app/new/components/streaming-transcription-display"
-import { TranscriptionDisplay } from "@/app/new/components/transcription-display"
 import { useUnifiedTranscription } from "@/hooks/use-unified-transcription"
 import { transcriptionVisibleAtom } from "@/lib/atoms"
-import {
-  hasCachedFile,
-  hasSharedSherpaDataFile,
-} from "@/lib/transcription/sherpa/sherpa-cache"
-import { getModelShortName } from "@/lib/transcription/sherpa/sherpa-model"
+import { hasSherpaModelFiles } from "@/lib/transcription/sherpa/sherpa-cache"
 import type { TranscriptionItem } from "@/lib/transcription/transcription-history-manager"
 import { UNIFIED_MODELS } from "@/lib/transcription/unified-models"
 
@@ -40,11 +35,10 @@ interface TranscriptionSectionProps {
 function getModelDisplayName(currentModel: string | null): string {
   if (!currentModel) return "No model"
 
-  // First try to find it in unified models (for Sherpa models)
+  // First try to find it in unified models.
   const unifiedModel = Object.values(UNIFIED_MODELS).find(
     (model: any) =>
       model.id === currentModel ||
-      model.whisperConfig?.modelName === currentModel ||
       model.sherpaConfig?.modelName === currentModel
   )
 
@@ -73,10 +67,6 @@ export function TranscriptionSection({
     modelLoadProgress,
   } = useUnifiedTranscription()
 
-  // Check if current model is Sherpa (for choosing display component)
-  const isUsingSherpaModel =
-    currentModel && UNIFIED_MODELS[currentModel]?.engine === "sherpa"
-
   // Track model checking state
   const hasCheckedModels = useRef(false)
   const [hasAvailableModels, setHasAvailableModels] = useState(false)
@@ -90,12 +80,6 @@ export function TranscriptionSection({
       try {
         setIsCheckingModels(true)
 
-        const hasSharedData = await hasSharedSherpaDataFile()
-        if (!hasSharedData) {
-          setHasAvailableModels(false)
-          return
-        }
-
         const sherpaModels = Object.values(UNIFIED_MODELS).filter(
           (model) => model.engine === "sherpa"
         )
@@ -104,21 +88,7 @@ export function TranscriptionSection({
         for (const model of sherpaModels) {
           if (!model.sherpaConfig) continue
 
-          const shortName = getModelShortName(model.id)
-          const baseUrl =
-            process.env.NEXT_PUBLIC_R2_BASE_URL || "https://r2.tovo.dev"
-
-          const wasmCached = await hasCachedFile(
-            `${baseUrl}/sherpa-onnx-${shortName}/sherpa-onnx-wasm-main-asr.wasm`
-          )
-          const jsApiCached = await hasCachedFile(
-            `${baseUrl}/sherpa-onnx-${shortName}/sherpa-onnx-asr.js`
-          )
-          const jsLoaderCached = await hasCachedFile(
-            `${baseUrl}/sherpa-onnx-${shortName}/sherpa-onnx-wasm-main-asr.js`
-          )
-
-          if (wasmCached && jsApiCached && jsLoaderCached) {
+          if (await hasSherpaModelFiles(model.id)) {
             hasAnyModel = true
             break
           }
@@ -200,14 +170,11 @@ export function TranscriptionSection({
           isTranscriptionVisible ? "flex-1 opacity-100" : "h-0 py-0 opacity-0"
         }`}
       >
-        {/* Always render StreamingTranscriptionDisplay for Sherpa models, regardless of visibility */}
-        {isUsingSherpaModel && (
-          <StreamingTranscriptionDisplay
-            transcriptionRef={transcriptionRef}
-            handleScroll={handleScroll}
-            visibleItems={visibleItems}
-          />
-        )}
+        <StreamingTranscriptionDisplay
+          transcriptionRef={transcriptionRef}
+          handleScroll={handleScroll}
+          visibleItems={visibleItems}
+        />
 
         {/* Content that's only shown when visible */}
         {isTranscriptionVisible && (
@@ -265,15 +232,6 @@ export function TranscriptionSection({
                   </div>
                 ) : null}
               </div>
-            )}
-
-            {/* Regular Transcription Display for non-Sherpa models */}
-            {!isUsingSherpaModel && !transcriptionLoading && (
-              <TranscriptionDisplay
-                transcriptionRef={transcriptionRef}
-                handleScroll={handleScroll}
-                visibleItems={visibleItems}
-              />
             )}
           </>
         )}

@@ -3,7 +3,7 @@
 import { motion } from "framer-motion"
 import Image from "next/image"
 
-const badge = "Privacy-first, local AI sidekick"
+const badge = "Privacy-first, on-device voice AI"
 
 const stats = [
   { value: "100%", label: "On-device" },
@@ -31,7 +31,7 @@ export default function HeroSection() {
         >
           <Image
             src="/tovo-logo.svg"
-            alt="Tovo"
+            alt="Tovo Voice"
             width={56}
             height={56}
             className="drop-shadow-[0_0_24px_rgba(0,144,238,0.35)]"
@@ -59,11 +59,9 @@ export default function HeroSection() {
           transition={{ duration: 0.7, delay: 0.18 }}
           className="mx-auto mt-7 max-w-2xl text-lg leading-relaxed text-neutral-400 md:text-xl"
         >
-          Meet <span className="text-white font-medium">Tovo</span> — a local
-          voice AI that listens quietly and helps in real time. Perfect for{" "}
-          <span className="text-white font-medium">meetings</span>,{" "}
-          <span className="text-white font-medium">interviews</span>, and{" "}
-          <span className="text-white font-medium">any session</span>.
+          Meet <span className="text-white font-medium">Tovo Voice</span> — a
+          privacy-first voice app that transcribes speech and turns it into
+          useful AI insights, all on your device.
         </motion.p>
 
         {/* CTAs */}
@@ -79,7 +77,7 @@ export default function HeroSection() {
             rel="noopener noreferrer"
             className="group relative inline-flex items-center justify-center gap-2 rounded-full bg-[#0090EE] px-8 py-4 text-base font-semibold text-white shadow-[0_8px_30px_rgba(0,144,238,0.25)] transition-all duration-300 hover:bg-[#007acc] hover:shadow-[0_8px_44px_rgba(0,144,238,0.45)]"
           >
-            Launch Tovo
+            Launch Tovo Voice
             <span className="transition-transform duration-300 group-hover:translate-x-0.5">
               &rarr;
             </span>

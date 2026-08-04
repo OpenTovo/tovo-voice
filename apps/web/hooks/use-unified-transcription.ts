@@ -1,8 +1,7 @@
 /**
  * Unified Transcription Hook
  *
- * This hook replaces the old useWhisper hook and provides a unified interface
- * for transcription that works with both Whisper and Sherpa engines.
+ * Provides a unified interface for transcription engines.
  */
 
 import { useAtom, useSetAtom } from "jotai"
@@ -263,6 +262,3 @@ export function useUnifiedTranscription(): UseUnifiedTranscriptionReturn {
     clearTranscription,
   }
 }
-
-// Legacy alias for backward compatibility
-export const useWhisper = useUnifiedTranscription

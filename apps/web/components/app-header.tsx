@@ -13,7 +13,7 @@ export function AppHeader() {
     if (pathname.startsWith("/history")) return "History"
     if (pathname.startsWith("/settings")) return "Settings"
     if (pathname.startsWith("/new")) return "Session"
-    return "Tovo"
+    return "Tovo Voice"
   }
 
   return (

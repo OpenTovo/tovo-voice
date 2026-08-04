@@ -412,9 +412,7 @@ export function AIResponseSection({
 
     // Update the ref for next comparison
     prevTranscriptionLength.current = currentLength
-    // setState functions are stable and don't need to be in dependencies
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [transcription.length, clearSessionData])
+  }, [transcription.length, clearSessionData, setIsAnalyzing])
 
   // Simple auto-scroll: scroll to bottom whenever streaming content changes
   useEffect(() => {

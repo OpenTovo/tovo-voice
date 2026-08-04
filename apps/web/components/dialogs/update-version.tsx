@@ -33,7 +33,7 @@ export function UpdateVersion() {
             Update Available
           </DialogTitle>
           <DialogDescription>
-            A new version of Tovo is available. Reload to get the latest
+            A new version of Tovo Voice is available. Reload to get the latest
             features and improvements.
           </DialogDescription>
         </DialogHeader>

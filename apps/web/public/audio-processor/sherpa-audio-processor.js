@@ -1,9 +1,7 @@
 /**
  * Sherpa-ONNX Audio Worklet Processor
  * Processes audio in real-time for Sherpa-ONNX recognition
- *
- * Unlike Whisper which uses 5-second batches, Sherpa-ONNX processes
- * audio in smaller chunks for real-time streaming transcription
+ * Processes small audio chunks for real-time streaming transcription.
  */
 class SherpaAudioProcessor extends AudioWorkletProcessor {
   constructor() {

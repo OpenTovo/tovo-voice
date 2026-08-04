@@ -31,7 +31,7 @@
     "attributePosition": "auto"
   },
   "linter": {
-    "includes": ["apps/**"],
+    "includes": ["apps/**", "packages/ui/**"],
     "rules": {
       "recommended": true,
       "a11y": {
@@ -98,6 +98,16 @@
       "includes": ["**/next-env.d.ts"],
       "linter": {
         "enabled": false
+      }
+    },
+    {
+      "includes": ["packages/ui/src/styles/globals.css"],
+      "linter": {
+        "rules": {
+          "suspicious": {
+            "noDuplicateProperties": "off"
+          }
+        }
       }
     }
   ]

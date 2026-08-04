@@ -2,15 +2,16 @@
   "name": "tovo-monorepo",
   "version": "0.0.1",
   "private": true,
+  "packageManager": "pnpm@11.18.0",
   "scripts": {
     "build": "turbo build",
     "dev": "turbo dev",
-    "lint": "turbo lint",
+    "lint": "biome lint apps packages/ui --files-ignore-unknown=true",
     "format": "biome format --write package.json pnpm-workspace.yaml tsconfig.json turbo.json .vscode apps packages/ui --files-ignore-unknown=true",
     "format:check": "biome format package.json pnpm-workspace.yaml tsconfig.json turbo.json .vscode apps packages/ui --files-ignore-unknown=true",
     "format:js": "biome format --write apps packages/ui --files-ignore-unknown=true",
     "format:all": "biome format --write package.json pnpm-workspace.yaml tsconfig.json turbo.json .vscode apps packages/ui --files-ignore-unknown=true",
-    "lint:check": "turbo lint",
+    "lint:check": "biome lint apps packages/ui --files-ignore-unknown=true",
     "lint:fix": "pnpm --filter landing lint:fix && pnpm --filter web lint:fix && pnpm --filter @workspace/ui lint:fix",
     "typecheck": "turbo check-types",
     "pre-commit": "lint-staged",
@@ -20,9 +21,7 @@
   },
   "devDependencies": {
     "@biomejs/biome": "^2.3.11",
-    "@workspace/eslint-config": "workspace:*",
     "@workspace/typescript-config": "workspace:*",
-    "eslint": "^9.39.4",
     "husky": "^9.1.7",
     "lint-staged": "^16.4.0",
     "turbo": "^2.10.3",
@@ -33,7 +32,6 @@
       "biome check --write --no-errors-on-unmatched --files-ignore-unknown=true"
     ]
   },
-  "packageManager": "pnpm@10.32.0",
   "engines": {
     "node": ">=20"
   }

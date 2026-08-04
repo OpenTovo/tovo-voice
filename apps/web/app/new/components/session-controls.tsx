@@ -63,7 +63,7 @@ export function SessionControls({
                 }
                 title={
                   !isModelLoaded
-                    ? "Load a Whisper model first"
+                    ? "Load a transcription model first"
                     : !isAIModelReady
                       ? "Set up AI analysis model and WebGPU"
                       : "Start recording session"

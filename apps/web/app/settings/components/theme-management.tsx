@@ -73,8 +73,8 @@ export function ThemeManagement() {
         <DialogHeader>
           <DialogTitle>Appearance</DialogTitle>
           <DialogDescription>
-            Choose how Tovo looks to you. Select a theme preference or sync with
-            your system settings.
+            Choose how Tovo Voice looks to you. Select a theme preference or
+            sync with your system settings.
           </DialogDescription>
         </DialogHeader>
         {mounted && (

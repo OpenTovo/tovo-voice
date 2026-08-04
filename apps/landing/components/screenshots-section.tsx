@@ -6,26 +6,26 @@ import Image from "next/image"
 const screenshots = [
   {
     src: "/tovo-screenshots/tovo-mobile-new-session.png",
-    alt: "Tovo Mobile - New Session",
+    alt: "Tovo Voice Mobile - New Session",
     title: "Start New Session",
     description:
       "Clean, intuitive interface to begin your AI-powered conversations",
   },
   {
     src: "/tovo-screenshots/tovo-mobile-with-transcriptions.png",
-    alt: "Tovo Mobile - In Session",
+    alt: "Tovo Voice Mobile - In Session",
     title: "Live Transcription",
     description: "Real-time speech-to-text entirely on-device",
   },
   {
     src: "/tovo-screenshots/tovo-mobile-in-session2.png",
-    alt: "Tovo Mobile - Session View 2",
+    alt: "Tovo Voice Mobile - Session View 2",
     title: "Smart Analysis",
     description: "AI extracts key insights and help automatically",
   },
   {
     src: "/tovo-screenshots/tovo-mobile-settings.png",
-    alt: "Tovo Mobile - Settings",
+    alt: "Tovo Voice Mobile - Settings",
     title: "Customizable Settings",
     description:
       "Fine-tune your experience with powerful models and storage controls",
@@ -47,7 +47,7 @@ export default function ScreenshotsSection() {
             Gallery
           </span>
           <h2 className="mb-5 text-4xl font-bold tracking-tight md:text-5xl">
-            See <span className="text-gradient-zima">Tovo</span> in action
+            See <span className="text-gradient-zima">Tovo Voice</span> in action
           </h2>
           <p className="mx-auto max-w-2xl text-lg text-neutral-500">
             Seamless voice AI across all your devices with beautiful, intuitive
@@ -100,7 +100,7 @@ export default function ScreenshotsSection() {
             <div className="relative aspect-[18/14.6] overflow-hidden">
               <Image
                 src="/tovo-screenshots/tovo-desktop-new-session.png"
-                alt="Tovo Desktop - New Session"
+                alt="Tovo Voice Desktop - New Session"
                 fill
                 className="object-cover transition-transform duration-500 hover:scale-105"
                 sizes="(max-width: 1200px) 100vw, 75vw"

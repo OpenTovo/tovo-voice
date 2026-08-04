@@ -15,7 +15,11 @@ interface GPU {
 }
 
 interface GPUAdapter {
+  info?: unknown
   requestAdapterInfo(): Promise<unknown>
+  features?: {
+    [Symbol.iterator](): IterableIterator<string>
+  }
 }
 
 declare global {
@@ -28,6 +32,7 @@ export interface WebGPUInfo {
   isSupported: boolean
   isEnabled: boolean
   adapterInfo?: unknown
+  features?: string[]
   error?: string
 }
 
@@ -57,18 +62,21 @@ export async function detectWebGPU(): Promise<WebGPUInfo> {
     }
 
     // Get adapter info if available
-    let adapterInfo: unknown
-    try {
-      adapterInfo = await adapter.requestAdapterInfo()
-    } catch {
-      // requestAdapterInfo might not be available in all browsers
-      adapterInfo = undefined
+    let adapterInfo = adapter.info
+    if (!adapterInfo) {
+      try {
+        adapterInfo = await adapter.requestAdapterInfo()
+      } catch {
+        // requestAdapterInfo might not be available in all browsers
+        adapterInfo = undefined
+      }
     }
 
     return {
       isSupported: true,
       isEnabled: true,
       adapterInfo,
+      features: adapter.features ? Array.from(adapter.features) : undefined,
     }
   } catch (error) {
     return {

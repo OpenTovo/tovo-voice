@@ -2,10 +2,9 @@ import type { MetadataRoute } from "next"
 
 export default function manifest(): MetadataRoute.Manifest {
   return {
-    name: "Tovo - AI Sidekick for Interviews & Meetings",
-    short_name: "Tovo",
-    description:
-      "Privacy-first AI assistant for meetings, interviews, and real-time voice interaction",
+    name: "Tovo Voice",
+    short_name: "Tovo Voice",
+    description: "Private, on-device transcription and local AI analysis",
     start_url: "/",
     display: "standalone",
     background_color: "#ffffff",

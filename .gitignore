@@ -28,6 +28,7 @@ build
 dist
 .open-next/
 .wrangler/
+/.build/
 
 
 # Debug
@@ -51,4 +52,3 @@ npm-debug.log*
 # Local dev certificates
 certs/
 **/certs/
-

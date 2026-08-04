@@ -1,27 +1,16 @@
-## TOVO
+## Tovo Voice
 
-- a real-time AI buddy for
-  - meetings
-  - interviews
-  - pitches
-  - companionship
-- privacy-first: everything stays on your device
-- real-time transcription
-- local LLM models (powered by WebLLM via WebGPU)
-- LLM analysis output as text
+Tovo Voice is a privacy-first voice app that transcribes speech in real time and
+turns it into useful AI insights—all locally in your browser. Transcription
+runs on-device, while WebLLM uses WebGPU for local language-model analysis,
+keeping your audio and conversations private.
 
 ## Clone
 
 ```bash
-git clone --recursive https://github.com/OpenTovo/tovo-voice.git
+git clone https://github.com/OpenTovo/tovo-voice.git
 cd tovo-voice
 pnpm install
-```
-
-If you already cloned without submodules:
-
-```bash
-git submodule update --init --recursive
 ```
 
 ## Local Development
@@ -69,3 +58,8 @@ These cert files are for local development only and should not be committed.
 
 - This is a POC project created in 2025
 - cloudflare R2 setup will be required to deploy the web app
+
+## Sherpa-ONNX assets
+
+The reproducible WASM build, R2 staging layout, CORS policy, and local test
+flow are documented in [`docs/sherpa-wasm-build.md`](docs/sherpa-wasm-build.md).

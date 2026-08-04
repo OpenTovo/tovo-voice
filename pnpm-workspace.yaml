@@ -5,22 +5,6 @@ packages:
 minimumReleaseAge: 2880
 minimumReleaseAgeStrict: true
 
-# Temporary exact-version exceptions for the July 2026 security releases.
-# Remove after 2026-07-23T16:00:00Z.
-minimumReleaseAgeExclude:
-  - 'next@15.5.21'
-  - '@next/env@15.5.21'
-  - '@next/swc-darwin-arm64@15.5.21'
-  - '@next/swc-darwin-x64@15.5.21'
-  - '@next/swc-linux-arm64-gnu@15.5.21'
-  - '@next/swc-linux-arm64-musl@15.5.21'
-  - '@next/swc-linux-x64-gnu@15.5.21'
-  - '@next/swc-linux-x64-musl@15.5.21'
-  - '@next/swc-win32-arm64-msvc@15.5.21'
-  - '@next/swc-win32-x64-msvc@15.5.21'
-  - '@opennextjs/cloudflare@1.20.2'
-  - '@opennextjs/aws@4.1.0'
-
 onlyBuiltDependencies:
   - esbuild
   - workerd
@@ -34,16 +18,18 @@ overrides:
   lodash: 4.18.1
   mdast-util-to-hast: 13.2.1
   micromatch>picomatch: 2.3.2
-  minimatch@10.2.4>brace-expansion: 5.0.6
-  minimatch@3.1.5>brace-expansion: 1.1.13
-  minimatch@8.0.7>brace-expansion: 2.0.3
+  glob@9.3.5>minimatch: 10.2.6
+  minimatch@10.2.6>brace-expansion: 5.0.9
   router@2.2.0>path-to-regexp: 8.4.2
   tinyglobby>picomatch: 4.0.4
   yaml: 2.8.3
-  undici: 7.28.0
+  undici: 7.29.0
   ws: 8.21.0
   form-data: 4.0.6
   fast-xml-builder: 1.2.1
   qs: 6.15.3
-  postcss: 8.5.16
-  js-yaml: 4.2.0
+  postcss: 8.5.24
+  js-yaml: 4.3.0
+  sharp: 0.35.0
+  semver: 7.8.5
+  undici-types: 6.28.0

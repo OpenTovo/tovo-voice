@@ -26,15 +26,11 @@ import {
   type UnifiedModelConfig,
   type UnifiedModelId,
 } from "./unified-models"
-import { WhisperTranscriptionEngine } from "./whisper/whisper-engine"
 
 /**
  * Lazy-loaded engine factories
  */
 const engineFactories: EngineRegistry = {
-  [TranscriptionEngine.WHISPER]: async () => {
-    return new WhisperTranscriptionEngine()
-  },
   [TranscriptionEngine.SHERPA]: async () => {
     return new SherpaTranscriptionEngine()
   },

@@ -1,18 +1,15 @@
 /**
  * Transcription Engine Configuration
  *
- * This file controls which transcription engine is used throughout the application.
- * Change the TRANSCRIPTION_ENGINE constant to switch between engines.
+ * This file defines the transcription engines supported by the application.
  */
 
 export enum TranscriptionEngine {
-  WHISPER = "whisper",
   SHERPA = "sherpa",
 }
 
 /**
  * Default transcription engine
- * Change this constant to switch the entire application to use a different engine
  */
 export const TRANSCRIPTION_ENGINE: TranscriptionEngine =
   TranscriptionEngine.SHERPA

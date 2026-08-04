@@ -31,7 +31,7 @@ export default function PrivacyPage() {
                 🔒 Private Conversations
               </h2>
               <p className="leading-relaxed text-slate-300">
-                At Tovo, your privacy is our top priority. We operate on a
+                At Tovo Voice, your privacy is our top priority. We operate on a
                 simple principle:
                 <strong className="text-white">
                   {" "}
@@ -97,15 +97,15 @@ export default function PrivacyPage() {
                   </p>
                   <p>
                     <strong className="text-white">Offline Capability:</strong>{" "}
-                    Tovo works offline, ensuring your conversations never leave
-                    your device, even when connected to the internet.
+                    Tovo Voice works offline, ensuring your conversations never
+                    leave your device, even when connected to the internet.
                   </p>
                   <p>
                     <strong className="text-white">
                       Account-Based Access:
                     </strong>{" "}
-                    While Tovo requires a simple account for access, we only
-                    collect your email address for authentication. All your
+                    While Tovo Voice requires a simple account for access, we
+                    only collect your email address for authentication. All your
                     conversations and AI interactions remain local to your
                     device.
                   </p>
@@ -161,11 +161,11 @@ export default function PrivacyPage() {
                   Our Commitment
                 </h2>
                 <p className="text-slate-300">
-                  Tovo is built on the principle that your conversations and
-                  data should remain completely private. We will never change
-                  this approach or start collecting user data. Your privacy is
-                  not a feature we can turn off—it's built into the very
-                  foundation of how Tovo works.
+                  Tovo Voice is built on the principle that your conversations
+                  and data should remain completely private. We will never
+                  change this approach or start collecting user data. Your
+                  privacy is not a feature we can turn off—it's built into the
+                  very foundation of how Tovo Voice works.
                 </p>
               </section>
             </div>

@@ -18,12 +18,12 @@ export default function CallToAction() {
           <div className="grid-bg pointer-events-none absolute inset-0 opacity-50" />
 
           <h2 className="relative mb-4 text-3xl font-bold tracking-tight md:text-5xl">
-            Ready to experience <span className="text-gradient-zima">Tovo</span>
-            ?
+            Ready to experience{" "}
+            <span className="text-gradient-zima">Tovo Voice</span>?
           </h2>
           <p className="relative mx-auto mb-10 max-w-md text-lg text-neutral-400">
-            Start using your privacy-first AI sidekick today — 100% free, runs
-            entirely on your device.
+            Start transcribing and exploring useful AI insights locally — 100%
+            free and private.
           </p>
           <a
             href="https://pwa.tovo.dev"
@@ -31,7 +31,7 @@ export default function CallToAction() {
             rel="noopener noreferrer"
             className="group relative inline-flex items-center justify-center gap-2 rounded-full bg-[#0090EE] px-8 py-4 text-base font-semibold text-white shadow-[0_8px_30px_rgba(0,144,238,0.25)] transition-all duration-300 hover:bg-[#007acc] hover:shadow-[0_8px_44px_rgba(0,144,238,0.45)]"
           >
-            Launch Tovo
+            Launch Tovo Voice
             <span className="transition-transform duration-300 group-hover:translate-x-0.5">
               &rarr;
             </span>

@@ -41,8 +41,7 @@ export const addTranscriptionAtom = atom(
   ) => {
     const current = get(unifiedTranscriptionResultsAtom)
 
-    // For Sherpa: Only add final results to avoid duplicates and excessive LLM calls
-    // For Whisper: All results are considered final
+    // Only add final results to avoid duplicates and excessive LLM calls.
     if (result.isPartial && result.isFinal === false) {
       // Skip partial results - don't add to transcription history
       return

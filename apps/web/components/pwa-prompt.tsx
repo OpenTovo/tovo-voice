@@ -81,7 +81,7 @@ export function PWAPrompt({ isLoggedIn }: PWAPromptProps) {
           </DialogTitle>
           <DialogDescription>
             {isIOS
-              ? "Tovo doesn't work on iOS devices due to memory limitations"
+              ? "Tovo Voice doesn't work on iOS devices due to memory limitations"
               : "Get the best experience with offline access"}
           </DialogDescription>
         </DialogHeader>
@@ -91,9 +91,9 @@ export function PWAPrompt({ isLoggedIn }: PWAPromptProps) {
             <>
               <div className="rounded-lg border border-red-500/30 bg-red-50 p-4 dark:bg-red-950/20">
                 <p className="text-sm text-red-600 dark:text-red-200">
-                  Unfortunately, Tovo requires at least 650MB of memory to run
-                  the transcription and AI models, but iOS Safari is limited to
-                  200-400MB depending on the device.
+                  Unfortunately, Tovo Voice requires at least 650MB of memory to
+                  run the transcription and AI models, but iOS Safari is limited
+                  to 200-400MB depending on the device.
                 </p>
                 <p className="mt-2 text-sm font-medium text-red-600 dark:text-red-200">
                   Please use a desktop computer or Android device instead.
@@ -108,10 +108,10 @@ export function PWAPrompt({ isLoggedIn }: PWAPromptProps) {
             </>
           ) : (
             <>
-              <p className="text-sm">Add Tovo to your home screen to:</p>
+              <p className="text-sm">Add Tovo Voice to your home screen to:</p>
 
               <ul className="text-muted-foreground list-inside list-disc space-y-1 text-sm">
-                <li>Use Tovo like a native app</li>
+                <li>Use Tovo Voice like a native app</li>
                 <li>Offline access</li>
                 <li>Get faster performance</li>
               </ul>

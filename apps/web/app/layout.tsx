@@ -21,16 +21,16 @@ const fontMono = Geist_Mono({
 })
 
 export const metadata: Metadata = {
-  title: "Tovo",
+  title: "Tovo Voice",
   description:
-    "Your personal real-time AI sidekick for meetings, interviews, and more",
+    "Private, on-device transcription and local AI analysis in your browser",
   manifest: process.env.NEXT_PUBLIC_APP_URL
     ? new URL("/manifest.json", process.env.NEXT_PUBLIC_APP_URL)
     : "/manifest.json", // Relative URL - adapts to current protocol
   appleWebApp: {
     capable: true,
     statusBarStyle: "default",
-    title: "Tovo",
+    title: "Tovo Voice",
   },
 }
 

@@ -9,7 +9,7 @@ export default function GuidesPage() {
     {
       title: "Add to Home Screen",
       description:
-        "Install Tovo as a PWA for offline access and native app experience",
+        "Install Tovo Voice as a PWA for offline access and a native app experience",
       icon: Home,
       href: "/guides/add-to-home",
       color: "from-blue-500 to-purple-600",
@@ -40,11 +40,11 @@ export default function GuidesPage() {
           </Link>
 
           <h1 className="mb-8 text-4xl font-bold md:text-5xl">
-            Tovo <span className="text-zima">Guides</span>
+            Tovo Voice <span className="text-zima">Guides</span>
           </h1>
 
           <p className="mb-12 text-xl text-slate-400">
-            Step-by-step guides to help you get the most out of Tovo
+            Step-by-step guides to help you get the most out of Tovo Voice
           </p>
 
           <div className="grid gap-6 md:grid-cols-2">

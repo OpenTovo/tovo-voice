@@ -1,6 +1,5 @@
 "use client"
 
-import { Button } from "@workspace/ui/components/button"
 import { Skeleton } from "@workspace/ui/components/skeleton"
 import { getDefaultStore, useAtom } from "jotai"
 import { useEffect, useState } from "react"
@@ -26,10 +25,8 @@ import { tovoDB } from "@/lib/tovo-idb"
 import { TranscriptionEngine } from "@/lib/transcription/constants"
 import {
   clearCache as clearSherpaCache,
-  hasCachedFile,
-  hasSharedSherpaDataFile,
+  hasSherpaModelFiles,
 } from "@/lib/transcription/sherpa/sherpa-cache"
-import { getModelShortName } from "@/lib/transcription/sherpa/sherpa-model"
 import { getModelsForEngine } from "@/lib/transcription/unified-models"
 import { smartReload } from "@/lib/utils/pwa"
 import {
@@ -53,12 +50,10 @@ export default function SettingsPageClient() {
     defaultAnalysisModelAtom
   )
 
-  const [cachedWhisperModels, setCachedWhisperModels] = useState<string[]>([])
   const [cachedSherpaModels, setCachedSherpaModels] = useState<string[]>([])
   const [cachedWebLLMModels, setCachedWebLLMModels] = useState<string[]>([])
   const [storageInfo, setStorageInfo] = useState<{
     quota?: number
-    whisperModels: Array<{ url: string; size: number; timestamp: number }>
     webllmModels: Array<{
       id: string
       name: string
@@ -68,7 +63,6 @@ export default function SettingsPageClient() {
     sherpaModels: Array<{ url: string; size: number; timestamp: number }>
     sessionHistorySize: number
   }>({
-    whisperModels: [],
     webllmModels: [],
     sherpaModels: [],
     sessionHistorySize: 0,
@@ -82,43 +76,12 @@ export default function SettingsPageClient() {
 
   const loadCachedModels = async () => {
     try {
-      const whisperCached: string[] = []
-      const whisperModels = getModelsForEngine(TranscriptionEngine.WHISPER)
-
-      for (const model of whisperModels) {
-        if (model.whisperConfig?.url) {
-          const hasModel = await tovoDB.hasModel(model.whisperConfig.url)
-          if (hasModel) {
-            whisperCached.push(model.id)
-          }
-        }
-      }
-      setCachedWhisperModels(whisperCached)
-
       const sherpaCached: string[] = []
       const sherpaModels = getModelsForEngine(TranscriptionEngine.SHERPA)
 
       for (const model of sherpaModels) {
         if (model.sherpaConfig) {
-          const shortName = getModelShortName(model.id)
-          const baseUrl =
-            process.env.NEXT_PUBLIC_R2_BASE_URL || "https://r2.tovo.dev"
-
-          const [wasmCached, jsApiCached, jsLoaderCached, hasSharedData] =
-            await Promise.all([
-              hasCachedFile(
-                `${baseUrl}/sherpa-onnx-${shortName}/sherpa-onnx-wasm-main-asr.wasm`
-              ),
-              hasCachedFile(
-                `${baseUrl}/sherpa-onnx-${shortName}/sherpa-onnx-asr.js`
-              ),
-              hasCachedFile(
-                `${baseUrl}/sherpa-onnx-${shortName}/sherpa-onnx-wasm-main-asr.js`
-              ),
-              hasSharedSherpaDataFile(),
-            ])
-
-          if (wasmCached && jsApiCached && jsLoaderCached && hasSharedData) {
+          if (await hasSherpaModelFiles(model.id)) {
             sherpaCached.push(model.id)
           }
         }
@@ -129,7 +92,6 @@ export default function SettingsPageClient() {
       setCachedWebLLMModels(webllmCached)
     } catch (error) {
       console.error("Error loading cached models:", error)
-      setCachedWhisperModels([])
       setCachedSherpaModels([])
       setCachedWebLLMModels([])
     }
@@ -145,16 +107,12 @@ export default function SettingsPageClient() {
       ])
 
       const allModels = tovoIDB?.models ?? []
-      const whisperModels = allModels.filter(
-        (model) => !model.url.includes("sherpa-onnx")
-      )
       const sherpaModels = allModels.filter((model) =>
         model.url.includes("sherpa-onnx")
       )
 
       setStorageInfo({
         quota: tovoIDB?.quota ?? 0,
-        whisperModels: whisperModels,
         webllmModels: webllmModels,
         sherpaModels: sherpaModels,
         sessionHistorySize: sessionHistorySize,
@@ -163,7 +121,6 @@ export default function SettingsPageClient() {
       console.error("Error loading storage info:", error)
       setStorageInfo({
         quota: 0,
-        whisperModels: [],
         webllmModels: [],
         sherpaModels: [],
         sessionHistorySize: 0,
@@ -235,10 +192,8 @@ export default function SettingsPageClient() {
     modelType: "transcription" | "webllm"
   ) => {
     if (modelType === "transcription") {
-      const totalTranscriptionModels =
-        cachedWhisperModels.length + cachedSherpaModels.length
       return (
-        totalTranscriptionModels === 1 ||
+        cachedSherpaModels.length === 1 ||
         defaultTranscriptionModel !== modelName
       )
     }
@@ -247,10 +202,9 @@ export default function SettingsPageClient() {
   }
 
   const handleSetDefaultTranscriptionModel = (modelId: string) => {
-    const isWhisperCached = cachedWhisperModels.includes(modelId)
     const isSherpaCached = cachedSherpaModels.includes(modelId)
 
-    if (isWhisperCached || isSherpaCached) {
+    if (isSherpaCached) {
       setDefaultTranscriptionModel(modelId)
     } else {
       console.warn(`Cannot set '${modelId}' as default - model is not cached`)
@@ -358,7 +312,6 @@ export default function SettingsPageClient() {
               <DefaultModelsConfig
                 defaultTranscriptionModel={defaultTranscriptionModel}
                 defaultAnalysisModel={defaultAnalysisModel}
-                cachedWhisperModels={cachedWhisperModels}
                 cachedSherpaModels={cachedSherpaModels}
                 cachedWebLLMModels={cachedWebLLMModels}
                 onSetDefaultTranscriptionModel={

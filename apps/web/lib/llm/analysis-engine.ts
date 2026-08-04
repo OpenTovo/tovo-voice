@@ -67,7 +67,7 @@ export interface AnalysisRequest {
   onStreamChunk?: (chunk: string) => void
 }
 
-// TranscriptionResult type (matches whisper atoms)
+// Transcription result passed to the analysis engine.
 export interface TranscriptionResult {
   text: string
   timestamp?: number
@@ -205,7 +205,10 @@ export class LLMAnalysisEngine {
   ): Promise<boolean> {
     const webllmState = getWebLLMEngineState()
 
-    if (!webllmState.hasGlobalEngine) {
+    if (
+      !webllmState.hasGlobalEngine ||
+      webllmState.currentModel !== modelName
+    ) {
       return false
     }
 

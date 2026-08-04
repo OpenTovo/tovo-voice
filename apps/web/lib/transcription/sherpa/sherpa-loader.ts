@@ -1,12 +1,8 @@
 // Sherpa-ONNX WASM module loader
 
 import { storageQuotaManager } from "@/lib/storage/storage-quota-manager"
-import { getSherpaAssetUrl, getSherpaBaseUrl } from "./sherpa-assets"
+import { getSherpaModelAssetUrls, SHERPA_ASSET_FILES } from "./sherpa-assets"
 import { getCachedFile, hasCachedFile } from "./sherpa-cache"
-
-// R2 Configuration
-const SHERPA_BASE_URL = getSherpaBaseUrl()
-const SHERPA_SHARED_PATH = "sherpa-onnx-shared"
 
 // Export function to get original fetch for downloads
 export function getOriginalFetch(): typeof fetch {
@@ -90,6 +86,7 @@ declare global {
 let wasmModule: SherpaWasmModule | null = null
 let isLoading = false
 let loadPromise: Promise<SherpaWasmModule> | null = null
+let workerScriptBlobUrl: string | null = null
 
 // Progress tracking
 type ProgressCallback = (progress: number) => void
@@ -112,6 +109,7 @@ export async function loadSherpaWasm(
 
   isLoading = true
   currentProgressCallback = onProgress || null
+  const modelAssets = getSherpaModelAssetUrls(modelFolder)
 
   loadPromise = new Promise((resolve, reject) => {
     const loadModule = async () => {
@@ -124,24 +122,20 @@ export async function loadSherpaWasm(
 
         // Set up Module configuration before loading scripts
         let moduleReadyResolve: () => void
-        // eslint-disable-next-line @typescript-eslint/no-unused-vars
-        let moduleReadyReject: (error: Error) => void
-
-        const moduleReadyPromise = new Promise<void>((resolve, reject) => {
+        const moduleReadyPromise = new Promise<void>((resolve) => {
           moduleReadyResolve = resolve
-          moduleReadyReject = reject
         })
 
         // Set up Module configuration with blob URLs to prevent any network requests
         window.Module = {
           locateFile: (path: string, scriptDirectory: string = "") => {
             // Handle .data files - return local blob URL to prevent downloads
-            if (path.includes("sherpa-onnx-wasm-main-asr.data")) {
+            if (path.includes(SHERPA_ASSET_FILES.data)) {
               return dataBlobUrl
             }
 
             // Handle .wasm files - return local blob URL to prevent downloads
-            if (path.includes("sherpa-onnx-wasm-main-asr.wasm")) {
+            if (path.includes(SHERPA_ASSET_FILES.wasm)) {
               return wasmBlobUrl
             }
 
@@ -178,22 +172,20 @@ export async function loadSherpaWasm(
         }
 
         // Set up fetch interception to serve cached files only
-        setupFetchInterception(modelFolder)
+        setupFetchInterception(modelAssets)
 
         // Check that all required files are cached
         currentProgressCallback?.(10)
 
         // Check and create blob URLs for all required files
-        const sharedDataUrl = `${SHERPA_BASE_URL}/${SHERPA_SHARED_PATH}/sherpa-onnx-wasm-main-asr.data`
-        const wasmUrl = `${SHERPA_BASE_URL}/${modelFolder}/sherpa-onnx-wasm-main-asr.wasm`
-        const jsUrl = `${SHERPA_BASE_URL}/${modelFolder}/sherpa-onnx-asr.js`
-
         // Batch check all required files at once
-        const [isDataCached, isWasmCached, isJsCached] = await Promise.all([
-          hasCachedFile(sharedDataUrl),
-          hasCachedFile(wasmUrl),
-          hasCachedFile(jsUrl),
-        ])
+        const [isDataCached, isWasmCached, isApiCached, isWasmLoaderCached] =
+          await Promise.all([
+            hasCachedFile(modelAssets.data),
+            hasCachedFile(modelAssets.wasm),
+            hasCachedFile(modelAssets.api),
+            hasCachedFile(modelAssets.wasmLoader),
+          ])
 
         if (!isDataCached) {
           throw new Error(
@@ -205,9 +197,9 @@ export async function loadSherpaWasm(
             "Required .wasm file not cached. Please download the model first."
           )
         }
-        if (!isJsCached) {
+        if (!isApiCached || !isWasmLoaderCached) {
           throw new Error(
-            "Required .js file not cached. Please download the model first."
+            "Required JavaScript files are not cached. Please download the model first."
           )
         }
 
@@ -218,12 +210,13 @@ export async function loadSherpaWasm(
 
         // Check if Safari iOS optimization is needed for .data file
         const needsSafariOptimization =
-          storageQuotaManager.needsSafariIOSOptimization(sharedDataUrl)
+          storageQuotaManager.needsSafariIOSOptimization(modelAssets.data)
 
         if (needsSafariOptimization) {
           console.log("Using Safari iOS memory optimization for .data file")
-          dataBlobUrl =
-            await storageQuotaManager.createSafariIOSBlobUrl(sharedDataUrl)
+          dataBlobUrl = await storageQuotaManager.createSafariIOSBlobUrl(
+            modelAssets.data
+          )
           if (!dataBlobUrl) {
             throw new Error(
               "Failed to create Safari iOS optimized blob URL for .data file"
@@ -231,7 +224,7 @@ export async function loadSherpaWasm(
           }
         } else {
           // Use regular method for other browsers
-          const dataBlob = await getCachedFile(sharedDataUrl)
+          const dataBlob = await getCachedFile(modelAssets.data)
           if (!dataBlob) {
             throw new Error("Failed to get cached .data file")
           }
@@ -241,7 +234,7 @@ export async function loadSherpaWasm(
         }
 
         // .wasm files are typically smaller, so use regular method
-        const wasmBlob = await getCachedFile(wasmUrl)
+        const wasmBlob = await getCachedFile(modelAssets.wasm)
         if (!wasmBlob) {
           throw new Error("Failed to get cached .wasm file")
         }
@@ -253,12 +246,8 @@ export async function loadSherpaWasm(
         // Load scripts in parallel
         currentProgressCallback?.(30)
         await Promise.all([
-          loadScriptWithCache(
-            getSherpaAssetUrl(`${modelFolder}/sherpa-onnx-asr.js`)
-          ),
-          loadScriptWithCache(
-            getSherpaAssetUrl(`${modelFolder}/sherpa-onnx-wasm-main-asr.js`)
-          ),
+          loadScriptWithCache(modelAssets.api),
+          loadScriptWithCache(modelAssets.wasmLoader),
         ])
 
         // Wait for module initialization with better timeout handling
@@ -306,12 +295,15 @@ export async function loadSherpaWasm(
         resolve(wasmModule)
       } catch (error) {
         isLoading = false
+        loadPromise = null
         currentProgressCallback = null
         console.error("Failed to load Sherpa-ONNX WASM module", { error })
 
         // Clean up blob URLs on error
         if (dataBlobUrl) URL.revokeObjectURL(dataBlobUrl)
         if (wasmBlobUrl) URL.revokeObjectURL(wasmBlobUrl)
+        revokeWorkerScriptBlobUrl()
+        removeLoadedSherpaScripts()
 
         reject(error)
       }
@@ -361,6 +353,14 @@ async function loadScriptWithCache(src: string): Promise<void> {
     const script = document.createElement("script")
     script.setAttribute("data-sherpa-src", src) // Mark with our custom attribute
     script.type = "text/javascript"
+
+    if (src.includes(SHERPA_ASSET_FILES.wasmLoader)) {
+      revokeWorkerScriptBlobUrl()
+      workerScriptBlobUrl = URL.createObjectURL(
+        new Blob([scriptContent], { type: "text/javascript" })
+      )
+      window.Module.mainScriptUrlOrBlob = workerScriptBlobUrl
+    }
 
     return new Promise((resolve, reject) => {
       const cleanup = () => {
@@ -433,6 +433,8 @@ export function resetSherpaWasm(): void {
   isLoading = false
   loadPromise = null
   currentProgressCallback = null
+  revokeWorkerScriptBlobUrl()
+  removeLoadedSherpaScripts()
 
   // Clean up any existing module
   if (window.Module) {
@@ -442,12 +444,31 @@ export function resetSherpaWasm(): void {
   console.info("Sherpa WASM module state reset")
 }
 
+function revokeWorkerScriptBlobUrl(): void {
+  if (!workerScriptBlobUrl) {
+    return
+  }
+
+  URL.revokeObjectURL(workerScriptBlobUrl)
+  workerScriptBlobUrl = null
+}
+
+function removeLoadedSherpaScripts(): void {
+  document
+    .querySelectorAll<HTMLScriptElement>("script[data-sherpa-src]")
+    .forEach((script) => {
+      script.remove()
+    })
+}
+
 /**
  * Setup fetch interception to serve cached WASM and data files
  * CRITICAL: This ONLY serves from cache, NEVER downloads files
  * Downloads should only happen via explicit user action in TranscriptionModelDownload
  */
-function setupFetchInterception(modelFolder: string): void {
+function setupFetchInterception(
+  modelAssets: ReturnType<typeof getSherpaModelAssetUrls>
+): void {
   // Only set up if not already done
   if ((window as any).__sherpaFetchIntercepted) {
     return
@@ -471,25 +492,19 @@ function setupFetchInterception(modelFolder: string): void {
           ? input.toString()
           : input.url
 
-    // Handle .data files with shared caching
-    if (
-      url.includes(".data") &&
-      (url.includes("sherpa-onnx-") || url.includes(`/${modelFolder}/`))
-    ) {
+    // Handle model data files with cache-only access.
+    if (url.includes(SHERPA_ASSET_FILES.data)) {
       try {
         console.info("Processing .data file request", { url })
 
-        // Use shared cache key for all Sherpa .data files
-        const sharedDataUrl = `${SHERPA_BASE_URL}/${SHERPA_SHARED_PATH}/sherpa-onnx-wasm-main-asr.data`
-
         // Check if already cached
-        const isCached = await hasCachedFile(sharedDataUrl)
+        const isCached = await hasCachedFile(modelAssets.data)
         if (isCached) {
           console.info("Loading .data file from cache", {
             url,
-            sharedUrl: sharedDataUrl,
+            dataUrl: modelAssets.data,
           })
-          const cachedData = await getCachedFile(sharedDataUrl)
+          const cachedData = await getCachedFile(modelAssets.data)
           if (cachedData) {
             return new Response(cachedData, {
               status: 200,
@@ -506,7 +521,7 @@ function setupFetchInterception(modelFolder: string): void {
         // Downloads should only happen via explicit user action
         console.warn("Required .data file not cached, cannot serve", {
           url,
-          sharedUrl: sharedDataUrl,
+          dataUrl: modelAssets.data,
         })
         return new Response("File not cached", {
           status: 404,

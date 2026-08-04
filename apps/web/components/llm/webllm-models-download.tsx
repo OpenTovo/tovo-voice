@@ -27,7 +27,7 @@ import {
   detectWebGPU,
   downloadWebLLMModel,
   getAvailableWebLLMModels,
-  getCachedWebLLMModels,
+  type WebGPUInfo,
   type WebLLMModelInfo,
 } from "@/lib/llm"
 import type { WebLLMModelName } from "@/lib/llm/models"
@@ -38,6 +38,19 @@ interface WebLLMModelsDownloadProps {
   onModelReady?: (modelName: WebLLMModelName) => void
   canDeleteModel?: (modelName: string) => boolean
   onDeleteModel?: (modelName: WebLLMModelName) => Promise<void>
+}
+
+function getMissingWebGPUFeatures(
+  webgpuInfo: WebGPUInfo | null,
+  model: WebLLMModelInfo
+): string[] {
+  if (!webgpuInfo?.features) {
+    return []
+  }
+
+  return model.requiredFeatures.filter(
+    (feature) => !webgpuInfo.features?.includes(feature)
+  )
 }
 
 export function WebLLMModelsDownload({
@@ -53,7 +66,7 @@ export function WebLLMModelsDownload({
     webllmDownloadProgressAtom
   )
   const showConfirmDialog = useSetAtom(showConfirmDialogAtom)
-  const [webgpuInfo, setWebgpuInfo] = useState<any>(null)
+  const [webgpuInfo, setWebgpuInfo] = useState<WebGPUInfo | null>(null)
   const [showWebGPUDialog, setShowWebGPUDialog] = useState(false)
   const [availableModels, setAvailableModels] = useState<WebLLMModelInfo[]>([])
   const [isLoading, setIsLoading] = useState(true)
@@ -102,6 +115,22 @@ export function WebLLMModelsDownload({
     // Find the model info and check storage limits
     const model = availableModels.find((m) => m.id === modelName)
     if (!model) return
+
+    const missingFeatures = getMissingWebGPUFeatures(webgpuInfo, model)
+    if (missingFeatures.length > 0) {
+      TovoHaptics.error()
+      await showConfirmDialog({
+        title: "Model Not Compatible",
+        message: `This model requires WebGPU features that are unavailable on this device: ${missingFeatures.join(
+          ", "
+        )}.
+
+Please choose another model or try an updated Chromium-based browser.`,
+        confirmText: "OK",
+        cancelText: "",
+      })
+      return
+    }
 
     // Check device capability (both storage and memory limits)
     const deviceCheck = storageQuotaManager.canStorageAccommodateModel(
@@ -164,9 +193,9 @@ This model will be cached locally for offline use. Download may take several min
     })
 
     try {
-      // Check if this is the first model download in session
-      const cachedModels = await getCachedWebLLMModels()
-      const isFirstModel = cachedModels.length === 0
+      const isFirstModel = !availableModels.some(
+        (availableModel) => availableModel.isDownloaded
+      )
 
       await downloadWebLLMModel(
         modelName,
@@ -193,14 +222,6 @@ This model will be cached locally for offline use. Download may take several min
 
           // Reload available models to update cache status
           await loadCachedModels()
-        },
-        (error) => {
-          setGlobalDownloadProgress({
-            modelName,
-            progress: 0,
-            isDownloading: true,
-            status: `Download failed: ${error.message}`,
-          })
         }
       )
 
@@ -210,18 +231,7 @@ This model will be cached locally for offline use. Download may take several min
       if (onModelReady) {
         onModelReady(modelName)
       }
-    } catch {
-      setGlobalDownloadProgress({
-        modelName,
-        progress: 0,
-        isDownloading: true,
-        status: "Download failed",
-      })
 
-      // Error haptic feedback
-      TovoHaptics.error()
-    } finally {
-      // Clear download state after a delay
       setTimeout(() => {
         setGlobalDownloadProgress({
           modelName: null,
@@ -230,6 +240,18 @@ This model will be cached locally for offline use. Download may take several min
           status: "",
         })
       }, 3000)
+    } catch (error) {
+      const errorMessage =
+        error instanceof Error ? error.message : "Unknown error"
+      setGlobalDownloadProgress({
+        modelName,
+        progress: 0,
+        isDownloading: false,
+        status: `Download failed: ${errorMessage}`,
+      })
+
+      // Error haptic feedback
+      TovoHaptics.error()
     }
   }
 
@@ -350,6 +372,13 @@ This will permanently remove the model from your device. You can download it aga
         </div>
       )}
 
+      {!isDownloading && loadingStatus && (
+        <Alert variant="destructive">
+          <AlertCircle className="h-4 w-4" />
+          <AlertDescription>{loadingStatus}</AlertDescription>
+        </Alert>
+      )}
+
       <div className="flex-1 space-y-2 overflow-y-auto">
         {availableModels.map((model) => {
           const isDownloaded = model.isDownloaded || false
@@ -360,8 +389,13 @@ This will permanently remove the model from your device. You can download it aga
           const modelSizeBytes = model.vramRequired * 1024 * 1024 // Convert MB to bytes
           const deviceCheck =
             storageQuotaManager.canStorageAccommodateModel(modelSizeBytes)
-          const canHandleModel = deviceCheck.canStore
-          const deviceWarning = deviceCheck.reason
+          const missingFeatures = getMissingWebGPUFeatures(webgpuInfo, model)
+          const canHandleModel =
+            deviceCheck.canStore && missingFeatures.length === 0
+          const deviceWarning =
+            missingFeatures.length > 0
+              ? `Missing WebGPU features: ${missingFeatures.join(", ")}`
+              : deviceCheck.reason
 
           const handleDeviceInfoClick = async () => {
             if (!canHandleModel) {

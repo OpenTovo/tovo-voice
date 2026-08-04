@@ -210,11 +210,20 @@ best practices for handling real-time transcription results.
     </div>
 
     <script>
-      const SHERPA_BASE_URL =
-        new URLSearchParams(window.location.search).get("baseUrl") ||
-        "https://r2.tovo.dev"
-      const SHERPA_MODEL_PATH = `${SHERPA_BASE_URL}/sherpa-onnx-bilingual`
-      const SHERPA_SHARED_PATH = `${SHERPA_BASE_URL}/sherpa-onnx-shared`
+      const params = new URLSearchParams(window.location.search)
+      const SHERPA_BASE_URL = params.get("baseUrl") || "https://r2.tovo.dev"
+      const SHERPA_ASSET_PREFIX =
+        params.get("prefix") || "sherpa/v1.13.4"
+      const SHERPA_VERSION = params.get("version") || "sherpa-v1.13.4"
+      const SHERPA_MODEL_FOLDER = "sherpa-onnx-bilingual"
+
+      function assetUrl(path) {
+        const url = new URL(
+          `${SHERPA_BASE_URL.replace(/\/$/, "")}/${SHERPA_ASSET_PREFIX.replace(/^\/+|\/+$/g, "")}/${path}`
+        )
+        url.searchParams.set("v", SHERPA_VERSION)
+        return url.toString()
+      }
 
       let logDiv
       let sherpaModule = null
@@ -276,10 +285,16 @@ best practices for handling real-time transcription results.
           log("Checking for Sherpa-ONNX files...")
 
           const filesToCheck = [
-            `${SHERPA_MODEL_PATH}/sherpa-onnx-wasm-main-asr.js`,
-            `${SHERPA_MODEL_PATH}/sherpa-onnx-asr.js`,
-            `${SHERPA_MODEL_PATH}/sherpa-onnx-wasm-main-asr.wasm`,
-            `${SHERPA_SHARED_PATH}/sherpa-onnx-wasm-main-asr.data`,
+            assetUrl(`${SHERPA_MODEL_FOLDER}/sherpa-onnx-asr.js`),
+            assetUrl(
+              `${SHERPA_MODEL_FOLDER}/sherpa-onnx-wasm-main-asr.js`
+            ),
+            assetUrl(
+              `${SHERPA_MODEL_FOLDER}/sherpa-onnx-wasm-main-asr.wasm`
+            ),
+            assetUrl(
+              `${SHERPA_MODEL_FOLDER}/sherpa-onnx-wasm-main-asr.data`
+            ),
           ]
 
           for (const file of filesToCheck) {
@@ -302,11 +317,8 @@ best practices for handling real-time transcription results.
           // Resolve model files from the shared R2 bucket.
           window.Module.locateFile = function (path, scriptDirectory = "") {
             log(`Locating file: ${path}, scriptDirectory: ${scriptDirectory}`)
-            if (path.endsWith(".data")) {
-              return `${SHERPA_SHARED_PATH}/${path}`
-            }
-            if (path.endsWith(".wasm")) {
-              return `${SHERPA_MODEL_PATH}/${path}`
+            if (path.endsWith(".data") || path.endsWith(".wasm")) {
+              return assetUrl(`${SHERPA_MODEL_FOLDER}/${path}`)
             }
             return scriptDirectory + path
           }
@@ -345,11 +357,15 @@ best practices for handling real-time transcription results.
           log("Attempting to load Sherpa-ONNX WASM module...")
 
           // Load the JavaScript API first
-          await loadScript(`${SHERPA_MODEL_PATH}/sherpa-onnx-asr.js`)
+          await loadScript(assetUrl(`${SHERPA_MODEL_FOLDER}/sherpa-onnx-asr.js`))
           log("✅ Loaded sherpa-onnx-asr.js")
 
           // Load the main WASM module
-          await loadScript(`${SHERPA_MODEL_PATH}/sherpa-onnx-wasm-main-asr.js`)
+          await loadScript(
+            assetUrl(
+              `${SHERPA_MODEL_FOLDER}/sherpa-onnx-wasm-main-asr.js`
+            )
+          )
           log("✅ Loaded sherpa-onnx-wasm-main-asr.js")
 
           updateStatus(

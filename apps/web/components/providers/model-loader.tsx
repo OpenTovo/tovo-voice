@@ -4,6 +4,7 @@ import { useAtom } from "jotai"
 import { useEffect, useRef } from "react"
 import { useUnifiedTranscription } from "@/hooks/use-unified-transcription"
 import { defaultTranscriptionModelAtom } from "@/lib/atoms"
+import { removeLegacyWhisperModels } from "@/lib/transcription/legacy-model-cleanup"
 import {
   UNIFIED_MODELS,
   type UnifiedModelId,
@@ -12,7 +13,7 @@ import {
 /**
  * ModelLoader provider that automatically loads default models in the background
  * This ensures models are available regardless of which page the user enters first
- * Now uses the unified transcription system to support both Whisper and Sherpa models
+ * Uses the unified transcription system so another ASR engine can be added later.
  */
 export function ModelLoaderProvider({
   children,
@@ -31,6 +32,12 @@ export function ModelLoaderProvider({
   const loadingModelRef = useRef<string | null>(null)
   const lastDefaultModelRef = useRef<string | null>(null)
   const previousModelRef = useRef<string | null>(null)
+
+  useEffect(() => {
+    removeLegacyWhisperModels().catch((error) => {
+      console.warn("Failed to remove legacy Whisper model cache:", error)
+    })
+  }, [])
 
   // Auto-load default transcription model when it changes
   useEffect(() => {

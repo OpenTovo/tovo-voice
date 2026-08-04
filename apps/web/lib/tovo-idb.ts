@@ -5,7 +5,7 @@ import type {
   TranscriptionItem,
 } from "./transcription/transcription-history-manager"
 
-// Database schema for Tovo app data
+// Database schema for Tovo Voice app data
 interface TovoDB extends DBSchema {
   models: {
     key: string

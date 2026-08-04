@@ -1,7 +1,7 @@
 import { ImageResponse } from "next/og"
 
 // Image metadata
-export const alt = "Tovo - AI Sidekick for Interviews & Meetings"
+export const alt = "Tovo Voice — Private, On-Device Voice AI"
 export const size = {
   width: 1200,
   height: 630,
@@ -58,7 +58,7 @@ export default async function Image() {
             letterSpacing: "-0.02em",
           }}
         >
-          Tovo
+          Tovo Voice
         </div>
       </div>
       <div
@@ -71,7 +71,7 @@ export default async function Image() {
           opacity: 0.9,
         }}
       >
-        AI Sidekick for Interviews & Meetings
+        Private, On-Device Voice AI
       </div>
       <div
         style={{
@@ -83,7 +83,7 @@ export default async function Image() {
           opacity: 0.7,
         }}
       >
-        Privacy-first local AI that listens quietly and helps in real time
+        Real-time transcription and useful AI insights in your browser
       </div>
     </div>,
     // ImageResponse options

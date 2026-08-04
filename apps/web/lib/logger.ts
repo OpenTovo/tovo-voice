@@ -21,7 +21,7 @@ class Logger {
   constructor(config: Partial<LogConfig> = {}) {
     this.config = {
       level: LogLevel.INFO,
-      prefix: "[Tovo]",
+      prefix: "[Tovo Voice]",
       enableTimestamp: true,
       ...config,
     }
@@ -94,26 +94,26 @@ class Logger {
 
 // Create default logger instances
 export const wasmLogger = new Logger({
-  prefix: "[TOVO WASM]",
+  prefix: "[Tovo Voice WASM]",
   level:
     process.env.NODE_ENV === "development" ? LogLevel.DEBUG : LogLevel.INFO,
 })
 
 export const audioLogger = new Logger({
-  prefix: "[TOVO Audio]",
+  prefix: "[Tovo Voice Audio]",
   level:
     process.env.NODE_ENV === "development" ? LogLevel.DEBUG : LogLevel.INFO,
 })
 
 export const modelLogger = new Logger({
-  prefix: "[TOVO Model]",
+  prefix: "[Tovo Voice Model]",
   level:
     process.env.NODE_ENV === "development" ? LogLevel.DEBUG : LogLevel.INFO,
 })
 
 // Default logger instance
 export const logger = new Logger({
-  prefix: "[Tovo]",
+  prefix: "[Tovo Voice]",
   level:
     process.env.NODE_ENV === "development" ? LogLevel.DEBUG : LogLevel.INFO,
 })

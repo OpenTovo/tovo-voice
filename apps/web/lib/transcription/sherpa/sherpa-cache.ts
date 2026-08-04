@@ -1,24 +1,23 @@
 /**
- * IndexedDB cache for Sherpa model files using the unified Tovo database
+ * IndexedDB cache for Sherpa model files using the unified Tovo Voice database
  * Caches large .data files to avoid re-downloading on each session
  */
 
 import { storageQuotaManager } from "@/lib/storage/storage-quota-manager"
 import { tovoDB } from "@/lib/tovo-idb"
 import {
-  getSherpaAssetUrl,
-  getSherpaBaseUrl,
+  getSherpaModelAssetUrls,
   normalizeSherpaAssetUrl,
 } from "./sherpa-assets"
 import { getOriginalFetch } from "./sherpa-loader"
-import { getModelShortName } from "./sherpa-model"
+import { getSherpaModelFolder } from "./sherpa-model"
 
 // Chunk size for large files (25MB chunks for Safari compatibility)
 const CHUNK_SIZE = 25 * 1024 * 1024 // 25MB
 const LARGE_FILE_THRESHOLD = 100 * 1024 * 1024 // 100MB
 
 /**
- * Check if a file is cached using the unified Tovo database
+ * Check if a file is cached using the unified Tovo Voice database
  */
 export async function hasCachedFile(url: string): Promise<boolean> {
   try {
@@ -30,7 +29,7 @@ export async function hasCachedFile(url: string): Promise<boolean> {
 }
 
 /**
- * Get cached file data using the unified Tovo database
+ * Get cached file data using the unified Tovo Voice database
  */
 export async function getCachedFile(url: string): Promise<ArrayBuffer | null> {
   try {
@@ -42,7 +41,7 @@ export async function getCachedFile(url: string): Promise<ArrayBuffer | null> {
 }
 
 /**
- * Cache a file using the unified Tovo database
+ * Cache a file using the unified Tovo Voice database
  */
 export async function cacheFile(url: string, data: ArrayBuffer): Promise<void> {
   try {
@@ -62,50 +61,17 @@ export async function cacheFile(url: string, data: ArrayBuffer): Promise<void> {
   }
 }
 
-/**
- * Check if the shared Sherpa data file is cached
- * Since all Sherpa models use the same .data file, we use a shared cache key
- */
-export async function hasSharedSherpaDataFile(): Promise<boolean> {
-  try {
-    // Check for the shared data file using just the path part to avoid base URL issues
-    const sharedDataPath = "sherpa-onnx-shared/sherpa-onnx-wasm-main-asr.data"
+export async function hasSherpaModelFiles(modelId: string): Promise<boolean> {
+  const assets = getSherpaModelAssetUrls(getSherpaModelFolder(modelId))
+  const cachedFiles = await Promise.all(
+    Object.values(assets).map((url) => hasCachedFile(url))
+  )
 
-    const storageInfo = await tovoDB.getStorageInfo()
-
-    // Check if any stored URL contains this path
-    const hasExactFile = storageInfo.models.some((model) =>
-      model.url.includes(sharedDataPath)
-    )
-
-    if (hasExactFile) {
-      return true
-    }
-
-    // Check if chunked version exists (metadata file)
-    const hasChunkedVersion = storageInfo.models.some(
-      (model) =>
-        model.url.includes(sharedDataPath) && model.url.includes(":metadata")
-    )
-
-    return hasChunkedVersion
-  } catch (error) {
-    console.warn("Error checking for shared Sherpa data file", error)
-    return false
-  }
+  return cachedFiles.every(Boolean)
 }
 
 /**
- * Get the shared Sherpa data file from cache
- */
-export async function getSharedSherpaDataFile(): Promise<ArrayBuffer | null> {
-  const baseUrl = getSherpaBaseUrl()
-  const sharedDataUrl = `${baseUrl}/sherpa-onnx-shared/sherpa-onnx-wasm-main-asr.data`
-  return getCachedFile(sharedDataUrl)
-}
-
-/**
- * Get cache info using the unified Tovo database
+ * Get cache info using the unified Tovo Voice database
  */
 export async function getCacheInfo(): Promise<{
   totalFiles: number
@@ -126,7 +92,7 @@ export async function getCacheInfo(): Promise<{
 }
 
 /**
- * Clear all cached files using the unified Tovo database
+ * Clear all cached files using the unified Tovo Voice database
  */
 export async function clearCache(): Promise<void> {
   try {
@@ -139,7 +105,7 @@ export async function clearCache(): Promise<void> {
 }
 
 /**
- * Delete a specific cached file using the unified Tovo database
+ * Delete a specific cached file using the unified Tovo Voice database
  */
 export async function deleteCachedFile(url: string): Promise<void> {
   try {
@@ -158,40 +124,18 @@ export async function deleteCachedFile(url: string): Promise<void> {
  */
 export async function deleteModelFiles(modelId: string): Promise<void> {
   try {
-    const shortName = getModelShortName(modelId)
+    const modelFolder = getSherpaModelFolder(modelId)
 
     const storageInfo = await tovoDB.getStorageInfo()
 
-    // Find model-specific files (not shared files)
-    const modelSpecificFiles = storageInfo.models.filter(
-      (model) =>
-        model.url.includes(shortName) &&
-        !model.url.includes("sherpa-onnx-shared")
+    // New Sherpa builds package the data file per model.
+    const modelSpecificFiles = storageInfo.models.filter((model) =>
+      model.url.includes(`/${modelFolder}/`)
     )
 
-    // Check if there are other Sherpa models that still need the shared files
-    const otherSherpaFiles = storageInfo.models.filter(
-      (model) =>
-        model.url.includes("sherpa-onnx") &&
-        !model.url.includes(shortName) &&
-        !model.url.includes("sherpa-onnx-shared")
-    )
+    const filesToDelete = [...modelSpecificFiles]
 
-    // Only delete shared files if this is the last Sherpa model
-    const shouldDeleteSharedFiles = otherSherpaFiles.length === 0
-
-    let filesToDelete = [...modelSpecificFiles]
-
-    if (shouldDeleteSharedFiles) {
-      const sharedFiles = storageInfo.models.filter((model) =>
-        model.url.includes("sherpa-onnx-shared")
-      )
-      filesToDelete = [...filesToDelete, ...sharedFiles]
-    }
-
-    console.log(
-      `Deleting ${filesToDelete.length} files for model: ${modelId} (shared files: ${shouldDeleteSharedFiles})`
-    )
+    console.log(`Deleting ${filesToDelete.length} files for model: ${modelId}`)
 
     // Delete each file
     const deletePromises = filesToDelete.map(async (file) => {
@@ -212,15 +156,14 @@ export async function deleteModelFiles(modelId: string): Promise<void> {
 
 /**
  * Download and cache all required files for a specific Sherpa model
- * This includes .js, .wasm, and shared .data files
+ * This includes the API wrapper, WASM loader, WASM binary, and data file.
  */
 export async function downloadModelFiles(
   modelId: string,
   onProgress?: (progress: number) => void
 ): Promise<void> {
   try {
-    const shortName = getModelShortName(modelId)
-    const baseUrl = getSherpaBaseUrl()
+    const modelFiles = getSherpaModelAssetUrls(getSherpaModelFolder(modelId))
     const originalFetch = getOriginalFetch()
 
     // Request persistent storage if not already granted
@@ -229,47 +172,21 @@ export async function downloadModelFiles(
       await storageQuotaManager.requestPersistentStorage()
     }
 
-    // Define the files to download
-    const modelFiles = [
-      {
-        url: getSherpaAssetUrl(
-          `sherpa-onnx-${shortName}/sherpa-onnx-wasm-main-asr.wasm`
-        ),
-        name: "WASM module",
-      },
-      {
-        url: getSherpaAssetUrl(`sherpa-onnx-${shortName}/sherpa-onnx-asr.js`),
-        name: "JavaScript API wrapper",
-      },
-      {
-        url: getSherpaAssetUrl(
-          `sherpa-onnx-${shortName}/sherpa-onnx-wasm-main-asr.js`
-        ),
-        name: "JavaScript WASM loader",
-      },
+    const files = [
+      { url: modelFiles.api, name: "JavaScript API wrapper" },
+      { url: modelFiles.wasmLoader, name: "JavaScript WASM loader" },
+      { url: modelFiles.wasm, name: "WASM module" },
+      { url: modelFiles.data, name: "Model data file" },
     ]
 
-    // Check if shared data file needs to be downloaded
-    const sharedDataUrl = `${baseUrl}/sherpa-onnx-shared/sherpa-onnx-wasm-main-asr.data`
-    const hasSharedData = await hasSharedSherpaDataFile()
-
-    if (!hasSharedData) {
-      modelFiles.push({
-        url: getSherpaAssetUrl(
-          "sherpa-onnx-shared/sherpa-onnx-wasm-main-asr.data"
-        ),
-        name: "Shared data file",
-      })
-    }
-
-    console.log(`Downloading ${modelFiles.length} files for model: ${modelId}`)
+    console.log(`Downloading ${files.length} files for model: ${modelId}`)
 
     let completedFiles = 0
-    const totalFiles = modelFiles.length
+    const totalFiles = files.length
 
     // Download all files in parallel for better performance
     await Promise.all(
-      modelFiles.map(async (file) => {
+      files.map(async (file) => {
         try {
           console.log(`Downloading ${file.name}: ${file.url}`)
 

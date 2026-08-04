@@ -34,6 +34,7 @@ export default function WebGPUSetupPage() {
 
           <p className="mb-12 text-xl text-slate-400">
             Enable WebGPU in your browser for local AI processing with Tovo
+            Voice
           </p>
 
           <div className="mb-8 rounded-lg border border-amber-500/20 bg-amber-950/30 p-4">
@@ -41,9 +42,9 @@ export default function WebGPUSetupPage() {
               <AlertTriangle className="mt-0.5 h-5 w-5 text-amber-400" />
               <div>
                 <p className="text-amber-200">
-                  <strong>Important:</strong> WebGPU is required for Tovo's
-                  local AI processing. Without it, AI features will not work
-                  properly.
+                  <strong>Important:</strong> WebGPU is required for Tovo
+                  Voice's local AI processing. Without it, AI features will not
+                  work properly.
                 </p>
               </div>
             </div>
@@ -141,7 +142,7 @@ export default function WebGPUSetupPage() {
                     ⚠️ iOS Not Currently Supported
                   </h3>
                   <p className="text-red-200">
-                    Unfortunately, Tovo doesn't work on iOS devices due to
+                    Unfortunately, Tovo Voice doesn't work on iOS devices due to
                     Safari's memory limitations. Our app requires at least 650MB
                     of memory to run the transcription and AI models, but iOS
                     Safari is limited to 200-400MB depending on the device.
@@ -328,10 +329,10 @@ export default function WebGPUSetupPage() {
                   <div className="flex items-center gap-3 rounded-lg bg-slate-800 p-4">
                     <span className="text-2xl">✅</span>
                     <div>
-                      <p className="font-medium">Tovo Check</p>
+                      <p className="font-medium">Tovo Voice Check</p>
                       <p className="text-sm text-slate-400">
-                        Visit Tovo - the app will automatically detect WebGPU
-                        support
+                        Visit Tovo Voice—the app will automatically detect
+                        WebGPU support
                       </p>
                     </div>
                   </div>

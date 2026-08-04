@@ -1,7 +1,7 @@
 {
-  "name": "Tovo - AI Meeting Assistant",
-  "short_name": "Tovo",
-  "description": "Your personal AI meeting assistant with real-time transcription",
+  "name": "Tovo Voice",
+  "short_name": "Tovo Voice",
+  "description": "Private, on-device transcription and local AI analysis",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#ffffff",

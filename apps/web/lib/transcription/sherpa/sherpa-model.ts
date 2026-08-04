@@ -2,45 +2,14 @@
 
 // Sherpa-ONNX model configuration
 export const SHERPA_MODELS = {
-  "bilingual-zh-en-2023-02-20-mobile": {
-    size: 336, // MB (actual size including WASM + data files)
+  "bilingual-zh-en-2023-02-20": {
+    size: 219, // MB (complete staged WASM package, rounded up)
     name: "Bilingual ZH-EN",
-    description:
-      "Chinese + English bilingual model, optimized for mobile, real-time streaming",
+    description: "Chinese + English bilingual model with real-time streaming",
     languages: ["zh", "en"],
     type: "zipformer",
     folder: "sherpa-onnx-bilingual",
-    url: "https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherpa-onnx-streaming-zipformer-bilingual-zh-en-2023-02-20-mobile.tar.bz2",
-  },
-  "multilingual-2025-02-10": {
-    size: 336, // MB (actual size including WASM + data files)
-    name: "Multilingual (8 Languages)",
-    description:
-      "Arabic, English, Indonesian, Japanese, Russian, Thai, Vietnamese, Chinese streaming model",
-    languages: ["ar", "en", "id", "ja", "ru", "th", "vi", "zh"],
-    type: "zipformer",
-    folder: "sherpa-onnx-multilingual",
-    url: "https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherpa-onnx-streaming-zipformer-ar_en_id_ja_ru_th_vi_zh-2025-02-10.tar.bz2",
-  },
-  "english-2023-06-21-mobile": {
-    size: 336, // MB (actual size including WASM + data files)
-    name: "English Only",
-    description:
-      "English-only streaming model, optimized for mobile and English transcription",
-    languages: ["en"],
-    type: "zipformer",
-    folder: "sherpa-onnx-english",
-    url: "https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherpa-onnx-streaming-zipformer-en-2023-06-21-mobile.tar.bz2",
-  },
-  "french-2023-04-14-mobile": {
-    size: 336, // MB (actual size including WASM + data files)
-    name: "French Only",
-    description:
-      "French-only streaming model, optimized for mobile and French transcription",
-    languages: ["fr"],
-    type: "zipformer",
-    folder: "sherpa-onnx-french",
-    url: "https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherpa-onnx-streaming-zipformer-fr-2023-04-14-mobile.tar.bz2",
+    url: "https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherpa-onnx-streaming-zipformer-bilingual-zh-en-2023-02-20.tar.bz2",
   },
 } as const
 
@@ -54,15 +23,13 @@ export function getModelShortName(modelId: string): string {
   switch (modelId) {
     case "sherpa-bilingual":
       return "bilingual" // Maps to sherpa-onnx-bilingual/
-    case "sherpa-multilingual":
-      return "multilingual" // Maps to sherpa-onnx-multilingual/
-    case "sherpa-english":
-      return "english" // Maps to sherpa-onnx-english/
-    case "sherpa-french":
-      return "french" // Maps to sherpa-onnx-french/
     default:
       return modelId.replace("sherpa-", "")
   }
+}
+
+export function getSherpaModelFolder(modelId: string): string {
+  return `sherpa-onnx-${getModelShortName(modelId)}`
 }
 
 export interface SherpaModelLoadCallbacks {

@@ -1,16 +1,15 @@
 /**
  * Unified Transcription Interface
  *
- * This interface provides a consistent API for transcription across different engines
- * (Whisper.cpp and Sherpa-ONNX). It abstracts the differences between engines and
- * provides a common interface for:
+ * This interface keeps transcription consumers independent from the active engine
+ * and provides a common interface for:
  * - Model loading and initialization
  * - Audio recording and processing
  * - Real-time transcription results
  * - Memory management and cleanup
  */
 
-import { TranscriptionEngine } from "./constants"
+import type { TranscriptionEngine } from "./constants"
 import type {
   ModelLoadCallbacks,
   UnifiedModelConfig,
@@ -119,10 +118,7 @@ export type EngineFactory = () => Promise<ITranscriptionEngine>
 /**
  * Engine registry for dynamic loading
  */
-export interface EngineRegistry {
-  [TranscriptionEngine.WHISPER]: EngineFactory
-  [TranscriptionEngine.SHERPA]: EngineFactory
-}
+export type EngineRegistry = Partial<Record<TranscriptionEngine, EngineFactory>>
 
 /**
  * Base class for transcription engines

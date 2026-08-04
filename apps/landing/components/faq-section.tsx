@@ -13,7 +13,7 @@ const faqs = [
   {
     question: "What AI models can I use?",
     answer:
-      "Tovo supports open source models that are optimized for on-device use. We offer relatively small models (1B-3B parameters) that can be downloaded directly to your device, including Llama 3.2 1B for mobile devices and Llama 3.2 3B for desktop. All models run entirely offline for complete privacy.",
+      "Tovo Voice supports compact open models optimized for on-device use, including Gemma 3 1B, Llama 3.2 1B, Qwen3.5 0.8B, Qwen3 1.7B, and Qwen3 4B. Once downloaded, they run locally for complete privacy.",
   },
   {
     question: "Can I use the app on desktop and mobile?",
@@ -38,7 +38,7 @@ const faqs = [
   {
     question: "AI Sidekick response is not good?",
     answer:
-      "Try larger models which are generally more capable. We recommend mobile devices use 'Llama3.2 1B' and desktop devices use 'Llama3.2 3B'. If your device cannot handle these models, stay tuned for more optimized models.",
+      "Try a larger model, which is generally more capable. Start with Gemma 3 1B or Llama 3.2 1B on mobile, and try Qwen3 1.7B or Qwen3 4B on a more capable desktop device.",
   },
   {
     question: "App crashed on Android or desktop?",
@@ -72,7 +72,7 @@ export default function FAQSection() {
             <span className="text-gradient-zima">questions</span>
           </h2>
           <p className="text-lg text-neutral-500">
-            Get answers to common questions about Tovo
+            Get answers to common questions about Tovo Voice
           </p>
         </motion.div>
 

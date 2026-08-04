@@ -60,7 +60,7 @@ export default function FeaturesSection() {
             Features
           </span>
           <h2 className="mb-5 text-4xl font-bold tracking-tight md:text-5xl">
-            Why choose <span className="text-gradient-zima">Tovo</span>?
+            Why choose <span className="text-gradient-zima">Tovo Voice</span>?
           </h2>
           <p className="mx-auto max-w-2xl text-lg text-neutral-500">
             Complete privacy and local AI capabilities — no cloud, no
