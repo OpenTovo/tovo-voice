@@ -45,6 +45,21 @@ export const WEBLLM_MODELS = {
       (m) => m.model_id === "Qwen3-1.7B-q4f16_1-MLC"
     ),
   },
+  "Qwen3.5-2B-q4f16_1-MLC": {
+    name: "Qwen3.5 2B",
+    description:
+      "Newer Qwen3.5 with hybrid RNN architecture for efficient long context.",
+    config: prebuiltAppConfig.model_list.find(
+      (m) => m.model_id === "Qwen3.5-2B-q4f16_1-MLC"
+    ),
+  },
+  "SmolLM2-1.7B-Instruct-q4f16_1-MLC": {
+    name: "SmolLM2 1.7B",
+    description: "Larger SmolLM2 instruct model with better instruction following.",
+    config: prebuiltAppConfig.model_list.find(
+      (m) => m.model_id === "SmolLM2-1.7B-Instruct-q4f16_1-MLC"
+    ),
+  },
   "Qwen3-4B-q4f16_1-MLC": {
     name: "Qwen3 4B",
     description: "Alibaba's Qwen3 general-purpose model.",
