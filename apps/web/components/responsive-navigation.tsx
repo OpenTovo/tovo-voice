@@ -209,18 +209,25 @@ export function ResponsiveNavigation({ mobileOnly = false }: NavigationProps) {
     >
       <div className="flex items-center justify-between p-4">
         <div className="flex min-w-0 items-center gap-2.5 overflow-hidden">
-          <Image
-            src="/tovo-icon.png"
-            alt="Tovo Voice logo"
-            width={28}
-            height={28}
-            className="shrink-0 rounded-md"
-          />
-          {sideMenuExpanded && (
-            <h2 className="text-lg font-semibold tracking-tight whitespace-nowrap">
-              Tovo Voice
-            </h2>
-          )}
+          <a
+            href="https://voice.tovo.dev"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex items-center gap-2.5"
+          >
+            <Image
+              src="/tovo-icon.png"
+              alt="Tovo Voice logo"
+              width={28}
+              height={28}
+              className="shrink-0 rounded-md"
+            />
+            {sideMenuExpanded && (
+              <h2 className="text-lg font-semibold tracking-tight whitespace-nowrap">
+                Tovo Voice
+              </h2>
+            )}
+          </a>
         </div>
         <div className="flex shrink-0 items-center gap-2">
           {sideMenuExpanded && <PWARefreshButton />}
