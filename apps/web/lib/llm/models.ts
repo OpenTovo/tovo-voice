@@ -72,3 +72,12 @@ export const WEBLLM_MODELS = {
 } as const
 
 export type WebLLMModelName = keyof typeof WEBLLM_MODELS
+
+/**
+ * Whether a model supports thinking mode (Qwen3 family only in WebLLM 0.2.x)
+ */
+export function isThinkingCapableModel(
+  modelName: WebLLMModelName | null | undefined
+): boolean {
+  return !!modelName && modelName.startsWith("Qwen3")
+}

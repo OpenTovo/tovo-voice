@@ -9,6 +9,7 @@ import {
   CardTitle,
 } from "@workspace/ui/components/card"
 import { Textarea } from "@workspace/ui/components/textarea"
+import { Switch } from "@workspace/ui/components/switch"
 import { useAtom } from "jotai"
 import {
   ArrowDown,
@@ -39,7 +40,7 @@ import {
   type AnalysisProgress,
   llmAnalysisEngine,
 } from "@/lib/llm/analysis-engine"
-import { WEBLLM_MODELS, type WebLLMModelName } from "@/lib/llm/models"
+import { WEBLLM_MODELS, isThinkingCapableModel, type WebLLMModelName } from "@/lib/llm/models"
 import { SessionTypeSelector } from "./session-type-selector"
 
 // Maximum number of AI responses to display in the UI
@@ -71,6 +72,7 @@ export function AIResponseSection({
   const [currentStreamingResponse, setCurrentStreamingResponse] =
     useState<string>("")
   const [sessionContext, setSessionContext] = useAtom(sessionContextAtom)
+  const [enableThinking, setEnableThinking] = useAtom(enableThinkingAtom)
   const scrollAreaRef = useRef<HTMLDivElement>(null)
   const [isUserScrolling, setIsUserScrolling] = useState(false)
   const lastScrollTop = useRef(0)
@@ -234,6 +236,7 @@ export function AIResponseSection({
         modelName: defaultAnalysisModel as WebLLMModelName,
         previousResponses: analysisResponses,
         userProvidedContext: sessionContext.trim() || undefined, // Include user context if provided
+        enableThinking,
         onStreamChunk: (content: string) => {
           // Check if analysis should be aborted
           if (abortController.signal.aborted) {
@@ -290,6 +293,7 @@ export function AIResponseSection({
     isAnalyzing,
     analysisResponses,
     sessionContext,
+    enableThinking,
     setAnalysisResponses,
     setIsAnalyzing,
     sessionId,
@@ -488,7 +492,19 @@ export function AIResponseSection({
               )}
             </div>
           </div>
-          <div className="items-center justify-start">
+          <div className="flex items-center gap-3">
+            {defaultAnalysisModel && isThinkingCapableModel(defaultAnalysisModel) && (
+              <label className="flex cursor-pointer items-center gap-2">
+                <span className="text-muted-foreground text-xs font-medium">
+                  Thinking
+                </span>
+                <Switch
+                  checked={enableThinking}
+                  onCheckedChange={setEnableThinking}
+                  aria-label="Enable model thinking"
+                />
+              </label>
+            )}
             <SessionTypeSelector />
           </div>
         </CardTitle>

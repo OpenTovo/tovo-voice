@@ -38,7 +38,7 @@
  * - Streamlined for natural LLM conversation patterns
  */
 
-import type { WebLLMModelName } from "./models"
+import { isThinkingCapableModel, type WebLLMModelName } from "./models"
 import {
   type MessageTransformName,
   SESSION_ANALYSIS_CONFIG,
@@ -592,9 +592,10 @@ export class LLMAnalysisEngine {
       repetition_penalty: 1.1,
       max_tokens: sessionConfig.maxTokens,
       stream: true,
-      extra_body: {
-        enable_thinking: request.enableThinking ?? true,
-      },
+      // Qwen3 models think by default; only pass the flag to thinking-capable models
+      ...(isThinkingCapableModel(request.modelName)
+        ? { extra_body: { enable_thinking: request.enableThinking ?? true } }
+        : {}),
     })
 
     return this.handleStreamingResponse(response, request.onStreamChunk)
