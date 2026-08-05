@@ -20,13 +20,42 @@ const fontMono = Geist_Mono({
   variable: "--font-mono",
 })
 
+const appUrl = "https://pwa.tovo.dev"
+const appTitle = "Tovo Voice | Private Voice AI"
+const appDescription = "Private, on-device transcription and AI analysis."
+
 export const metadata: Metadata = {
-  title: "Tovo Voice",
-  description:
-    "Private, on-device transcription and local AI analysis in your browser",
+  title: appTitle,
+  description: appDescription,
+  metadataBase: new URL(appUrl),
+  alternates: {
+    canonical: "/",
+  },
   manifest: process.env.NEXT_PUBLIC_APP_URL
     ? new URL("/manifest.json", process.env.NEXT_PUBLIC_APP_URL)
     : "/manifest.json", // Relative URL - adapts to current protocol
+  openGraph: {
+    title: appTitle,
+    description: appDescription,
+    url: appUrl,
+    siteName: "Tovo Voice",
+    locale: "en_US",
+    type: "website",
+    images: [
+      {
+        url: "/opengraph-image",
+        width: 1200,
+        height: 630,
+        alt: "Tovo Voice",
+      },
+    ],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: appTitle,
+    description: appDescription,
+    images: ["/twitter-image"],
+  },
   appleWebApp: {
     capable: true,
     statusBarStyle: "default",

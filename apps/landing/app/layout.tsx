@@ -6,14 +6,14 @@ import { StructuredData } from "../components/structured-data"
 
 const outfit = Outfit({ subsets: ["latin"], variable: "--font-outfit" })
 const landingUrl = "https://voice.tovo.dev"
+const landingTitle = "Tovo Voice | Private Voice AI"
 
-const descLong =
-  "Tovo Voice transcribes speech in real time and turns it into useful AI insights, all locally in your browser."
+const landingDescription =
+  "Real-time transcription and local AI analysis, all in your browser."
 
 export const metadata: Metadata = {
-  title: "Tovo Voice — Private, On-Device Voice AI",
-  description:
-    "Private, on-device transcription and local AI analysis in your browser.",
+  title: landingTitle,
+  description: landingDescription,
   keywords: [
     "AI assistant",
     "voice AI",
@@ -41,17 +41,26 @@ export const metadata: Metadata = {
     canonical: "/",
   },
   openGraph: {
-    title: "Tovo Voice — Private, On-Device Voice AI",
-    description: descLong,
+    title: landingTitle,
+    description: landingDescription,
     type: "website",
     url: landingUrl,
     siteName: "Tovo Voice",
     locale: "en_US",
+    images: [
+      {
+        url: "/opengraph-image",
+        width: 1200,
+        height: 630,
+        alt: "Tovo Voice",
+      },
+    ],
   },
   twitter: {
     card: "summary_large_image",
-    title: "Tovo Voice — Private, On-Device Voice AI",
-    description: descLong,
+    title: landingTitle,
+    description: landingDescription,
+    images: ["/twitter-image"],
     creator: "@buildin_fun",
   },
   robots: {
