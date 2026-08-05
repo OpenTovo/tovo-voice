@@ -6,6 +6,7 @@ import { Skeleton } from "@workspace/ui/components/skeleton"
 import { useAtom, useSetAtom } from "jotai"
 import { CheckCircle, Download, Trash2, Zap } from "lucide-react"
 import { useCallback, useEffect, useState } from "react"
+import { toast } from "@workspace/ui/components/sonner"
 import { useUnifiedTranscription } from "@/hooks/use-unified-transcription"
 import { defaultTranscriptionModelAtom } from "@/lib/atoms"
 import { showConfirmDialogAtom } from "@/lib/atoms/dialog"
@@ -177,7 +178,7 @@ This will be stored on your device for offline use.`
       }
     } catch (error) {
       console.error(`Failed to download ${model.id}:`, error)
-      // Show error state - could add toast notification here
+      toast.error(`Failed to download "${model.name}". Please try again.`)
     } finally {
       setDownloadingModels((prev) => {
         const newSet = new Set(prev)
@@ -236,7 +237,7 @@ This will permanently remove the model from your device. You can download it aga
       }
     } catch (error) {
       console.error(`Failed to delete ${model.id}:`, error)
-      // Show error state - could add toast notification here
+      toast.error(`Failed to delete "${model.name}". Please try again.`)
     } finally {
       setDeletingModels((prev) => {
         const newSet = new Set(prev)
@@ -259,11 +260,11 @@ This will permanently remove the model from your device. You can download it aga
         <div className="min-w-0 flex-1">
           <div className="mb-1 flex items-center gap-2">
             <div className="flex items-center gap-1">
-              <Zap className="h-3 w-3 text-blue-500" />
+              <Zap className="h-3 w-3 text-brand" />
               <span className="text-sm font-medium">{displayName}</span>
             </div>
             {isDownloaded && !isDeleting && (
-              <CheckCircle className="h-4 w-4 text-green-600" />
+              <CheckCircle className="h-4 w-4 text-status-success" />
             )}
           </div>
           <div className="text-muted-foreground text-xs">

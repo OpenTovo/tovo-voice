@@ -300,13 +300,13 @@ export class StorageQuotaManager {
     const storageCheck = this.canStorageAccommodateModel(modelSizeBytes)
 
     if (!storageCheck.canStore) {
-      return `⚠️ Storage Limit: ${storageCheck.reason}
+      return `Storage Limit: ${storageCheck.reason}
 
 Your browser (${storageCheck.limit.description}) may not have enough storage space for this model. Consider choosing a smaller model or freeing up browser storage.`
     }
 
     if (storageCheck.reason) {
-      return `📱 Permission Required: ${storageCheck.reason}
+      return `Permission Required: ${storageCheck.reason}
 
 Your browser may ask for permission to store this large model.`
     }

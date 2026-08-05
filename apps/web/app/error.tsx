@@ -38,7 +38,7 @@ export default function ErrorPage({ error, reset }: ErrorPageProps) {
   }
 
   const handleContactSupport = async () => {
-    const supportEmail = "support@tovo.app"
+    const supportEmail = "support@tovo.dev"
     const errorDetails = `
 Error: ${error.message}
 Digest: ${error.digest || "N/A"}
@@ -56,8 +56,8 @@ Timestamp: ${new Date().toISOString()}
     <div className="bg-background flex min-h-screen items-center justify-center p-4">
       <Card className="w-full max-w-lg">
         <CardHeader className="text-center">
-          <div className="mx-auto mb-4 w-fit rounded-full bg-red-100 p-3 dark:bg-red-900/20">
-            <AlertTriangle className="h-8 w-8 text-red-600 dark:text-red-400" />
+          <div className="mx-auto mb-4 w-fit rounded-full bg-destructive/10 p-3">
+            <AlertTriangle className="h-8 w-8 text-destructive" />
           </div>
           <CardTitle className="text-2xl font-semibold">
             Something went wrong
@@ -86,7 +86,7 @@ Timestamp: ${new Date().toISOString()}
           {/* Action buttons */}
           <div className="space-y-3">
             <Button onClick={reset} className="w-full" variant="default">
-              <RefreshCw className="mr-2 h-4 w-4" />
+              <RefreshCw className="h-4 w-4" />
               Try Again
             </Button>
 
@@ -95,13 +95,13 @@ Timestamp: ${new Date().toISOString()}
               variant="outline"
               className="w-full"
             >
-              <Copy className="mr-2 h-4 w-4" />
+              <Copy className="h-4 w-4" />
               {copied ? "Copied!" : "Contact Support"}
             </Button>
 
             <Button asChild variant="ghost" className="w-full">
               <Link href="/">
-                <Home className="mr-2 h-4 w-4" />
+                <Home className="h-4 w-4" />
                 Go Home
               </Link>
             </Button>
@@ -109,7 +109,7 @@ Timestamp: ${new Date().toISOString()}
 
           <div className="text-muted-foreground text-center text-xs">
             <p>If the problem persists, please contact our support team.</p>
-            <p className="mt-1">support@tovo.app</p>
+            <p className="mt-1">support@tovo.dev</p>
           </div>
         </CardContent>
       </Card>

@@ -7,7 +7,7 @@ import ScreenshotsSection from "@/components/screenshots-section"
 
 export default function HomePage() {
   return (
-    <div className="min-h-screen bg-[#07070b]">
+    <div className="bg-canvas min-h-screen">
       <HeroSection />
       <FeaturesSection />
       <ScreenshotsSection />

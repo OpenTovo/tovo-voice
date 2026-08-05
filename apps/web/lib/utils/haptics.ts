@@ -88,32 +88,8 @@ export function triggerHaptic(type: HapticType = HapticType.LIGHT): void {
       }
     }
 
-    // Fallback: Audio feedback (very subtle click sound)
-    // This provides some feedback even on unsupported devices
-    if ("AudioContext" in window || "webkitAudioContext" in window) {
-      try {
-        const AudioCtx =
-          window.AudioContext || (window as any).webkitAudioContext
-        const audioContext = new AudioCtx()
-        const oscillator = audioContext.createOscillator()
-        const gainNode = audioContext.createGain()
-
-        oscillator.connect(gainNode)
-        gainNode.connect(audioContext.destination)
-
-        oscillator.frequency.setValueAtTime(800, audioContext.currentTime)
-        gainNode.gain.setValueAtTime(0.1, audioContext.currentTime)
-        gainNode.gain.exponentialRampToValueAtTime(
-          0.01,
-          audioContext.currentTime + 0.1
-        )
-
-        oscillator.start(audioContext.currentTime)
-        oscillator.stop(audioContext.currentTime + 0.1)
-      } catch {
-        // Ignore audio feedback errors
-      }
-    }
+    // No fallback feedback: an audible beep on unsupported (mostly desktop)
+    // devices is surprising and not accessible.
   } catch (error) {
     // Silently fail if haptics are not supported
     console.debug("Haptic feedback not available:", error)

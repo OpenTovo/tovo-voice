@@ -58,7 +58,20 @@ if (typeof window === "undefined") {
             headers: newHeaders,
           })
         })
-        .catch((e) => console.error(e))
+        .catch((e) => {
+          // Dev-only noise: when the dev server restarts / HMR triggers,
+          // the fetch races the page load and fails with benign errors like
+          // "Failed to convert value to 'Response'". Don't spam the console.
+          if (
+            e instanceof TypeError &&
+            /Failed to convert value to 'Response'|Failed to fetch/.test(
+              String(e)
+            )
+          ) {
+            return
+          }
+          console.error(e)
+        })
     )
   })
 } else {

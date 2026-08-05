@@ -87,14 +87,14 @@ export function VersionManagement() {
               className="flex-1"
             >
               <RefreshCw
-                className={`mr-2 h-4 w-4 ${isChecking ? "animate-spin" : ""}`}
+                className={`h-4 w-4 ${isChecking ? "animate-spin" : ""}`}
               />
               {isChecking ? "Checking..." : "Check Now"}
             </Button>
 
             {hasUpdate && (
               <Button onClick={handleAcceptUpdate} className="flex-1">
-                <RefreshCw className="mr-2 h-4 w-4" />
+                <RefreshCw className="h-4 w-4" />
                 Update
               </Button>
             )}

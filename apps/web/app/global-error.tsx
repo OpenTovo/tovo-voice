@@ -27,8 +27,8 @@ export default function GlobalError({ error, reset }: GlobalErrorProps) {
         <div className="bg-background flex min-h-screen items-center justify-center p-4">
           <Card className="w-full max-w-lg">
             <CardHeader className="text-center">
-              <div className="mx-auto mb-4 w-fit rounded-full bg-red-100 p-3 dark:bg-red-900/20">
-                <AlertTriangle className="h-8 w-8 text-red-600 dark:text-red-400" />
+              <div className="mx-auto mb-4 w-fit rounded-full bg-destructive/10 p-3">
+                <AlertTriangle className="h-8 w-8 text-destructive" />
               </div>
               <CardTitle className="text-2xl font-semibold">
                 Application Error
@@ -51,12 +51,12 @@ export default function GlobalError({ error, reset }: GlobalErrorProps) {
               </div>
 
               <Button onClick={reset} className="w-full" variant="default">
-                <RefreshCw className="mr-2 h-4 w-4" />
+                <RefreshCw className="h-4 w-4" />
                 Restart Application
               </Button>
 
               <div className="text-muted-foreground text-center text-xs">
-                <p>If the problem persists, please contact support@tovo.app</p>
+                <p>If the problem persists, please contact support@tovo.dev</p>
               </div>
             </CardContent>
           </Card>

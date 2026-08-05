@@ -153,9 +153,9 @@ export default function NewSessionPageClient() {
   }
 
   return (
-    <div className="flex h-full flex-col px-3 py-4 pb-6 sm:px-6 md:px-8 lg:px-12 xl:px-16">
+    <div className="flex h-full flex-col overflow-hidden px-4 py-4 pb-6 sm:px-6 md:px-8">
       {error && (
-        <Alert className="mb-4 flex-shrink-0">
+        <Alert variant="destructive" className="mb-4 flex-shrink-0">
           <AlertDescription>{error}</AlertDescription>
         </Alert>
       )}
@@ -169,7 +169,7 @@ export default function NewSessionPageClient() {
 
       <AIResponseSection sessionId={sessionId} />
 
-      <div className="h-[85px] flex-shrink-0">
+      <div className="flex-shrink-0">
         <SessionControls
           sessionStatus={sessionStatus}
           isModelLoaded={isModelLoaded}

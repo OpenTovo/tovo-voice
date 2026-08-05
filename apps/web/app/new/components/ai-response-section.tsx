@@ -10,16 +10,19 @@ import {
 } from "@workspace/ui/components/card"
 import { Textarea } from "@workspace/ui/components/textarea"
 import { useAtom } from "jotai"
-import { Bot, Brain, Loader2, RotateCcw, Settings } from "lucide-react"
+import {
+  ArrowDown,
+  Bot,
+  Brain,
+  Loader2,
+  RotateCcw,
+  Settings,
+} from "lucide-react"
 import { useRouter } from "next/navigation"
 import { useCallback, useEffect, useRef, useState } from "react"
 import { AIResponseMarkdown } from "@/components/ai/ai-response-markdown"
 import { WebGPUSetupDialog } from "@/components/dialogs/webgpu-setup"
-import {
-  defaultAnalysisModelAtom,
-  sessionContextAtom,
-  transcriptionVisibleAtom,
-} from "@/lib/atoms"
+import { defaultAnalysisModelAtom, sessionContextAtom } from "@/lib/atoms"
 import {
   analysisLoadingAtom,
   analysisResponsesAtom,
@@ -99,7 +102,6 @@ export function AIResponseSection({
 
   const router = useRouter()
 
-  const [isTranscriptionVisible] = useAtom(transcriptionVisibleAtom)
 
   // Handle scroll events to detect user scrolling - Very sensitive to respect user intent
   const handleScroll = useCallback(() => {
@@ -446,7 +448,7 @@ export function AIResponseSection({
   }, [sessionStatus, transcription.length, setIsAnalyzing])
 
   return (
-    <Card className="mb-4 flex h-full w-full flex-col gap-4 py-4">
+    <Card className="mb-4 flex min-h-0 w-full flex-1 flex-col gap-4 py-4 shadow-card">
       <CardHeader className="flex-shrink-0 px-4 sm:px-6 md:px-8">
         <CardTitle className="flex justify-between gap-3">
           <div className="flex items-start justify-between">
@@ -458,19 +460,19 @@ export function AIResponseSection({
               {defaultAnalysisModel ? (
                 <Badge
                   variant="outline"
-                  className="-mx-1 flex items-center gap-2 text-xs"
+                  className="flex items-center gap-2 text-xs"
                 >
                   {getAnalysisModelDisplayName()}
                   {/* Engine status indicator */}
                   <div
                     className={`h-2 w-2 rounded-full ${
                       isEngineReady
-                        ? "bg-green-500"
+                        ? "bg-status-ready"
                         : engineProgress?.stage === "initializing"
-                          ? "animate-pulse bg-yellow-500"
+                          ? "animate-pulse bg-status-processing"
                           : engineProgress?.stage === "error"
-                            ? "bg-red-500"
-                            : "bg-gray-400"
+                            ? "bg-destructive"
+                            : "bg-status-idle"
                     }`}
                     title={
                       isEngineReady
@@ -480,7 +482,7 @@ export function AIResponseSection({
                   />
                 </Badge>
               ) : (
-                <Badge variant="secondary" className="-mx-1 text-xs">
+                <Badge variant="secondary" className="text-xs">
                   No model set
                 </Badge>
               )}
@@ -502,7 +504,7 @@ export function AIResponseSection({
                 onClick={() => setShowWebGPUDialog(true)}
                 className="ml-2"
               >
-                <Settings className="mr-2 h-4 w-4" />
+                <Settings className="h-4 w-4" />
                 Setup
               </Button>
             </p>
@@ -524,7 +526,7 @@ export function AIResponseSection({
                     }}
                     className="w-1/2 max-w-[200px]"
                   >
-                    <Settings className="mr-2 h-4 w-4" />
+                    <Settings className="h-4 w-4" />
                     Go to Settings
                   </Button>
                 </div>
@@ -547,29 +549,24 @@ export function AIResponseSection({
             ) : null}
           </div>
         ) : (
-          <div
-            className={`relative flex min-h-0 flex-col ${
-              isTranscriptionVisible
-                ? "h-[calc(45svh-35px)]"
-                : "h-[calc(80svh-250px)] md:h-[calc(80svh-210px)]"
-            }`}
-          >
+          <div className="relative flex h-full min-h-0 flex-col">
             {/* Static Clear Button - positioned absolutely at top right */}
             {analysisResponses.length > 0 && (
               <div className="absolute bottom-0 right-0 z-10 flex gap-2">
                 {/* Scroll to bottom indicator when user has scrolled up */}
                 {isUserScrolling && (
-                  <Button
-                    size="sm"
-                    variant="ghost"
-                    onClick={() => {
-                      setIsUserScrolling(false)
-                      forceScrollToBottom()
-                    }}
-                    className="text-muted-foreground hover:text-foreground bg-background/50 border-border/50 hover:bg-background/70 h-6 border px-2 text-xs shadow-sm backdrop-blur-sm transition-colors"
-                  >
-                    ↓ Latest
-                  </Button>
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      onClick={() => {
+                        setIsUserScrolling(false)
+                        forceScrollToBottom()
+                      }}
+                      className="text-muted-foreground hover:text-foreground bg-background/50 border-border/50 hover:bg-background/70 h-6 border px-2 text-xs shadow-sm backdrop-blur-sm transition-colors"
+                    >
+                      <ArrowDown className="h-3 w-3" />
+                      Latest
+                    </Button>
                 )}
                 <Button
                   size="sm"
@@ -577,7 +574,7 @@ export function AIResponseSection({
                   onClick={clearResponses}
                   className="text-muted-foreground hover:text-foreground bg-background/50 border-border/50 hover:bg-background/70 h-6 border px-2 text-xs shadow-sm backdrop-blur-sm transition-colors"
                 >
-                  <RotateCcw className="mr-1 h-3 w-3" />
+                  <RotateCcw className="h-3 w-3" />
                   Clear
                 </Button>
               </div>

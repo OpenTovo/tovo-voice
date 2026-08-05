@@ -11,7 +11,21 @@ import {
 import { Input } from "@workspace/ui/components/input"
 import { Skeleton } from "@workspace/ui/components/skeleton"
 import { Switch } from "@workspace/ui/components/switch"
-import { ArrowLeft, Bot, Clock, MessageSquare, Mic } from "lucide-react"
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@workspace/ui/components/tooltip"
+import {
+  ArrowLeft,
+  Bot,
+  Check,
+  Clock,
+  Copy,
+  MessageSquare,
+  Mic,
+} from "lucide-react"
 import { useParams, useRouter } from "next/navigation"
 import { useCallback, useEffect, useRef, useState } from "react"
 import { AIResponseMarkdown } from "@/components/ai/ai-response-markdown"
@@ -58,6 +72,9 @@ export default function SessionDetailsPageClient() {
   const [syncScroll, setSyncScroll] = useState(false)
   const [isEditingTitle, setIsEditingTitle] = useState(false)
   const [editTitle, setEditTitle] = useState("")
+  const [copiedSection, setCopiedSection] = useState<
+    "transcription" | "ai" | null
+  >(null)
 
   const transcriptionRef = useRef<HTMLDivElement>(null)
   const aiResponseRef = useRef<HTMLDivElement>(null)
@@ -170,6 +187,21 @@ export default function SessionDetailsPageClient() {
     }
   }
 
+  const handleCopy = async (
+    section: "transcription" | "ai",
+    items: HistoryItem[]
+  ) => {
+    if (items.length === 0) return
+    const text = items.map((item) => item.content).join("\n\n")
+    try {
+      await navigator.clipboard.writeText(text)
+      setCopiedSection(section)
+      setTimeout(() => setCopiedSection(null), 2000)
+    } catch (error) {
+      console.error("Failed to copy:", error)
+    }
+  }
+
   if (loading) {
     return (
       <div className="mx-auto flex h-full max-w-6xl flex-col">
@@ -223,37 +255,73 @@ export default function SessionDetailsPageClient() {
                 onChange={(e) => setEditTitle(e.target.value)}
                 onBlur={saveTitle}
                 onKeyDown={handleTitleKeyDown}
-                className="text-xl font-bold"
+                className="h-auto border-0 px-0 py-0 text-xl font-bold shadow-none focus-visible:ring-0 focus-visible:border-0 md:text-xl"
                 autoFocus
               />
             ) : (
               <h1
-                className="cursor-pointer truncate text-xl font-bold transition-colors hover:text-blue-600"
-                onClick={() => setIsEditingTitle(true)}
+                className="cursor-pointer truncate text-xl font-bold transition-colors hover:text-brand"
+                onClick={() => {
+                  setEditTitle(
+                    session.title ||
+                      `Session from ${new Date(session.startTime).toLocaleDateString()}`
+                  )
+                  setIsEditingTitle(true)
+                }}
                 title="Click to edit title"
               >
                 {session.title ||
                   `Session from ${new Date(session.startTime).toLocaleDateString()}`}
               </h1>
             )}
-            <div className="text-muted-foreground flex flex-wrap items-center gap-2 text-sm sm:gap-4">
-              <div className="flex items-center gap-1">
-                <Clock className="h-3 w-3" />
-                {formatDuration(session.startTime, session.endTime)}
+            <TooltipProvider delayDuration={300}>
+              <div className="text-muted-foreground flex flex-wrap items-center gap-2 text-sm sm:gap-4">
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <div className="flex items-center gap-1">
+                      <Clock className="h-3 w-3" />
+                      {formatDuration(session.startTime, session.endTime)}
+                    </div>
+                  </TooltipTrigger>
+                  <TooltipContent side="bottom">
+                    Session duration
+                  </TooltipContent>
+                </Tooltip>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <div className="flex items-center gap-1">
+                      <MessageSquare className="h-3 w-3" />
+                      {session.totalItems}
+                    </div>
+                  </TooltipTrigger>
+                  <TooltipContent side="bottom">
+                    Total items (transcriptions + AI responses)
+                  </TooltipContent>
+                </Tooltip>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <div className="flex items-center gap-1">
+                      <Mic className="h-3 w-3" />
+                      {transcriptionItems.length}
+                    </div>
+                  </TooltipTrigger>
+                  <TooltipContent side="bottom">
+                    Transcription segments
+                  </TooltipContent>
+                </Tooltip>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <div className="flex items-center gap-1">
+                      <Bot className="h-3 w-3" />
+                      {aiResponseItems.length}
+                    </div>
+                  </TooltipTrigger>
+                  <TooltipContent side="bottom">
+                    AI response entries
+                  </TooltipContent>
+                </Tooltip>
               </div>
-              <div className="flex items-center gap-1">
-                <MessageSquare className="h-3 w-3" />
-                {session.totalItems}
-              </div>
-              <div className="flex items-center gap-1">
-                <Mic className="h-3 w-3" />
-                {transcriptionItems.length}
-              </div>
-              <div className="flex items-center gap-1">
-                <Bot className="h-3 w-3" />
-                {aiResponseItems.length}
-              </div>
-            </div>
+            </TooltipProvider>
           </div>
 
           <div className="flex flex-col items-center gap-1">
@@ -263,17 +331,34 @@ export default function SessionDetailsPageClient() {
         </div>
       </div>
 
-      <div className="flex-1 overflow-hidden p-4">
+      <div className="flex-1 overflow-hidden p-4 pb-4">
         <div className="mx-auto flex h-full max-w-6xl flex-col gap-4">
-          <div className="flex h-2/5 flex-col">
+          <div className="flex min-h-0 flex-[2] flex-col">
             <Card className="flex h-full flex-col overflow-hidden">
               <CardHeader className="flex-shrink-0 pb-3">
-                <CardTitle className="flex items-center gap-2 text-base">
-                  <Mic className="h-4 w-4" />
-                  Transcriptions
-                  <Badge variant="secondary" className="text-xs">
-                    {transcriptionItems.length}
-                  </Badge>
+                <CardTitle className="flex items-center justify-between gap-2 text-base">
+                  <div className="flex items-center gap-2">
+                    <Mic className="h-4 w-4" />
+                    Transcriptions
+                    <Badge variant="secondary" className="text-xs">
+                      {transcriptionItems.length}
+                    </Badge>
+                  </div>
+                  {transcriptionItems.length > 0 && (
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="h-7 gap-1.5 px-2"
+                      onClick={() => handleCopy("transcription", transcriptionItems)}
+                    >
+                      {copiedSection === "transcription" ? (
+                        <Check className="h-3.5 w-3.5" />
+                      ) : (
+                        <Copy className="h-3.5 w-3.5" />
+                      )}
+                      {copiedSection === "transcription" ? "Copied" : "Copy"}
+                    </Button>
+                  )}
                 </CardTitle>
               </CardHeader>
               <CardContent className="flex-1 overflow-hidden p-0">
@@ -318,15 +403,32 @@ export default function SessionDetailsPageClient() {
             </Card>
           </div>
 
-          <div className="flex h-3/5 flex-col">
+          <div className="flex min-h-0 flex-[3] flex-col">
             <Card className="flex h-full flex-col overflow-hidden">
               <CardHeader className="flex-shrink-0 pb-3">
-                <CardTitle className="flex items-center gap-2 text-base">
-                  <Bot className="h-4 w-4" />
-                  AI Responses
-                  <Badge variant="secondary" className="text-xs">
-                    {aiResponseItems.length}
-                  </Badge>
+                <CardTitle className="flex items-center justify-between gap-2 text-base">
+                  <div className="flex items-center gap-2">
+                    <Bot className="h-4 w-4" />
+                    AI Responses
+                    <Badge variant="secondary" className="text-xs">
+                      {aiResponseItems.length}
+                    </Badge>
+                  </div>
+                  {aiResponseItems.length > 0 && (
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="h-7 gap-1.5 px-2"
+                      onClick={() => handleCopy("ai", aiResponseItems)}
+                    >
+                      {copiedSection === "ai" ? (
+                        <Check className="h-3.5 w-3.5" />
+                      ) : (
+                        <Copy className="h-3.5 w-3.5" />
+                      )}
+                      {copiedSection === "ai" ? "Copied" : "Copy"}
+                    </Button>
+                  )}
                 </CardTitle>
               </CardHeader>
               <CardContent className="flex-1 overflow-hidden p-0">

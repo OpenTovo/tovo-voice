@@ -4,6 +4,11 @@ import { storageQuotaManager } from "@/lib/storage/storage-quota-manager"
 import { getSherpaModelAssetUrls, SHERPA_ASSET_FILES } from "./sherpa-assets"
 import { getCachedFile, hasCachedFile } from "./sherpa-cache"
 
+// Sherpa-ONNX is built with debug enabled; on every recognizer init its C++
+// layer prints model config to stderr (e.g. "OnlineRecognizerConfig(...)",
+// "---encoder---", "attention_dims=..."). These are noise, not errors.
+const SHERPA_STDERR_NOISE = /^(OnlineRecognizerConfig|---|\d+ \S+:|---.*|attention_dims=|encoder_dims=|num_encoder_layers=|cnn_module_kernels=|left_context_len=|onnx\.infer=|model_type=|version=|T[:=]|decode_chunk_len_|vocab_size=|joiner_dim=|context_size=|rule\d?=|lm_config=|provider_config=)/
+
 // Export function to get original fetch for downloads
 export function getOriginalFetch(): typeof fetch {
   if (typeof window !== "undefined" && (window as any).__sherpaOriginalFetch) {
@@ -166,6 +171,12 @@ export async function loadSherpaWasm(
           },
 
           printErr: (text: string) => {
+            // Sherpa is built with debug enabled, so its C++ layer logs model
+            // config info to stderr on every init. Those lines aren't errors
+            // and only clutter the console. Filter them out; surface the rest.
+            if (SHERPA_STDERR_NOISE.test(text)) {
+              return
+            }
             console.warn("⚠️ WASM Error:", text)
             // Don't fail on print errors, but log them
           },

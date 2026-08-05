@@ -20,11 +20,6 @@ export function StructuredData() {
       priceCurrency: "USD",
       availability: "https://schema.org/InStock",
     },
-    aggregateRating: {
-      "@type": "AggregateRating",
-      ratingValue: "4.8",
-      reviewCount: "52",
-    },
     features: [
       "Privacy-first AI processing",
       "Real-time voice transcription",

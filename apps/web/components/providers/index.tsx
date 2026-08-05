@@ -10,7 +10,7 @@ export function Providers({ children }: { children: React.ReactNode }) {
     <JotaiProvider>
       <NextThemesProvider
         attribute="class"
-        defaultTheme="dark"
+        defaultTheme="system"
         enableSystem
         disableTransitionOnChange
         enableColorScheme

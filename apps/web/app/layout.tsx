@@ -9,6 +9,7 @@ import { UpdateVersion } from "@/components/dialogs/update-version"
 import { GlobalComponents } from "@/components/global-components"
 import { Providers } from "@/components/providers/index"
 import { ResponsiveNavigation } from "@/components/responsive-navigation"
+import { TryBanner } from "@/components/try-banner"
 
 const fontSans = Geist({
   subsets: ["latin"],
@@ -69,8 +70,8 @@ export const viewport: Viewport = {
   initialScale: 1,
   viewportFit: "cover",
   themeColor: [
-    { media: "(prefers-color-scheme: light)", color: "#ffffff" },
-    { media: "(prefers-color-scheme: dark)", color: "#000000" },
+    { media: "(prefers-color-scheme: light)", color: "#fbfbf9" },
+    { media: "(prefers-color-scheme: dark)", color: "#101214" },
   ],
 }
 
@@ -93,16 +94,20 @@ export default function RootLayout({
         className={`${fontSans.variable} ${fontMono.variable} font-sans antialiased`}
       >
         <Providers>
-          <div className="bg-background flex h-svh">
-            {/* Desktop Sidebar Navigation */}
-            <ResponsiveNavigation />
+          <div className="bg-background flex h-svh flex-col">
+            <TryBanner />
 
-            <div className="flex min-h-0 flex-1 flex-col">
-              {/* Mobile Header */}
-              <AppHeader />
+            <div className="flex min-h-0 flex-1">
+              {/* Desktop Sidebar Navigation */}
+              <ResponsiveNavigation />
 
-              {/* Main content area */}
-              <main className="flex-1 overflow-hidden">{children}</main>
+              <div className="flex min-h-0 flex-1 flex-col">
+                {/* Mobile Header */}
+                <AppHeader />
+
+                {/* Main content area */}
+                <main className="flex-1 overflow-hidden">{children}</main>
+              </div>
             </div>
           </div>
 

@@ -57,11 +57,11 @@ export function UpdateVersion() {
             onClick={handleDismissUpdate}
             className="flex-1"
           >
-            <X className="mr-2 h-4 w-4" />
+            <X className="h-4 w-4" />
             Not Now
           </Button>
           <Button onClick={handleAcceptUpdate} className="flex-1">
-            <RefreshCw className="mr-2 h-4 w-4" />
+            <RefreshCw className="h-4 w-4" />
             Update
           </Button>
         </DialogFooter>

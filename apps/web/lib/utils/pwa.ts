@@ -11,9 +11,13 @@ export interface PWAInstallPrompt extends Event {
 }
 
 // Atom to track if user has dismissed the PWA prompt
+// getOnInit: read localStorage synchronously at creation, so the popup
+// effect never sees the stale default and re-shows after dismissal.
 export const pwaPromptDismissedAtom = atomWithStorage<boolean>(
   "tovo-pwa-prompt-dismissed",
-  false
+  false,
+  undefined,
+  { getOnInit: true }
 )
 
 export function isPWAInstalled(): boolean {

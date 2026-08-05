@@ -2,7 +2,6 @@ import { initOpenNextCloudflareForDev } from "@opennextjs/cloudflare"
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  transpilePackages: ["@workspace/ui"],
   images: {
     unoptimized: true,
   },

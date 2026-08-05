@@ -185,13 +185,13 @@ function StreamingTranscriptionDisplay({
               </span>
             )}
           </div>
-          <p className="text-base sm:text-sm">{result.text}</p>
+          <p className="text-base">{result.text}</p>
         </div>
       ))}
 
       {/* Streaming partial result */}
       {partialText && (
-        <div className="border-l-2 border-blue-400 py-2 pl-3 opacity-70">
+        <div className="border-brand border-l-2 py-2 pl-3 opacity-70">
           <div className="mb-1 flex items-center gap-2">
             <Badge variant="secondary" className="text-xs">
               Listening...
@@ -200,7 +200,7 @@ function StreamingTranscriptionDisplay({
               {new Date().toLocaleTimeString()}
             </span>
           </div>
-          <p className="text-base italic sm:text-sm">{partialText}</p>
+          <p className="text-base italic">{partialText}</p>
         </div>
       )}
     </div>

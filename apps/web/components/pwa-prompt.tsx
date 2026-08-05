@@ -78,7 +78,7 @@ export function PWAPrompt({ isLoggedIn }: PWAPromptProps) {
           <DialogTitle className="flex items-center gap-2">
             {isIOS ? (
               <>
-                <AlertTriangle className="h-5 w-5 text-red-500" />
+                <AlertTriangle className="h-5 w-5 text-destructive" />
                 iOS Not Supported
               </>
             ) : (
@@ -98,13 +98,13 @@ export function PWAPrompt({ isLoggedIn }: PWAPromptProps) {
         <div className="space-y-4">
           {isIOS ? (
             <>
-              <div className="rounded-lg border border-red-500/30 bg-red-50 p-4 dark:bg-red-950/20">
-                <p className="text-sm text-red-600 dark:text-red-200">
+              <div className="rounded-lg border border-destructive/30 bg-destructive/5 p-4">
+                <p className="text-sm text-destructive">
                   Unfortunately, Tovo Voice requires at least 650MB of memory to
                   run the transcription and AI models, but iOS Safari is limited
                   to 200-400MB depending on the device.
                 </p>
-                <p className="mt-2 text-sm font-medium text-red-600 dark:text-red-200">
+                <p className="mt-2 text-sm font-medium text-destructive">
                   Please use a desktop computer or Android device instead.
                 </p>
               </div>
@@ -127,7 +127,7 @@ export function PWAPrompt({ isLoggedIn }: PWAPromptProps) {
 
               <div className="flex gap-2">
                 <Button onClick={handleGoToSettings} className="flex-1">
-                  <Settings className="mr-2 h-4 w-4" />
+                  <Settings className="h-4 w-4" />
                   Learn How in Settings
                 </Button>
 

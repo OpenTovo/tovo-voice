@@ -15,9 +15,12 @@ import {
   TabsTrigger,
 } from "@workspace/ui/components/tabs"
 import {
+  AlertTriangle,
+  CheckCircle,
   ChevronRight,
   Download,
   Home,
+  Lightbulb,
   Monitor,
   MoreVertical,
   Share,
@@ -93,7 +96,7 @@ function DialogContentBody({
   if (isAlreadyInstalled) {
     return (
       <div className="space-y-4 text-center">
-        <div className="text-2xl text-green-600 dark:text-green-400">✅</div>
+        <CheckCircle className="text-status-success mx-auto h-8 w-8" />
         <div>
           <h3 className="text-lg font-semibold">Already Added!</h3>
           <p className="text-muted-foreground mt-2 text-sm">
@@ -130,29 +133,30 @@ function DialogContentBody({
 
         <TabsContent value="ios" className="space-y-4">
           <div className="space-y-4">
-            <div className="rounded-lg border border-red-500/30 bg-red-50 p-4 dark:bg-red-950/20">
-              <h4 className="mb-2 font-semibold text-red-700 dark:text-red-300">
-                ⚠️ iOS Not Currently Supported
+            <div className="rounded-lg border border-destructive/30 bg-destructive/5 p-4">
+              <h4 className="mb-2 flex items-center gap-2 font-semibold text-destructive">
+                <AlertTriangle className="h-4 w-4" />
+                iOS Not Currently Supported
               </h4>
-              <p className="text-sm text-red-600 dark:text-red-200">
+              <p className="text-sm text-destructive">
                 Unfortunately, Tovo Voice doesn't work on iOS devices due to
                 Safari's memory limitations. Our app requires at least 650MB of
                 memory to run the transcription and AI models, but iOS Safari is
                 limited to 200-400MB depending on the device.
               </p>
-              <p className="mt-2 text-sm font-medium text-red-600 dark:text-red-200">
+              <p className="mt-2 text-sm font-medium text-destructive">
                 Please use a desktop computer or Android device instead.
               </p>
             </div>
 
             <div className="opacity-60">
-              <h4 className="mb-3 text-sm font-semibold text-gray-600 dark:text-gray-400">
+              <h4 className="mb-3 text-sm font-semibold text-muted-foreground">
                 Installation steps (if iOS support becomes available in the
                 future):
               </h4>
-              <ol className="space-y-3 text-sm text-gray-500 dark:text-gray-400">
+              <ol className="space-y-3 text-sm text-muted-foreground">
                 <li className="flex gap-3">
-                  <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-gray-400 text-xs font-medium text-white">
+                  <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-muted-foreground text-xs font-medium text-background">
                     1
                   </span>
                   <span>
@@ -161,7 +165,7 @@ function DialogContentBody({
                   </span>
                 </li>
                 <li className="flex gap-3">
-                  <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-gray-400 text-xs font-medium text-white">
+                  <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-muted-foreground text-xs font-medium text-background">
                     2
                   </span>
                   <div className="space-y-2">
@@ -170,13 +174,13 @@ function DialogContentBody({
                       screen
                     </span>
                     <div className="bg-muted flex items-center gap-2 rounded-md p-2">
-                      <Share className="h-4 w-4 text-gray-400" />
+                      <Share className="h-4 w-4 text-muted-foreground" />
                       <span className="text-xs">Share icon</span>
                     </div>
                   </div>
                 </li>
                 <li className="flex gap-3">
-                  <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-gray-400 text-xs font-medium text-white">
+                  <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-muted-foreground text-xs font-medium text-background">
                     3
                   </span>
                   <span>
@@ -184,7 +188,7 @@ function DialogContentBody({
                   </span>
                 </li>
                 <li className="flex gap-3">
-                  <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-gray-400 text-xs font-medium text-white">
+                  <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-muted-foreground text-xs font-medium text-background">
                     4
                   </span>
                   <span>
@@ -239,10 +243,13 @@ function DialogContentBody({
                 <span>Confirm to add to home screen</span>
               </li>
             </ol>
-            <div className="rounded-lg bg-green-50 p-3 text-sm dark:bg-green-950/20">
-              <p className="text-green-800 dark:text-green-200">
-                💡 <strong>Tip:</strong> Chrome may show an automatic "Add to
-                Home" banner. Tap "Add" when it appears!
+            <div className="bg-brand-soft rounded-lg p-3 text-sm">
+              <p className="text-brand-soft-foreground flex items-start gap-2">
+                <Lightbulb className="mt-0.5 h-4 w-4 shrink-0" />
+                <span>
+                  <strong>Tip:</strong> Chrome may show an automatic "Add to
+                  Home" banner. Tap "Add" when it appears!
+                </span>
               </p>
             </div>
           </div>
@@ -292,10 +299,13 @@ function DialogContentBody({
                 <span>Confirm to add Tovo Voice to your desktop</span>
               </li>
             </ol>
-            <div className="rounded-lg bg-purple-50 p-3 text-sm dark:bg-purple-950/20">
-              <p className="text-purple-800 dark:text-purple-200">
-                💡 <strong>Tip:</strong> You can also drag the URL to your
-                desktop to install.
+            <div className="bg-brand-soft rounded-lg p-3 text-sm">
+              <p className="text-brand-soft-foreground flex items-start gap-2">
+                <Lightbulb className="mt-0.5 h-4 w-4 shrink-0" />
+                <span>
+                  <strong>Tip:</strong> You can also drag the URL to your
+                  desktop to install.
+                </span>
               </p>
             </div>
           </div>

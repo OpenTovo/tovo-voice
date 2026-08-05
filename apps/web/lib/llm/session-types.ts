@@ -5,6 +5,16 @@
  * Responses use points for easy scanning since users need to focus on their conversation.
  */
 
+import {
+  BookOpen,
+  Building2,
+  GraduationCap,
+  Lightbulb,
+  MessageSquare,
+  Users,
+  type LucideIcon,
+} from "lucide-react"
+
 // Common base instruction for all session types
 export const COMMON_AI_INSTRUCTION = `
 You are an AI sidekick listening to live conversation transcriptions. Provide helpful tips when you detect key points or concepts.
@@ -42,7 +52,7 @@ export const SESSION_TYPE_CONFIG = {
   [SessionType.GENERAL]: {
     name: "General",
     description: "General purpose analysis",
-    icon: "💬",
+    icon: MessageSquare,
     systemPrompt: `${COMMON_AI_INSTRUCTION}
 
 CURRENT SESSION TYPE: general conversations
@@ -55,7 +65,7 @@ CURRENT SESSION TYPE: general conversations
   [SessionType.INTERVIEW]: {
     name: "Interview",
     description: "Job, research interviews",
-    icon: "👥",
+    icon: Users,
     systemPrompt: `${COMMON_AI_INSTRUCTION}
 
 CURRENT SESSION TYPE: interview sessions
@@ -67,7 +77,7 @@ CURRENT SESSION TYPE: interview sessions
   [SessionType.MEETING]: {
     name: "Meeting",
     description: "Team & business meetings",
-    icon: "🏢",
+    icon: Building2,
     systemPrompt: `${COMMON_AI_INSTRUCTION}
 
 CURRENT SESSION TYPE: business meetings
@@ -79,7 +89,7 @@ CURRENT SESSION TYPE: business meetings
   [SessionType.HOMEWORK]: {
     name: "Study Session",
     description: "Homework & study helper",
-    icon: "📚",
+    icon: BookOpen,
     systemPrompt: `${COMMON_AI_INSTRUCTION}
 
 CURRENT SESSION TYPE: study sessions
@@ -91,7 +101,7 @@ CURRENT SESSION TYPE: study sessions
   [SessionType.LECTURE]: {
     name: "Lecture",
     description: "Educational lectures",
-    icon: "🎓",
+    icon: GraduationCap,
     systemPrompt: `${COMMON_AI_INSTRUCTION}
 
 CURRENT SESSION TYPE: lectures and presentations
@@ -103,7 +113,7 @@ CURRENT SESSION TYPE: lectures and presentations
   [SessionType.BRAINSTORM]: {
     name: "Brainstorming",
     description: "Creativity & ideas",
-    icon: "💡",
+    icon: Lightbulb,
     systemPrompt: `${COMMON_AI_INSTRUCTION}
 
 CURRENT SESSION TYPE: brainstorming sessions

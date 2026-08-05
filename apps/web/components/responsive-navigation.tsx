@@ -19,12 +19,14 @@ import {
   Plus,
   Settings,
 } from "lucide-react"
+import Image from "next/image"
 import { usePathname, useRouter } from "next/navigation"
 import { useState } from "react"
 import { useSessionNavigationGuard } from "@/hooks/use-session-navigation-guard"
 import { SessionStatus, sessionStatusAtom, type TabType } from "@/lib/atoms"
 import { sideMenuExpandedAtom } from "@/lib/atoms/tabs"
 import { PWARefreshButton } from "./pwa-refresh-button"
+import { ThemeToggle } from "./theme-toggle"
 
 interface NavigationProps {
   className?: string
@@ -126,7 +128,7 @@ export function ResponsiveNavigation({ mobileOnly = false }: NavigationProps) {
             currentTab === tab && "bg-muted/50 text-foreground",
             sessionStatus === SessionStatus.Recording &&
               tab === "new" &&
-              "animate-pulse bg-red-500 text-white hover:bg-red-600"
+              "bg-status-recording/10 text-status-recording hover:bg-status-recording/15"
           )}
           title={collapsed ? getTabLabel(tab) : undefined}
         >
@@ -153,7 +155,10 @@ export function ResponsiveNavigation({ mobileOnly = false }: NavigationProps) {
           <DrawerHeader>
             <div className="flex items-center justify-between">
               <DrawerTitle>Menu</DrawerTitle>
-              <PWARefreshButton />
+              <div className="flex items-center gap-1">
+                <ThemeToggle />
+                <PWARefreshButton />
+              </div>
             </div>
           </DrawerHeader>
           <div className="flex flex-col space-y-2 p-6 pt-0">
@@ -172,6 +177,22 @@ export function ResponsiveNavigation({ mobileOnly = false }: NavigationProps) {
                 <span className="font-medium">GitHub</span>
               </a>
             </Button>
+            <Button
+              variant="ghost"
+              asChild
+              className="flex w-full items-center justify-start gap-3"
+            >
+              <a
+                href="https://x.com/qiweiy"
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                <svg viewBox="0 0 24 24" className="h-5 w-5" fill="currentColor" aria-hidden="true">
+                  <path d="M18.901 1.153h3.68l-8.04 9.19L24 22.846h-7.406l-5.8-7.584-6.638 7.584H.474l8.6-9.83L0 1.154h7.594l5.243 6.932ZM17.61 20.644h2.039L6.486 3.24H4.298Z" />
+                </svg>
+                <span className="font-medium">X (Twitter)</span>
+              </a>
+            </Button>
           </div>
         </DrawerContent>
       </Drawer>
@@ -187,10 +208,21 @@ export function ResponsiveNavigation({ mobileOnly = false }: NavigationProps) {
       )}
     >
       <div className="flex items-center justify-between p-4">
-        {sideMenuExpanded && (
-          <h2 className="text-lg font-semibold">Tovo Voice</h2>
-        )}
-        <div className="flex items-center gap-2">
+        <div className="flex min-w-0 items-center gap-2.5 overflow-hidden">
+          <Image
+            src="/tovo-icon.png"
+            alt="Tovo Voice logo"
+            width={28}
+            height={28}
+            className="shrink-0 rounded-md"
+          />
+          {sideMenuExpanded && (
+            <h2 className="text-lg font-semibold tracking-tight whitespace-nowrap">
+              Tovo Voice
+            </h2>
+          )}
+        </div>
+        <div className="flex shrink-0 items-center gap-2">
           {sideMenuExpanded && <PWARefreshButton />}
           <Button
             variant="ghost"
@@ -217,14 +249,17 @@ export function ResponsiveNavigation({ mobileOnly = false }: NavigationProps) {
       <div
         className={cn(
           "flex items-center",
-          !sideMenuExpanded ? "justify-center p-2" : "justify-start gap-3 p-4"
+          !sideMenuExpanded
+            ? "flex-col justify-center gap-1 p-2"
+            : "justify-start gap-1 p-4"
         )}
       >
+        <ThemeToggle />
         <Button
           variant="ghost"
           size="sm"
           asChild
-          className={cn(!sideMenuExpanded ? "p-2.5" : "gap-2")}
+          className="p-2"
           title="View source on GitHub"
         >
           <a
@@ -233,7 +268,25 @@ export function ResponsiveNavigation({ mobileOnly = false }: NavigationProps) {
             rel="noopener noreferrer"
           >
             <Github className="h-5 w-5" />
-            {sideMenuExpanded && <span className="font-medium">GitHub</span>}
+            <span className="sr-only">GitHub</span>
+          </a>
+        </Button>
+        <Button
+          variant="ghost"
+          size="sm"
+          asChild
+          className="p-2"
+          title="Follow @qiweiy on X"
+        >
+          <a
+            href="https://x.com/qiweiy"
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            <svg viewBox="0 0 24 24" className="h-4 w-4" fill="currentColor" aria-hidden="true">
+              <path d="M18.901 1.153h3.68l-8.04 9.19L24 22.846h-7.406l-5.8-7.584-6.638 7.584H.474l8.6-9.83L0 1.154h7.594l5.243 6.932ZM17.61 20.644h2.039L6.486 3.24H4.298Z" />
+            </svg>
+            <span className="sr-only">X (Twitter)</span>
           </a>
         </Button>
       </div>

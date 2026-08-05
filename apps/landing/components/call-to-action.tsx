@@ -1,40 +1,40 @@
 "use client"
 
-import { motion } from "framer-motion"
+import { motion, useReducedMotion } from "framer-motion"
+import { ArrowRight } from "lucide-react"
 
 export default function CallToAction() {
-  return (
-    <section className="px-4 py-28">
-      <div className="mx-auto max-w-6xl">
-        <motion.div
-          initial={{ opacity: 0, y: 40 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.7 }}
-          viewport={{ once: true }}
-          className="relative overflow-hidden rounded-[2rem] border border-white/[0.08] bg-white/[0.02] px-8 py-20 text-center backdrop-blur-sm md:px-16"
-        >
-          {/* Zima glow behind CTA */}
-          <div className="pointer-events-none absolute left-1/2 top-0 h-[280px] w-[520px] -translate-x-1/2 rounded-full bg-[#0090EE]/[0.12] blur-[120px]" />
-          <div className="grid-bg pointer-events-none absolute inset-0 opacity-50" />
+  const reduceMotion = useReducedMotion()
 
-          <h2 className="relative mb-4 text-3xl font-bold tracking-tight md:text-5xl">
-            Ready to experience{" "}
-            <span className="text-gradient-zima">Tovo Voice</span>?
+  return (
+    <section className="px-4 py-24 sm:px-8">
+      <div className="mx-auto max-w-[1120px]">
+        <motion.div
+          initial={reduceMotion ? false : { opacity: 0, y: 14 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
+          viewport={{ once: true, amount: 0.4 }}
+          className="border-hairline bg-surface shadow-card relative overflow-hidden rounded-2xl border px-8 py-20 text-center md:px-16"
+        >
+          {/* Ambient accent glow */}
+          <div className="ambient-glow pointer-events-none absolute left-1/2 top-[-120px] h-[300px] w-[520px] -translate-x-1/2 rounded-full" />
+
+          <h2 className="text-ink relative mb-4 text-3xl font-semibold tracking-[-0.02em] md:text-5xl">
+            Your next conversation,
+            <br />
+            understood locally.
           </h2>
-          <p className="relative mx-auto mb-10 max-w-md text-lg text-neutral-400">
-            Start transcribing and exploring useful AI insights locally — 100%
-            free and private.
+          <p className="text-ink-muted relative mx-auto mb-10 max-w-md text-lg leading-relaxed">
+            Start transcribing with useful AI insights — 100% free and private.
           </p>
           <a
             href="https://pwa.tovo.dev"
             target="_blank"
             rel="noopener noreferrer"
-            className="group relative inline-flex items-center justify-center gap-2 rounded-full bg-[#0090EE] px-8 py-4 text-base font-semibold text-white shadow-[0_8px_30px_rgba(0,144,238,0.25)] transition-all duration-300 hover:bg-[#007acc] hover:shadow-[0_8px_44px_rgba(0,144,238,0.45)]"
+            className="group bg-ink text-surface hover:bg-ink/85 relative inline-flex min-h-[46px] items-center justify-center gap-2 rounded-xl px-8 text-base font-semibold transition-all active:scale-[0.98]"
           >
             Launch Tovo Voice
-            <span className="transition-transform duration-300 group-hover:translate-x-0.5">
-              &rarr;
-            </span>
+            <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" />
           </a>
         </motion.div>
       </div>

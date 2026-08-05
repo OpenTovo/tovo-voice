@@ -1,226 +1,228 @@
 "use client"
 
-import { motion } from "framer-motion"
+import { motion, useReducedMotion } from "framer-motion"
 import {
   AlertTriangle,
   ArrowLeft,
   CheckCircle,
   Chrome,
   ExternalLink,
+  FlaskConical,
+  Globe,
+  Lightbulb,
   Settings,
 } from "lucide-react"
 import Link from "next/link"
+import {
+  GuideSection,
+  guideIconChip,
+  guideStepBadge,
+} from "@/components/guide-section"
+
+const testRow =
+  "bg-canvas border-hairline flex items-center gap-3 rounded-lg border p-4"
 
 export default function WebGPUSetupPage() {
+  const reduceMotion = useReducedMotion()
+
   return (
-    <div className="min-h-screen bg-[#0a0a0a] text-white">
-      <div className="mx-auto max-w-4xl px-4 py-20">
+    <div className="bg-canvas text-ink min-h-screen">
+      <div className="mx-auto max-w-4xl px-4 py-16 sm:px-8">
         <motion.div
-          initial={{ opacity: 0, y: 50 }}
+          initial={reduceMotion ? false : { opacity: 0, y: 14 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.8 }}
+          transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
         >
           <Link
             href="/guides"
-            className="mb-8 inline-flex items-center gap-2 text-slate-400 transition-colors hover:text-white"
+            className="text-ink-muted hover:text-ink mb-8 inline-flex items-center gap-2 text-sm transition-colors"
           >
             <ArrowLeft className="h-4 w-4" />
             Back to Guides
           </Link>
 
-          <h1 className="mb-8 text-4xl font-bold md:text-5xl">
-            <span className="text-zima">WebGPU Setup</span>
+          <h1 className="mb-4 text-4xl font-semibold tracking-[-0.02em] md:text-5xl">
+            WebGPU Setup
           </h1>
 
-          <p className="mb-12 text-xl text-slate-400">
+          <p className="text-ink-muted mb-12 text-lg leading-relaxed">
             Enable WebGPU in your browser for local AI processing with Tovo
-            Voice
+            Voice.
           </p>
 
-          <div className="mb-8 rounded-lg border border-amber-500/20 bg-amber-950/30 p-4">
+          <div className="bg-accent-soft mb-8 rounded-lg p-4">
             <div className="flex items-start gap-3">
-              <AlertTriangle className="mt-0.5 h-5 w-5 text-amber-400" />
-              <div>
-                <p className="text-amber-200">
-                  <strong>Important:</strong> WebGPU is required for Tovo
-                  Voice's local AI processing. Without it, AI features will not
-                  work properly.
-                </p>
-              </div>
+              <AlertTriangle className="text-accent-strong mt-0.5 h-5 w-5" />
+              <p className="text-accent-strong text-sm">
+                <strong>Important:</strong> WebGPU is required for Tovo Voice's
+                local AI processing. Without it, AI features will not work
+                properly.
+              </p>
             </div>
           </div>
 
-          <div className="space-y-12">
+          <div className="space-y-8">
             {/* Chrome Desktop Section */}
-            <motion.section
-              initial={{ opacity: 0, y: 30 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.5, delay: 0.1 }}
-              className="glass rounded-2xl p-8"
-            >
-              <div className="mb-6 flex items-center gap-3">
-                <Chrome className="h-6 w-6 text-blue-400" />
-                <h2 className="text-2xl font-semibold">Chrome Desktop</h2>
-              </div>
-
+            <GuideSection icon={Chrome} title="Chrome Desktop" delay={0.1}>
               <div className="space-y-4">
-                <p className="text-slate-300">
+                <p className="text-ink-muted">
                   Chrome has WebGPU enabled by default in recent versions
                   (Chrome 113+). If you're having issues:
                 </p>
 
-                <ol className="space-y-4 text-slate-300">
+                <ol className="text-ink-muted space-y-4">
                   <li className="flex gap-4">
-                    <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-blue-500 text-sm font-medium text-white">
-                      1
-                    </span>
+                    <span className={guideStepBadge}>1</span>
                     <span>
                       Open Chrome and go to{" "}
-                      <code className="rounded bg-slate-800 px-2 py-1 text-blue-300">
+                      <code className="bg-canvas border-hairline text-accent-strong rounded border px-2 py-1">
                         chrome://flags
                       </code>
                     </span>
                   </li>
                   <li className="flex gap-4">
-                    <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-blue-500 text-sm font-medium text-white">
-                      2
-                    </span>
+                    <span className={guideStepBadge}>2</span>
                     <span>
-                      Search for{" "}
-                      <strong className="text-white">"WebGPU"</strong> in the
-                      search box
+                      Search for <strong className="text-ink">"WebGPU"</strong>{" "}
+                      in the search box
                     </span>
                   </li>
                   <li className="flex gap-4">
-                    <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-blue-500 text-sm font-medium text-white">
-                      3
-                    </span>
+                    <span className={guideStepBadge}>3</span>
                     <span>
                       Set{" "}
-                      <strong className="text-white">"Unsafe WebGPU"</strong> to{" "}
-                      <strong className="text-green-400">"Enabled"</strong>
+                      <strong className="text-ink">"Unsafe WebGPU"</strong> to{" "}
+                      <strong className="text-ink">"Enabled"</strong>
                     </span>
                   </li>
                   <li className="flex gap-4">
-                    <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-blue-500 text-sm font-medium text-white">
-                      4
-                    </span>
+                    <span className={guideStepBadge}>4</span>
                     <span>
-                      Click <strong className="text-white">"Relaunch"</strong>{" "}
-                      to restart Chrome
+                      Click <strong className="text-ink">"Relaunch"</strong> to
+                      restart Chrome
                     </span>
                   </li>
                 </ol>
 
-                <div className="mt-6 rounded-lg border border-blue-500/20 bg-blue-950/30 p-4">
-                  <p className="text-blue-200">
-                    💡 <strong>Note:</strong> The "Unsafe" label doesn't mean
-                    it's actually unsafe - it's just Chrome's way of indicating
-                    experimental features.
+                <div className="bg-accent-soft mt-6 rounded-lg p-4">
+                  <p className="text-accent-strong flex items-start gap-2 text-sm">
+                    <Lightbulb className="mt-0.5 h-4 w-4 shrink-0" />
+                    <span>
+                      <strong>Note:</strong> the "Unsafe" label doesn't mean
+                      it's actually unsafe — it's just Chrome's way of
+                      indicating experimental features.
+                    </span>
                   </p>
                 </div>
               </div>
-            </motion.section>
+            </GuideSection>
 
-            {/* Safari iOS Section - Now with warning */}
-            <motion.section
-              initial={{ opacity: 0, y: 30 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.5, delay: 0.2 }}
-              className="glass rounded-2xl p-8 opacity-60"
-            >
-              <div className="mb-6 flex items-center gap-3">
-                <Settings className="h-6 w-6 text-red-400" />
-                <h2 className="text-2xl font-semibold text-red-400">
-                  Safari on iOS (Not Supported)
-                </h2>
-              </div>
-
+            {/* Edge Section */}
+            <GuideSection icon={Settings} title="Microsoft Edge" delay={0.15}>
               <div className="space-y-4">
-                <div className="rounded-lg border border-red-500/30 bg-red-950/30 p-6">
-                  <h3 className="mb-3 font-semibold text-red-300">
-                    ⚠️ iOS Not Currently Supported
+                <p className="text-ink-muted">
+                  Edge (version 113+) has similar WebGPU support to Chrome:
+                </p>
+
+                <ol className="text-ink-muted space-y-4">
+                  <li className="flex gap-4">
+                    <span className={guideStepBadge}>1</span>
+                    <span>
+                      Open Edge and go to{" "}
+                      <code className="bg-canvas border-hairline text-accent-strong rounded border px-2 py-1">
+                        edge://flags
+                      </code>
+                    </span>
+                  </li>
+                  <li className="flex gap-4">
+                    <span className={guideStepBadge}>2</span>
+                    <span>
+                      Search for <strong className="text-ink">"WebGPU"</strong>{" "}
+                      and enable the flag
+                    </span>
+                  </li>
+                  <li className="flex gap-4">
+                    <span className={guideStepBadge}>3</span>
+                    <span>Restart Edge when prompted</span>
+                  </li>
+                </ol>
+              </div>
+            </GuideSection>
+
+            {/* Safari iOS Section */}
+            <GuideSection
+              icon={Settings}
+              title="Safari on iOS (Not Supported)"
+              delay={0.2}
+              dimmed
+            >
+              <div className="space-y-4">
+                <div className="rounded-lg border border-red-200 bg-red-50 p-5">
+                  <h3 className="mb-2 flex items-center gap-2 font-semibold text-red-700">
+                    <AlertTriangle className="h-4 w-4" />
+                    iOS Not Currently Supported
                   </h3>
-                  <p className="text-red-200">
+                  <p className="text-sm text-red-700">
                     Unfortunately, Tovo Voice doesn't work on iOS devices due to
-                    Safari's memory limitations. Our app requires at least 650MB
+                    Safari's memory limitations. The app requires at least 650MB
                     of memory to run the transcription and AI models, but iOS
                     Safari is limited to 200-400MB depending on the device.
                   </p>
-                  <p className="mt-3 text-red-200">
-                    <strong>
-                      Please use a desktop computer or Android device instead.
-                    </strong>
+                  <p className="mt-3 text-sm font-medium text-red-700">
+                    Please use a desktop computer or Android device instead.
                   </p>
                 </div>
 
-                <div className="opacity-50">
-                  <p className="mb-4 text-slate-300">
+                <div className="opacity-70">
+                  <p className="text-ink-muted mb-4 text-sm">
                     WebGPU setup for iOS (if support becomes available in the
                     future):
                   </p>
 
-                  <ol className="space-y-4 text-slate-400">
+                  <ol className="text-ink-muted space-y-4">
                     <li className="flex gap-4">
-                      <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-slate-600 text-sm font-medium text-white">
-                        1
-                      </span>
+                      <span className={guideStepBadge}>1</span>
                       <span>
-                        Open{" "}
-                        <strong className="text-slate-300">Settings</strong> app
+                        Open <strong className="text-ink">Settings</strong> app
                         on your iPhone/iPad
                       </span>
                     </li>
                     <li className="flex gap-4">
-                      <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-slate-600 text-sm font-medium text-white">
-                        2
-                      </span>
+                      <span className={guideStepBadge}>2</span>
                       <span>
                         Scroll down and tap{" "}
-                        <strong className="text-slate-300">Safari</strong>
+                        <strong className="text-ink">Safari</strong>
                       </span>
                     </li>
                     <li className="flex gap-4">
-                      <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-slate-600 text-sm font-medium text-white">
-                        3
-                      </span>
+                      <span className={guideStepBadge}>3</span>
                       <span>
-                        Tap <strong className="text-slate-300">Advanced</strong>{" "}
-                        at the bottom
+                        Tap <strong className="text-ink">Advanced</strong> at
+                        the bottom
                       </span>
                     </li>
                     <li className="flex gap-4">
-                      <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-slate-600 text-sm font-medium text-white">
-                        4
-                      </span>
+                      <span className={guideStepBadge}>4</span>
                       <span>
-                        Tap{" "}
-                        <strong className="text-slate-300">
-                          Feature Flags
-                        </strong>
+                        Tap <strong className="text-ink">Feature Flags</strong>
                       </span>
                     </li>
                     <li className="flex gap-4">
-                      <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-slate-600 text-sm font-medium text-white">
-                        5
-                      </span>
+                      <span className={guideStepBadge}>5</span>
                       <span>
-                        Find <strong className="text-slate-300">WebGPU</strong>{" "}
-                        and toggle it{" "}
-                        <strong className="text-slate-300">ON</strong>
+                        Find <strong className="text-ink">WebGPU</strong> and
+                        toggle it <strong className="text-ink">ON</strong>
                       </span>
                     </li>
                     <li className="flex gap-4">
-                      <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-slate-600 text-sm font-medium text-white">
-                        6
-                      </span>
+                      <span className={guideStepBadge}>6</span>
                       <span>Close Settings and restart Safari completely</span>
                     </li>
                   </ol>
 
-                  <div className="mt-6 rounded-lg border border-slate-500/20 bg-slate-950/30 p-4">
-                    <p className="text-slate-400">
-                      ⚠️ <strong>iOS Browser Limitation:</strong> Only Safari
+                  <div className="bg-canvas border-hairline mt-6 rounded-lg border p-4">
+                    <p className="text-ink-muted text-sm">
+                      <strong>iOS Browser Limitation:</strong> only Safari
                       supports WebGPU on iOS. Chrome, Firefox, and other
                       browsers on iOS cannot access WebGPU due to Apple's
                       restrictions.
@@ -228,97 +230,42 @@ export default function WebGPUSetupPage() {
                   </div>
                 </div>
               </div>
-            </motion.section>
-
-            {/* Edge Section */}
-            <motion.section
-              initial={{ opacity: 0, y: 30 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.5, delay: 0.3 }}
-              className="glass rounded-2xl p-8"
-            >
-              <div className="mb-6 flex items-center gap-3">
-                <Settings className="h-6 w-6 text-blue-400" />
-                <h2 className="text-2xl font-semibold">Microsoft Edge</h2>
-              </div>
-
-              <div className="space-y-4">
-                <p className="text-slate-300">
-                  Edge (version 113+) has similar WebGPU support to Chrome:
-                </p>
-
-                <ol className="space-y-4 text-slate-300">
-                  <li className="flex gap-4">
-                    <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-blue-500 text-sm font-medium text-white">
-                      1
-                    </span>
-                    <span>
-                      Open Edge and go to{" "}
-                      <code className="rounded bg-slate-800 px-2 py-1 text-blue-300">
-                        edge://flags
-                      </code>
-                    </span>
-                  </li>
-                  <li className="flex gap-4">
-                    <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-blue-500 text-sm font-medium text-white">
-                      2
-                    </span>
-                    <span>
-                      Search for{" "}
-                      <strong className="text-white">"WebGPU"</strong> and
-                      enable the flag
-                    </span>
-                  </li>
-                  <li className="flex gap-4">
-                    <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-blue-500 text-sm font-medium text-white">
-                      3
-                    </span>
-                    <span>Restart Edge when prompted</span>
-                  </li>
-                </ol>
-              </div>
-            </motion.section>
+            </GuideSection>
 
             {/* Testing Section */}
-            <motion.section
-              initial={{ opacity: 0, y: 30 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.5, delay: 0.4 }}
-              className="glass rounded-2xl p-8"
+            <GuideSection
+              icon={CheckCircle}
+              title="Test WebGPU Support"
+              delay={0.25}
             >
-              <div className="mb-6 flex items-center gap-3">
-                <CheckCircle className="h-6 w-6 text-green-400" />
-                <h2 className="text-2xl font-semibold">Test WebGPU Support</h2>
-              </div>
-
               <div className="space-y-4">
-                <p className="text-slate-300">
+                <p className="text-ink-muted">
                   After enabling WebGPU, you can test if it's working:
                 </p>
 
                 <div className="space-y-3">
-                  <div className="flex items-center gap-3 rounded-lg bg-slate-800 p-4">
-                    <span className="text-2xl">🧪</span>
+                  <div className={testRow}>
+                    <FlaskConical className="text-accent-strong h-5 w-5 shrink-0" />
                     <div>
                       <p className="font-medium">Browser Console Test</p>
-                      <p className="text-sm text-slate-400">
+                      <p className="text-ink-muted text-sm">
                         Open browser console (F12) and type:{" "}
-                        <code className="rounded bg-slate-700 px-2 py-1">
+                        <code className="bg-surface border-hairline rounded border px-2 py-1">
                           navigator.gpu
                         </code>
                       </p>
                     </div>
                   </div>
 
-                  <div className="flex items-center gap-3 rounded-lg bg-slate-800 p-4">
-                    <span className="text-2xl">🌐</span>
+                  <div className={testRow}>
+                    <Globe className="text-accent-strong h-5 w-5 shrink-0" />
                     <div>
                       <p className="font-medium">Online WebGPU Test</p>
                       <a
                         href="https://webgpu.github.io/webgpu-samples/"
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="flex items-center gap-2 text-sm text-blue-400 hover:text-blue-300"
+                        className="text-accent-strong hover:text-accent flex items-center gap-2 text-sm"
                       >
                         Visit WebGPU Samples
                         <ExternalLink className="h-4 w-4" />
@@ -326,119 +273,102 @@ export default function WebGPUSetupPage() {
                     </div>
                   </div>
 
-                  <div className="flex items-center gap-3 rounded-lg bg-slate-800 p-4">
-                    <span className="text-2xl">✅</span>
+                  <div className={testRow}>
+                    <CheckCircle className="text-accent-strong h-5 w-5 shrink-0" />
                     <div>
                       <p className="font-medium">Tovo Voice Check</p>
-                      <p className="text-sm text-slate-400">
-                        Visit Tovo Voice—the app will automatically detect
+                      <p className="text-ink-muted text-sm">
+                        Visit Tovo Voice — the app will automatically detect
                         WebGPU support
                       </p>
                     </div>
                   </div>
                 </div>
               </div>
-            </motion.section>
+            </GuideSection>
 
             {/* Troubleshooting Section */}
-            <motion.section
-              initial={{ opacity: 0, y: 30 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.5, delay: 0.5 }}
-              className="glass rounded-2xl p-8"
+            <GuideSection
+              icon={AlertTriangle}
+              title="Troubleshooting"
+              delay={0.3}
             >
-              <div className="mb-6 flex items-center gap-3">
-                <AlertTriangle className="h-6 w-6 text-amber-400" />
-                <h2 className="text-2xl font-semibold">Troubleshooting</h2>
-              </div>
-
               <div className="space-y-6">
-                <div>
-                  <h3 className="mb-3 font-semibold text-red-400">
-                    Common Issues
-                  </h3>
-                  <div className="space-y-3 text-slate-300">
-                    <div className="rounded-lg border border-red-500/20 bg-red-950/20 p-4">
-                      <p className="font-medium text-red-300">
-                        WebGPU not detected after enabling
-                      </p>
-                      <ul className="mt-2 space-y-1 text-sm">
-                        <li>
-                          • Make sure you completely restarted your browser
-                        </li>
-                        <li>• Clear browser cache and cookies</li>
-                        <li>• Check if your graphics drivers are up to date</li>
-                        <li>
-                          • Try using an incognito/private browsing window
-                        </li>
-                      </ul>
-                    </div>
+                <div className="space-y-3">
+                  <div className="rounded-lg border border-red-200 bg-red-50 p-4">
+                    <p className="font-medium text-red-700">
+                      WebGPU not detected after enabling
+                    </p>
+                    <ul className="mt-2 list-disc space-y-1 pl-5 text-sm text-red-700">
+                      <li>Make sure you completely restarted your browser</li>
+                      <li>Clear browser cache and cookies</li>
+                      <li>Check if your graphics drivers are up to date</li>
+                      <li>Try using an incognito/private browsing window</li>
+                    </ul>
+                  </div>
 
-                    <div className="rounded-lg border border-red-500/20 bg-red-950/20 p-4">
-                      <p className="font-medium text-red-300">
-                        WebGPU flag not available
-                      </p>
-                      <ul className="mt-2 space-y-1 text-sm">
-                        <li>• Update your browser to the latest version</li>
-                        <li>
-                          • Check if your device supports WebGPU (newer hardware
-                          required)
-                        </li>
-                        <li>
-                          • Some older or low-end devices may not support WebGPU
-                        </li>
-                      </ul>
-                    </div>
+                  <div className="rounded-lg border border-red-200 bg-red-50 p-4">
+                    <p className="font-medium text-red-700">
+                      WebGPU flag not available
+                    </p>
+                    <ul className="mt-2 list-disc space-y-1 pl-5 text-sm text-red-700">
+                      <li>Update your browser to the latest version</li>
+                      <li>
+                        Check if your device supports WebGPU (newer hardware
+                        required)
+                      </li>
+                      <li>
+                        Some older or low-end devices may not support WebGPU
+                      </li>
+                    </ul>
+                  </div>
 
-                    <div className="rounded-lg border border-red-500/20 bg-red-950/20 p-4">
-                      <p className="font-medium text-red-300">
-                        iOS Safari issues
-                      </p>
-                      <ul className="mt-2 space-y-1 text-sm">
-                        <li>• Ensure you're running iOS 16.4 or later</li>
-                        <li>
-                          • Only Safari works - Chrome/Firefox on iOS don't
-                          support WebGPU
-                        </li>
-                        <li>
-                          • Force-close Safari completely and reopen after
-                          enabling the flag
-                        </li>
-                      </ul>
-                    </div>
+                  <div className="rounded-lg border border-red-200 bg-red-50 p-4">
+                    <p className="font-medium text-red-700">
+                      iOS Safari issues
+                    </p>
+                    <ul className="mt-2 list-disc space-y-1 pl-5 text-sm text-red-700">
+                      <li>Ensure you're running iOS 16.4 or later</li>
+                      <li>
+                        Only Safari works — Chrome/Firefox on iOS don't support
+                        WebGPU
+                      </li>
+                      <li>
+                        Force-close Safari completely and reopen after enabling
+                        the flag
+                      </li>
+                    </ul>
                   </div>
                 </div>
 
                 <div>
-                  <h3 className="mb-3 font-semibold text-green-400">
+                  <h3 className="text-accent-strong mb-3 font-semibold">
                     Browser Compatibility
                   </h3>
                   <div className="grid gap-3 md:grid-cols-2">
-                    <div className="rounded-lg border border-green-500/20 bg-green-950/20 p-4">
-                      <p className="font-medium text-green-300">✅ Supported</p>
-                      <ul className="mt-2 space-y-1 text-sm text-slate-300">
-                        <li>• Chrome 113+ (Desktop/Android)</li>
-                        <li>• Edge 113+ (Desktop)</li>
-                        <li>• Safari 16.4+ (macOS only)</li>
+                    <div className="bg-accent-soft rounded-lg p-4">
+                      <p className="text-accent-strong font-medium">Supported</p>
+                      <ul className="text-ink-muted mt-2 list-disc space-y-1 pl-5 text-sm">
+                        <li>Chrome 113+ (Desktop/Android)</li>
+                        <li>Edge 113+ (Desktop)</li>
+                        <li>Safari 16.4+ (macOS only)</li>
                       </ul>
                     </div>
 
-                    <div className="rounded-lg border border-red-500/20 bg-red-950/20 p-4">
-                      <p className="font-medium text-red-300">
-                        ❌ Not Supported
-                      </p>
-                      <ul className="mt-2 space-y-1 text-sm text-slate-300">
-                        <li>• Firefox (coming soon)</li>
-                        <li>• Safari on iOS (memory limitations)</li>
-                        <li>• Chrome/Firefox on iOS</li>
-                        <li>• Older browser versions</li>
-                        <li>• Some mobile browsers</li>
+                    <div className="rounded-lg border border-red-200 bg-red-50 p-4">
+                      <p className="font-medium text-red-700">Not Supported</p>
+                      <ul className="mt-2 list-disc space-y-1 pl-5 text-sm text-red-700">
+                        <li>Firefox (coming soon)</li>
+                        <li>Safari on iOS (memory limitations)</li>
+                        <li>Chrome/Firefox on iOS</li>
+                        <li>Older browser versions</li>
+                        <li>Some mobile browsers</li>
                       </ul>
                     </div>
                   </div>
                 </div>
               </div>
-            </motion.section>
+            </GuideSection>
           </div>
         </motion.div>
       </div>

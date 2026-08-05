@@ -1,5 +1,5 @@
 const logoSrc =
-  "data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTI4IiBoZWlnaHQ9IjEyOCIgdmlld0JveD0iMCAwIDEyOCAxMjgiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CjxnIGZpbHRlcj0idXJsKCNmaWx0ZXIwX2RfMTdfNSkiPgo8cmVjdCB4PSI1IiB5PSI1IiB3aWR0aD0iMTE4IiBoZWlnaHQ9IjExOCIgcng9IjI0IiBmaWxsPSIjNUJDMkU3Ii8+CjwvZz4KPHBhdGggZD0iTTc1LjEyNyA0Mi40NEw3MS4wMjMgMTAyLjM4QzcwLjk1MSAxMDMuNDYgNzAuNTU1IDEwNCA2OS44MzUgMTA0SDYzLjg5NUM1OS44NjMgMTA0IDU2Ljk4MyAxMDMuMjA4IDU1LjI1NSAxMDEuNjI0QzUzLjUyNyAxMDAuMDQgNTIuNjYzIDk3Ljc3MiA1Mi42NjMgOTQuODJDNTIuNjYzIDkzLjc0IDUyLjY5OSA5Mi4xMiA1Mi43NzEgODkuOTZDNTIuOTE1IDg3LjggNTMuMDk1IDg1LjI4IDUzLjMxMSA4Mi40QzUzLjUyNyA3OS40NDggNTMuNzQzIDc2LjI4IDUzLjk1OSA3Mi44OTZDNTQuMjQ3IDY5LjQ0IDU0LjUzNSA2NS45ODQgNTQuODIzIDYyLjUyOEM1NS4xMTEgNTkgNTUuMzYzIDU1LjUwOCA1NS41NzkgNTIuMDUyQzU1Ljg2NyA0OC41OTYgNTYuMTE5IDQ1LjM5MiA1Ni4zMzUgNDIuNDRIMzkuMDU1QzM4LjI2MyA0Mi40NCAzNy44NjcgNDEuOTM2IDM3Ljg2NyA0MC45MjhMMzguMTkxIDM0Ljg4QzM4LjI2MyAzMy45NDQgMzguNDA3IDMzLjA0NCAzOC42MjMgMzIuMThDMzguOTExIDMxLjI0NCAzOS4zNDMgMzAuNDE2IDM5LjkxOSAyOS42OTZDNDAuNDk1IDI4Ljk3NiA0MS4yMTUgMjguNCA0Mi4wNzkgMjcuOTY4QzQzLjAxNSAyNy41MzYgNDQuMTMxIDI3LjMyIDQ1LjQyNyAyNy4zMkg5My43MDNDOTQuMTM1IDI3LjMyIDk0LjUzMSAyNy40MjggOTQuODkxIDI3LjY0NEM5NS4yNTEgMjcuODYgOTUuNDMxIDI4LjI1NiA5NS40MzEgMjguODMyTDk0Ljk5OSAzNS4yMDRDOTQuODU1IDM3LjM2NCA5NC4yNDMgMzkuMTI4IDkzLjE2MyA0MC40OTZDOTIuMTU1IDQxLjc5MiA5MC4wMzEgNDIuNDQgODYuNzkxIDQyLjQ0SDc1LjEyN1oiIGZpbGw9IiM0ODM0NTQiLz4KPGRlZnM+CjxmaWx0ZXIgaWQ9ImZpbHRlcjBfZF8xN181IiB4PSIxIiB5PSIyIiB3aWR0aD0iMTI2IiBoZWlnaHQ9IjEyNiIgZmlsdGVyVW5pdHM9InVzZXJTcGFjZU9uVXNlIiBjb2xvci1pbnRlcnBvbGF0aW9uLWZpbHRlcnM9InNSR0IiPgo8ZmVGbG9vZCBmbG9vZC1vcGFjaXR5PSIwIiByZXN1bHQ9IkJhY2tncm91bmRJbWFnZUZpeCIvPgo8ZmVDb2xvck1hdHJpeCBpbj0iU291cmNlQWxwaGEiIHR5cGU9Im1hdHJpeCIgdmFsdWVzPSIwIDAgMCAwIDAgMCAwIDAgMCAwIDAgMCAwIDAgMCAwIDAgMCAxMjcgMCIgcmVzdWx0PSJoYXJkQWxwaGEiLz4KPGZlT2Zmc2V0IGR5PSIxIi8+CjxmZUdhdXNzaWFuQmx1ciBzdGREZXZpYXRpb249IjIiLz4KPGZlQ29tcG9zaXRlIGluMj0iaGFyZEFscGhhIiBvcGVyYXRvcj0ib3V0Ii8+CjxmZUNvbG9yTWF0cml4IHR5cGU9Im1hdHJpeCIgdmFsdWVzPSIwIDAgMCAwIDAgMCAwIDAgMCAwIDAgMCAwIDAgMCAwIDAgMCAwLjI1IDAiLz4KPGZlQmxlbmQgbW9kZT0ibm9ybWFsIiBpbjI9IkJhY2tncm91bmRJbWFnZUZpeCIgcmVzdWx0PSJlZmZlY3QxX2Ryb3BTaGFkb3dfMTdfNSIvPgo8ZmVCbGVuZCBtb2RlPSJub3JtYWwiIGluPSJTb3VyY2VHcmFwaGljIiBpbjI9ImVmZmVjdDFfZHJvcFNoYWRvd18xN181IiByZXN1bHQ9InNoYXBlIi8+CjwvZmlsdGVyPgo8L2RlZnM+Cjwvc3ZnPgo="
+  "data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTI4IiBoZWlnaHQ9IjEyOCIgdmlld0JveD0iMCAwIDEyOCAxMjgiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PGRlZnM+PGxpbmVhckdyYWRpZW50IGlkPSJnIiB4MT0iMCIgeTE9IjAiIHgyPSIxMjgiIHkyPSIxMjgiIGdyYWRpZW50VW5pdHM9InVzZXJTcGFjZU9uVXNlIj48c3RvcCBzdG9wLWNvbG9yPSIjNkZDQkVFIi8+PHN0b3Agb2Zmc2V0PSIxIiBzdG9wLWNvbG9yPSIjMkI4RkU2Ii8+PC9saW5lYXJHcmFkaWVudD48L2RlZnM+PHJlY3Qgd2lkdGg9IjEyOCIgaGVpZ2h0PSIxMjgiIHJ4PSIyNiIgZmlsbD0idXJsKCNnKSIvPjxwYXRoIGQ9Ik03NS4xMjcgNDIuNDRMNzEuMDIzIDEwMi4zOEM3MC45NTEgMTAzLjQ2IDcwLjU1NSAxMDQgNjkuODM1IDEwNEg2My44OTVDNTkuODYzIDEwNCA1Ni45ODMgMTAzLjIwOCA1NS4yNTUgMTAxLjYyNEM1My41MjcgMTAwLjA0IDUyLjY2MyA5Ny43NzIgNTIuNjYzIDk0LjgyQzUyLjY2MyA5My43NCA1Mi42OTkgOTIuMTIgNTIuNzcxIDg5Ljk2QzUyLjkxNSA4Ny44IDUzLjA5NSA4NS4yOCA1My4zMTEgODIuNEM1My41MjcgNzkuNDQ4IDUzLjc0MyA3Ni4yOCA1My45NTkgNzIuODk2QzU0LjI0NyA2OS40NCA1NC41MzUgNjUuOTg0IDU0LjgyMyA2Mi41MjhDNTUuMTExIDU5IDU1LjM2MyA1NS41MDggNTUuNTc5IDUyLjA1MkM1NS44NjcgNDguNTk2IDU2LjExOSA0NS4zOTIgNTYuMzM1IDQyLjQ0SDM5LjA1NUMzOC4yNjMgNDIuNDQgMzcuODY3IDQxLjkzNiAzNy44NjcgNDAuOTI4TDM4LjE5MSAzNC44OEMzOC4yNjMgMzMuOTQ0IDM4LjQwNyAzMy4wNDQgMzguNjIzIDMyLjE4QzM4LjkxMSAzMS4yNDQgMzkuMzQzIDMwLjQxNiAzOS45MTkgMjkuNjk2QzQwLjQ5NSAyOC45NzYgNDEuMjE1IDI4LjQgNDIuMDc5IDI3Ljk2OEM0My4wMTUgMjcuNTM2IDQ0LjEzMSAyNy4zMiA0NS40MjcgMjcuMzJIOTMuNzAzQzk0LjEzNSAyNy4zMiA5NC41MzEgMjcuNDI4IDk0Ljg5MSAyNy42NDRDOTUuMjUxIDI3Ljg2IDk1LjQzMSAyOC4yNTYgOTUuNDMxIDI4LjgzMkw5NC45OTkgMzUuMjA0Qzk0Ljg1NSAzNy4zNjQgOTQuMjQzIDM5LjEyOCA5My4xNjMgNDAuNDk2QzkyLjE1NSA0MS43OTIgOTAuMDMxIDQyLjQ0IDg2Ljc5MSA0Mi40NEg3NS4xMjdaIiBmaWxsPSIjRkZGRkZGIi8+PC9zdmc+Cg=="
 
 export const alt = "Tovo Voice, a private AI sidekick with local transcription"
 export const size = {
@@ -17,8 +17,8 @@ export function TovoVoiceImage() {
         display: "flex",
         position: "relative",
         overflow: "hidden",
-        background: "#0b0f14",
-        color: "#f5f7fa",
+        background: "#fbfbf9",
+        color: "#14161a",
         fontFamily: "Arial, Helvetica, sans-serif",
         padding: "54px 64px",
       }}
@@ -26,25 +26,13 @@ export function TovoVoiceImage() {
       <div
         style={{
           position: "absolute",
-          top: -220,
-          right: -140,
-          width: 520,
-          height: 520,
-          borderRadius: "50%",
-          background: "#12303b",
-          opacity: 0.9,
-        }}
-      />
-      <div
-        style={{
-          position: "absolute",
-          bottom: -300,
-          left: -180,
+          top: -260,
+          right: -160,
           width: 560,
           height: 560,
           borderRadius: "50%",
-          background: "#211b2b",
-          opacity: 0.8,
+          background:
+            "radial-gradient(circle, rgba(43, 143, 230, 0.12), transparent 60%)",
         }}
       />
 
@@ -69,13 +57,14 @@ export function TovoVoiceImage() {
             <img
               alt="Tovo logo"
               src={logoSrc}
-              style={{ width: 48, height: 48, borderRadius: 14 }}
+              style={{ width: 48, height: 48, borderRadius: 12 }}
             />
             <div
               style={{
                 fontSize: 25,
                 fontWeight: 700,
                 marginLeft: 13,
+                letterSpacing: "-0.02em",
               }}
             >
               Tovo Voice
@@ -83,7 +72,7 @@ export function TovoVoiceImage() {
           </div>
           <div
             style={{
-              color: "#91a5af",
+              color: "#6b6e76",
               fontSize: 14,
               letterSpacing: "0.14em",
             }}
@@ -124,7 +113,7 @@ export function TovoVoiceImage() {
             </div>
             <div
               style={{
-                color: "#afbec5",
+                color: "#6b6e76",
                 fontSize: 23,
                 lineHeight: 1.28,
                 marginTop: 22,
@@ -137,7 +126,7 @@ export function TovoVoiceImage() {
               style={{
                 width: 112,
                 height: 3,
-                background: "#5bc2e7",
+                background: "#2b8fe6",
                 marginTop: 28,
               }}
             />
@@ -158,10 +147,11 @@ export function TovoVoiceImage() {
                 width: 326,
                 height: 296,
                 padding: 22,
-                background: "#111a20",
-                border: "1px solid #2d4953",
+                background: "#ffffff",
+                border: "1px solid #e8e8e5",
                 borderRadius: 28,
-                boxShadow: "0 18px 50px rgba(0, 0, 0, 0.24)",
+                boxShadow:
+                  "0 1px 3px rgba(20, 22, 26, 0.04), 0 12px 40px rgba(20, 22, 26, 0.08)",
               }}
             >
               <div
@@ -169,20 +159,21 @@ export function TovoVoiceImage() {
                   display: "flex",
                   alignItems: "center",
                   justifyContent: "space-between",
-                  color: "#e6edf0",
+                  color: "#14161a",
                   fontSize: 16,
                   fontWeight: 700,
                 }}
               >
                 <div>VOICE SIDEKICK</div>
-                <div style={{ color: "#60d9a2", fontSize: 13 }}>READY</div>
+                <div style={{ color: "#2f9e44", fontSize: 13 }}>READY</div>
               </div>
               <div
                 style={{
                   display: "flex",
                   flexDirection: "column",
                   padding: "12px 14px",
-                  background: "#0d1419",
+                  background: "#fbfbf9",
+                  border: "1px solid #e8e8e5",
                   borderRadius: 16,
                   marginTop: 14,
                 }}
@@ -191,18 +182,18 @@ export function TovoVoiceImage() {
                   style={{
                     display: "flex",
                     justifyContent: "space-between",
-                    color: "#8fe1f4",
+                    color: "#2b8fe6",
                     fontSize: 12,
                     letterSpacing: "0.1em",
                   }}
                 >
                   <span>LISTENING</span>
-                  <span style={{ color: "#8fa6b0" }}>LIVE</span>
+                  <span style={{ color: "#6b6e76" }}>LIVE</span>
                 </div>
                 <div style={{ fontSize: 16, marginTop: 8 }}>
                   Session context
                 </div>
-                <div style={{ color: "#8fa6b0", fontSize: 13, marginTop: 5 }}>
+                <div style={{ color: "#6b6e76", fontSize: 13, marginTop: 5 }}>
                   Transcript context is ready.
                 </div>
               </div>
@@ -211,7 +202,7 @@ export function TovoVoiceImage() {
                   display: "flex",
                   flexDirection: "column",
                   padding: "12px 14px",
-                  background: "#1a272e",
+                  background: "#eaf3fd",
                   borderRadius: 16,
                   marginTop: 10,
                 }}
@@ -220,16 +211,16 @@ export function TovoVoiceImage() {
                   style={{
                     display: "flex",
                     justifyContent: "space-between",
-                    color: "#8fe1f4",
+                    color: "#1f7fd4",
                     fontSize: 12,
                     letterSpacing: "0.1em",
                   }}
                 >
                   <span>ANALYSING</span>
-                  <span style={{ color: "#8fa6b0" }}>LOCAL MODEL</span>
+                  <span>LOCAL MODEL</span>
                 </div>
                 <div style={{ fontSize: 16, marginTop: 8 }}>AI notes</div>
-                <div style={{ color: "#8fa6b0", fontSize: 13, marginTop: 5 }}>
+                <div style={{ color: "#1f7fd4", fontSize: 13, marginTop: 5 }}>
                   Keep the next step clear.
                 </div>
               </div>
@@ -241,7 +232,7 @@ export function TovoVoiceImage() {
           style={{
             display: "flex",
             justifyContent: "space-between",
-            color: "#6e858f",
+            color: "#6b6e76",
             fontSize: 14,
             letterSpacing: "0.08em",
           }}

@@ -20,6 +20,13 @@ import {
 import { loadSherpaWasm, type SherpaWasmModule } from "./sherpa-loader"
 import { SHERPA_MODELS } from "./sherpa-model"
 
+// Sherpa is compiled with debug enabled: during recognizer construction its
+// C++ layer dumps the model config to stderr via emscripten's logging, which
+// calls console.error directly and bypasses Module.printErr. These lines are
+// tagged with the C++ source location (e.g. ".../c-api.cc:Func:183 ..." or
+// ".../online-...cc:operator():130 ...").
+const SHERPA_CPP_LOG_LINE = /\.(cc|h):[^:]*:\d+/
+
 /**
  * Sherpa-ONNX transcription engine
  */
@@ -81,6 +88,16 @@ export class SherpaTranscriptionEngine
       callbacks.onProgress(90)
 
       // Create recognizer using the high-level API (embedded models)
+      // Suppress sherpa's C++ debug config dump (see SHERPA_CPP_LOG_LINE)
+      // only during this synchronous construction; real JS errors still throw.
+      const originalConsoleError = console.error
+      console.error = (...args: unknown[]) => {
+        if (typeof args[0] === "string" && SHERPA_CPP_LOG_LINE.test(args[0])) {
+          return
+        }
+        originalConsoleError(...args)
+      }
+
       try {
         this.recognizer =
           this.wasmModule.createOnlineRecognizer?.(this.wasmModule) ||
@@ -93,6 +110,8 @@ export class SherpaTranscriptionEngine
         }
       } catch (error) {
         throw new Error(`Recognizer creation failed: ${error}`)
+      } finally {
+        console.error = originalConsoleError
       }
 
       if (!this.recognizer) {

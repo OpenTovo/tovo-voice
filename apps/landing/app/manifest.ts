@@ -7,29 +7,14 @@ export default function manifest(): MetadataRoute.Manifest {
     description: "Private, on-device transcription and local AI analysis",
     start_url: "/",
     display: "standalone",
-    background_color: "#ffffff",
-    theme_color: "#667eea",
+    background_color: "#fbfbf9",
+    theme_color: "#2b8fe6",
     orientation: "portrait",
     scope: "/",
     icons: [
       {
-        src: "/favicon.ico",
-        sizes: "any",
-        type: "image/x-icon",
-      },
-      {
-        src: "/tovo-logo-128.png",
-        sizes: "128x128",
-        type: "image/png",
-      },
-      {
-        src: "/tovo-logo-384.png",
-        sizes: "384x384",
-        type: "image/png",
-      },
-      {
-        src: "/tovo-logo-512.png",
-        sizes: "512x512",
+        src: "/tovo-icon.png",
+        sizes: "1024x1024",
         type: "image/png",
       },
     ],

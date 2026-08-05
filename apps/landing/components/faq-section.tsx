@@ -1,14 +1,14 @@
 "use client"
 
-import { motion } from "framer-motion"
-import { ChevronDown } from "lucide-react"
+import { motion, useReducedMotion } from "framer-motion"
+import { Plus } from "lucide-react"
 import { useState } from "react"
 
 const faqs = [
   {
-    question: "What data do we collect?",
+    question: "What data do you collect?",
     answer:
-      "Nothing! All session content stays on your device and is not saved on any remote server. Your privacy is completely protected.",
+      "Nothing. All session content stays on your device and is never sent to any server. Your privacy is completely protected.",
   },
   {
     question: "What AI models can I use?",
@@ -18,105 +18,108 @@ const faqs = [
   {
     question: "Can I use the app on desktop and mobile?",
     answer:
-      "Yes! The app works great on desktop and Android mobile devices. Unfortunately, iOS Safari has memory limitations (200-400MB) while our app requires at least 650MB to run properly, so iOS is not currently supported.",
+      "Yes — the app works great on desktop and Android mobile devices. Unfortunately, iOS Safari has memory limitations (200-400MB) while the app requires at least 650MB to run properly, so iOS is not currently supported.",
   },
   {
-    question: "How to install the app on mobile/desktop?",
+    question: "How do I install the app?",
     answer:
       "Visit our guides page for step-by-step installation instructions for your desktop or Android device.",
   },
   {
     question: "Why doesn't it work on iOS?",
     answer:
-      "iOS Safari has strict memory limitations (200-400MB depending on device), but our app needs at least 650MB to run the transcription model and AI assistant together. Until these limitations are lifted, please use a desktop or Android device.",
+      "iOS Safari has strict memory limitations (200-400MB depending on device), but the app needs at least 650MB to run the transcription model and AI assistant together. Until these limitations are lifted, please use a desktop or Android device.",
   },
   {
-    question: "AI output is too slow?",
+    question: "Why is the AI output slow?",
     answer:
-      "Please download a smaller model. Your device GPU cannot provide fast enough computation to handle the current model. Try switching to a lighter model for better performance.",
+      "Your device GPU may not be fast enough for the current model. Download a smaller model in Settings for quicker responses.",
   },
   {
-    question: "AI Sidekick response is not good?",
+    question: "How do I improve AI Sidekick responses?",
     answer:
-      "Try a larger model, which is generally more capable. Start with Gemma 3 1B or Llama 3.2 1B on mobile, and try Qwen3 1.7B or Qwen3 4B on a more capable desktop device.",
+      "Try a larger model, which is generally more capable. Start with Gemma 3 1B or Llama 3.2 1B on mobile, and try Qwen3 1.7B or Qwen3 4B on a capable desktop device.",
   },
   {
-    question: "App crashed on Android or desktop?",
+    question: "What if the app crashes?",
     answer:
-      "This may be due to memory limitations causing crashes from: 1) transcription model loading, or 2) WebGPU memory insufficient. Try using smaller models or closing other browser tabs to free up memory.",
+      "Crashes are usually memory-related — either the transcription model or WebGPU running out of memory. Try a smaller model, or close other browser tabs to free up memory.",
   },
 ]
 
 export default function FAQSection() {
   const [openIndex, setOpenIndex] = useState<number | null>(null)
+  const reduceMotion = useReducedMotion()
 
   const toggleFAQ = (index: number) => {
     setOpenIndex(openIndex === index ? null : index)
   }
 
   return (
-    <section className="px-4 py-28">
+    <section className="px-4 py-24 sm:px-8">
       <div className="mx-auto max-w-3xl">
         <motion.div
-          initial={{ opacity: 0, y: 40 }}
+          initial={reduceMotion ? false : { opacity: 0, y: 14 }}
           whileInView={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.7 }}
-          viewport={{ once: true }}
-          className="mb-16 text-center"
+          transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
+          viewport={{ once: true, amount: 0.4 }}
+          className="mb-14"
         >
-          <span className="mb-4 inline-block text-xs font-semibold uppercase tracking-[0.18em] text-[#0090EE]">
-            FAQ
-          </span>
-          <h2 className="mb-5 text-4xl font-bold tracking-tight md:text-5xl">
-            Frequently asked{" "}
-            <span className="text-gradient-zima">questions</span>
+          <h2 className="text-ink mb-5 text-4xl font-semibold tracking-[-0.02em] md:text-5xl">
+            Frequently asked questions
           </h2>
-          <p className="text-lg text-neutral-500">
-            Get answers to common questions about Tovo Voice
+          <p className="text-ink-muted text-lg leading-relaxed">
+            Everything you need to know about Tovo Voice.
           </p>
         </motion.div>
 
-        <div className="space-y-3">
+        <motion.div
+          initial={reduceMotion ? false : { opacity: 0, y: 14 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
+          viewport={{ once: true, amount: 0.2 }}
+          className="border-hairline divide-hairline divide-y border-t border-b"
+        >
           {faqs.map((faq, index) => (
-            <motion.div
-              key={faq.question}
-              initial={{ opacity: 0, y: 16 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.4, delay: index * 0.06 }}
-              viewport={{ once: true }}
-              className="glass overflow-hidden rounded-xl transition-colors duration-300 hover:border-white/10"
-            >
+            <div key={faq.question}>
               <button
                 type="button"
                 onClick={() => toggleFAQ(index)}
-                className="flex w-full items-center justify-between gap-4 p-5 text-left transition-colors hover:bg-white/[0.03]"
+                aria-expanded={openIndex === index}
+                aria-controls={`faq-panel-${index}`}
+                className="hover:bg-ink/[0.02] flex w-full items-center justify-between gap-4 px-2 py-5 text-left transition-colors"
               >
-                <h3 className="text-base font-medium text-neutral-100">
+                <h3 className="text-ink text-base font-medium">
                   {faq.question}
                 </h3>
-                <ChevronDown
-                  className={`h-4 w-4 flex-shrink-0 text-[#0090EE] transition-transform duration-300 ${
-                    openIndex === index ? "rotate-180" : ""
+                <Plus
+                  className={`text-accent-strong h-4 w-4 flex-shrink-0 transition-transform duration-300 ${
+                    openIndex === index ? "rotate-45" : ""
                   }`}
                 />
               </button>
 
               <motion.div
+                id={`faq-panel-${index}`}
                 initial={false}
                 animate={{
                   height: openIndex === index ? "auto" : 0,
                   opacity: openIndex === index ? 1 : 0,
                 }}
-                transition={{ duration: 0.3 }}
+                transition={
+                  reduceMotion
+                    ? { duration: 0 }
+                    : { duration: 0.32, ease: [0.16, 1, 0.3, 1] }
+                }
                 className="overflow-hidden"
               >
-                <div className="px-5 pb-5 text-sm leading-relaxed text-neutral-500">
+                <div className="text-ink-muted px-2 pb-5 text-sm leading-relaxed">
                   {faq.answer}
                 </div>
               </motion.div>
-            </motion.div>
+            </div>
           ))}
-        </div>
+        </motion.div>
       </div>
     </section>
   )

@@ -107,8 +107,10 @@ export const audioLogger = new Logger({
 
 export const modelLogger = new Logger({
   prefix: "[Tovo Voice Model]",
-  level:
-    process.env.NODE_ENV === "development" ? LogLevel.DEBUG : LogLevel.INFO,
+  // INFO in dev too: at DEBUG this logs every cache-probe miss
+  // ("Model not found in cache: ...:metadata") as the loader checks
+  // multiple candidate file names while loading.
+  level: LogLevel.INFO,
 })
 
 // Default logger instance

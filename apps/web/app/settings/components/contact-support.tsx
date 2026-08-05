@@ -95,7 +95,7 @@ export function ContactSupport() {
             </div>
 
             <Button onClick={openEmailClient} className="w-full">
-              <Mail className="mr-2 h-4 w-4" />
+              <Mail className="h-4 w-4" />
               Open Email Client
             </Button>
           </div>

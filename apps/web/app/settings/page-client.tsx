@@ -1,6 +1,5 @@
 "use client"
 
-import { Skeleton } from "@workspace/ui/components/skeleton"
 import { getDefaultStore, useAtom } from "jotai"
 import { useEffect, useState } from "react"
 import {
@@ -41,8 +40,6 @@ import {
 } from "./components"
 
 export default function SettingsPageClient() {
-  const isReady = true
-
   const [defaultTranscriptionModel, setDefaultTranscriptionModel] = useAtom(
     defaultTranscriptionModelAtom
   )
@@ -219,73 +216,16 @@ export default function SettingsPageClient() {
     }
   }
 
-  if (!isReady) {
-    return (
-      <div className="flex-1 p-4">
-        <div className="mx-auto max-w-2xl">
-          <Skeleton className="mb-6 h-8 w-24" />
-
-          <div className="space-y-6">
-            <div className="rounded-lg border p-6">
-              <Skeleton className="mb-4 h-6 w-32" />
-              <div className="space-y-4">
-                <div>
-                  <Skeleton className="mb-2 h-4 w-40" />
-                  <Skeleton className="h-10 w-full" />
-                </div>
-                <div>
-                  <Skeleton className="mb-2 h-4 w-32" />
-                  <Skeleton className="h-10 w-full" />
-                </div>
-              </div>
-            </div>
-
-            <div className="rounded-lg border p-6">
-              <Skeleton className="mb-4 h-6 w-32" />
-              <div className="space-y-3">
-                {[1, 2].map((i) => (
-                  <div key={i} className="rounded-lg border p-3">
-                    <div className="flex items-center justify-between">
-                      <div className="flex-1">
-                        <Skeleton className="mb-1 h-5 w-32" />
-                        <Skeleton className="h-4 w-20" />
-                      </div>
-                      <Skeleton className="h-8 w-20" />
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            <div className="rounded-lg border p-6">
-              <Skeleton className="mb-4 h-6 w-20" />
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <Skeleton className="mb-1 h-4 w-20" />
-                  <Skeleton className="h-5 w-16" />
-                </div>
-                <div>
-                  <Skeleton className="mb-1 h-4 w-24" />
-                  <Skeleton className="h-5 w-16" />
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-    )
-  }
-
   return (
     <div className="flex h-full flex-col">
       <div className="hidden flex-shrink-0 p-4 pb-2 md:block">
-        <h1 className="text-2xl font-bold">Settings</h1>
+        <h1 className="text-2xl font-bold tracking-tight">Settings</h1>
       </div>
 
       <div className="flex-1 overflow-y-auto pb-6 pt-2 md:pt-6">
-        <div className="space-y-4 px-4 sm:px-6 md:px-8">
+        <div className="mx-auto w-full max-w-3xl space-y-4 px-4 sm:px-6 md:px-8">
           <div>
-            <h2 className="text-muted-foreground mb-2 text-lg font-semibold">
+            <h2 className="mb-2 text-lg font-semibold tracking-tight">
               General
             </h2>
             <div className="space-y-0">
@@ -295,7 +235,7 @@ export default function SettingsPageClient() {
           </div>
 
           <div>
-            <h2 className="text-muted-foreground mb-2 text-lg font-semibold">
+            <h2 className="mb-2 text-lg font-semibold tracking-tight">
               Models
             </h2>
             <div className="space-y-0">
@@ -323,7 +263,7 @@ export default function SettingsPageClient() {
           </div>
 
           <div>
-            <h2 className="text-muted-foreground mb-2 text-lg font-semibold">
+            <h2 className="mb-2 text-lg font-semibold tracking-tight">
               Storage
             </h2>
             <StorageManagement
@@ -352,7 +292,7 @@ export default function SettingsPageClient() {
           </div>
 
           <div>
-            <h2 className="text-muted-foreground mb-2 text-lg font-semibold">
+            <h2 className="mb-2 text-lg font-semibold tracking-tight">
               About
             </h2>
             <div className="space-y-0">

@@ -99,7 +99,7 @@ export function WebLLMModelsManagement({
                 <div className="flex items-center gap-2">
                   <span className="flex items-center gap-1 font-medium">
                     Large Language Models
-                    <span className="text-red-500">*</span>
+                    <span className="text-destructive">*</span>
                   </span>
                   {getStatusBadge()}
                 </div>
@@ -111,12 +111,7 @@ export function WebLLMModelsManagement({
             <ChevronRight className="h-4 w-4 flex-shrink-0" />
           </Button>
         </DialogTrigger>
-        <DialogContent
-          className="my-4 w-[90dvw] px-4"
-          onInteractOutside={(e) => {
-            e.preventDefault()
-          }}
-        >
+        <DialogContent className="my-4 w-[90dvw] px-4">
           <DialogHeader>
             <DialogTitle>Large Language Models</DialogTitle>
             <DialogDescription>

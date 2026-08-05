@@ -117,8 +117,10 @@ export function TranscriptionSection({
 
   return (
     <Card
-      className={`mb-4 flex flex-col py-4 transition-all duration-200 ${
-        isTranscriptionVisible ? "min-h-[220px] gap-4" : "h-auto gap-0"
+      className={`mb-4 flex flex-col py-4 shadow-card transition-all duration-200 ${
+        isTranscriptionVisible
+          ? "max-h-[35svh] min-h-[220px] gap-4"
+          : "h-auto gap-0"
       }`}
     >
       <CardHeader
@@ -127,22 +129,18 @@ export function TranscriptionSection({
         <CardTitle className="flex items-start justify-between">
           <div className="flex flex-col items-start gap-2">
             <div className="flex items-center gap-2">
-              <Mic className="h-4.5 w-4.5" />
+              <Mic className="h-4 w-4" />
               Live Transcription
             </div>
             {transcriptionLoading ? (
-              <Badge variant="secondary" className="-mx-1">
+              <Badge variant="secondary">
                 <div className="mr-2 h-2 w-2 animate-spin rounded-full border border-current border-t-transparent" />
                 Loading...
               </Badge>
             ) : currentModel ? (
-              <Badge variant="outline" className="-mx-1">
-                {getModelDisplayName(currentModel)}
-              </Badge>
+              <Badge variant="outline">{getModelDisplayName(currentModel)}</Badge>
             ) : (
-              <Badge variant="secondary" className="-mx-1">
-                No model set
-              </Badge>
+              <Badge variant="secondary">No model set</Badge>
             )}
           </div>
 
@@ -225,12 +223,23 @@ export function TranscriptionSection({
                         }}
                         className="w-1/2 max-w-[200px]"
                       >
-                        <Settings className="mr-2 h-4 w-4" />
+                        <Settings className="h-4 w-4" />
                         Go to Settings
                       </Button>
                     </div>
                   </div>
-                ) : null}
+                ) : (
+                  <div className="flex flex-col items-center justify-center py-6 text-center">
+                    <Mic className="text-muted-foreground/50 mb-3 h-8 w-8" />
+                    <p className="text-muted-foreground max-w-[40ch] text-sm">
+                      Press{" "}
+                      <span className="text-foreground font-medium">
+                        Start Session
+                      </span>{" "}
+                      and speak — your words appear here live.
+                    </p>
+                  </div>
+                )}
               </div>
             )}
           </>

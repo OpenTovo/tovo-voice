@@ -15,6 +15,7 @@ import {
   Trash2,
 } from "lucide-react"
 import { useEffect, useState } from "react"
+import { toast } from "@workspace/ui/components/sonner"
 import { WebGPUSetupDialog } from "@/components/dialogs/webgpu-setup"
 import {
   defaultAnalysisModelAtom,
@@ -166,7 +167,7 @@ This model will be cached locally for offline use. Download may take several min
 
     // Add any warnings from the device check
     if (deviceCheck.reason) {
-      confirmationMessage += `\n\n⚠️ ${deviceCheck.reason}`
+      confirmationMessage += `\n\nWarning: ${deviceCheck.reason}`
     }
 
     const confirmed = await showConfirmDialog({
@@ -307,7 +308,7 @@ This will permanently remove the model from your device. You can download it aga
         onModelReady(modelName)
       }
     } catch {
-      // Silently handle error, user will notice model still exists
+      toast.error("Failed to delete the model. Please try again.")
     }
   }
 
@@ -353,7 +354,7 @@ This will permanently remove the model from your device. You can download it aga
           className="w-full"
           variant="outline"
         >
-          <Settings className="mr-2 h-4 w-4" />
+          <Settings className="h-4 w-4" />
           How to Enable WebGPU
         </Button>
 
@@ -450,7 +451,7 @@ Please choose a smaller model that fits within your device's capabilities.`,
                     </Badge>
                   )}
                   {isDownloaded && (
-                    <CheckCircle className="h-4 w-4 text-green-600" />
+                    <CheckCircle className="h-4 w-4 text-status-success" />
                   )}
                   {/* Device compatibility warning/info icon - only show for non-downloaded models */}
                   {!isDownloaded && (deviceWarning || !canHandleModel) && (
@@ -467,7 +468,7 @@ Please choose a smaller model that fits within your device's capabilities.`,
                     >
                       <Info
                         className={`h-3 w-3 ${
-                          !canHandleModel ? "text-red-500" : "text-yellow-500"
+                          !canHandleModel ? "text-destructive" : "text-status-processing"
                         }`}
                       />
                     </Button>
@@ -476,7 +477,7 @@ Please choose a smaller model that fits within your device's capabilities.`,
                 <div className="text-muted-foreground text-xs">
                   {formatFileSize(model.vramRequired)} • {model.description}
                   {!isDownloaded && !canHandleModel && (
-                    <span className="ml-1 text-red-500">
+                    <span className="ml-1 text-destructive">
                       • {deviceWarning || "Insufficient storage or memory"}
                     </span>
                   )}

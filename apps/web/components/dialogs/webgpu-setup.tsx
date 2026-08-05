@@ -64,7 +64,7 @@ export function WebGPUSetupDialog({
               }}
               className="w-full"
             >
-              <ExternalLink className="mr-2 h-4 w-4" />
+              <ExternalLink className="h-4 w-4" />
               Detailed Guide
             </Button>
           </div>

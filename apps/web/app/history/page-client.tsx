@@ -3,6 +3,7 @@
 import { Button } from "@workspace/ui/components/button"
 import { Card, CardContent } from "@workspace/ui/components/card"
 import { Skeleton } from "@workspace/ui/components/skeleton"
+import { toast } from "@workspace/ui/components/sonner"
 import { useSetAtom } from "jotai"
 import { Clock, MessageSquare, Trash2 } from "lucide-react"
 import { useRouter } from "next/navigation"
@@ -139,6 +140,7 @@ export default function HistoryPageClient() {
       setSessions(sessionList)
     } catch (error) {
       console.error("Error loading sessions:", error)
+      toast.error("Failed to load session history. Please refresh.")
     } finally {
       setSessionsLoading(false)
     }
@@ -156,6 +158,7 @@ export default function HistoryPageClient() {
       )
     } catch (error) {
       console.error("Error deleting session:", error)
+      toast.error("Failed to delete the session. Please try again.")
     }
   }
 
@@ -166,7 +169,7 @@ export default function HistoryPageClient() {
   return (
     <div className="flex h-full flex-col">
       <div className="hidden flex-shrink-0 p-4 pb-2 md:block">
-        <h1 className="text-2xl font-bold">Session History</h1>
+        <h1 className="text-2xl font-bold tracking-tight">Session History</h1>
       </div>
 
       <div className="flex-1 overflow-y-auto px-4 pb-4 pt-2 sm:px-6 md:px-8 md:pt-0">

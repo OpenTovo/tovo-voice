@@ -32,7 +32,7 @@ export function TranscriptionManagement({
             <div className="text-left">
               <div className="flex items-center gap-1 font-medium">
                 Transcription Models
-                <span className="text-red-500">*</span>
+                <span className="text-destructive">*</span>
               </div>
               <div className="text-muted-foreground text-sm">
                 Manage transcription models

@@ -14,7 +14,7 @@ export function AIResponseMarkdown({
 }: AIResponseMarkdownProps) {
   return (
     <div
-      className={`prose prose-sm dark:prose-invert sm:prose-base max-w-[90vw] break-words sm:max-w-none ${className}`}
+      className={`max-w-[90vw] break-words sm:max-w-none ${className}`}
     >
       <ReactMarkdown
         remarkPlugins={[remarkGfm, remarkMath]}

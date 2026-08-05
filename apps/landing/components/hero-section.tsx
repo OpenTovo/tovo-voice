@@ -1,6 +1,7 @@
 "use client"
 
-import { motion } from "framer-motion"
+import { motion, useReducedMotion } from "framer-motion"
+import { ArrowRight, Github } from "lucide-react"
 import Image from "next/image"
 
 const badge = "Privacy-first, on-device voice AI"
@@ -12,110 +13,95 @@ const stats = [
 ]
 
 export default function HeroSection() {
+  const reduceMotion = useReducedMotion()
+  const rise = (delay: number) => ({
+    initial: reduceMotion ? false : { opacity: 0, y: 14 },
+    animate: { opacity: 1, y: 0 },
+    transition: { duration: 0.6, delay, ease: [0.16, 1, 0.3, 1] as const },
+  })
+
   return (
-    <section className="relative flex min-h-screen items-center justify-center overflow-hidden px-4 pt-24 pb-20">
-      {/* Background: grid + zima glows */}
-      <div className="absolute inset-0 pointer-events-none">
-        <div className="absolute left-1/2 top-0 h-[520px] w-[820px] -translate-x-1/2 rounded-full bg-[#0090EE]/[0.10] blur-[140px]" />
-        <div className="absolute bottom-0 right-1/4 h-[320px] w-[320px] rounded-full bg-[#0090EE]/[0.06] blur-[110px]" />
+    <section className="relative flex min-h-[calc(100dvh-4rem)] items-center justify-center overflow-hidden px-4 py-20 sm:px-8">
+      {/* Ambient accent glow (TovoType signature) */}
+      <div className="pointer-events-none absolute inset-0">
+        <div className="ambient-glow absolute left-1/2 top-[-180px] h-[520px] w-[60vw] -translate-x-1/2 rounded-full" />
       </div>
-      <div className="grid-bg absolute inset-0" />
 
       <div className="relative z-10 mx-auto max-w-5xl text-center">
         {/* Logo + badge */}
         <motion.div
-          initial={{ opacity: 0, y: 16 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5 }}
+          {...rise(0)}
           className="mb-8 flex flex-col items-center gap-4"
         >
           <Image
-            src="/tovo-logo.svg"
+            src="/tovo-icon.png"
             alt="Tovo Voice"
             width={56}
             height={56}
-            className="drop-shadow-[0_0_24px_rgba(0,144,238,0.35)]"
           />
-          <span className="rounded-full border border-white/10 bg-white/[0.04] px-4 py-1.5 text-xs font-medium uppercase tracking-[0.18em] text-neutral-300 backdrop-blur-sm">
+          <span className="bg-accent-soft text-accent-strong rounded-full px-4 py-1.5 text-[11px] font-semibold uppercase tracking-[0.18em]">
             {badge}
           </span>
         </motion.div>
 
         {/* Headline */}
         <motion.h1
-          initial={{ opacity: 0, y: 32 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.7, delay: 0.08 }}
-          className="mx-auto max-w-4xl text-5xl font-bold leading-[1.04] tracking-tight text-white md:text-7xl lg:text-[5.5rem]"
+          {...rise(0.08)}
+          className="text-ink mx-auto max-w-4xl text-5xl leading-[1.02] font-semibold tracking-[-0.03em] sm:text-7xl"
         >
           Your AI sidekick for{" "}
-          <span className="text-gradient-zima">every conversation</span>
+          <span className="font-display text-accent font-black">
+            every conversation
+          </span>
         </motion.h1>
 
         {/* Subhead */}
         <motion.p
-          initial={{ opacity: 0, y: 24 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.7, delay: 0.18 }}
-          className="mx-auto mt-7 max-w-2xl text-lg leading-relaxed text-neutral-400 md:text-xl"
+          {...rise(0.16)}
+          className="text-ink-muted mx-auto mt-7 max-w-2xl text-lg leading-relaxed md:text-xl"
         >
-          Meet <span className="text-white font-medium">Tovo Voice</span> — a
-          privacy-first voice app that transcribes speech and turns it into
-          useful AI insights, all on your device.
+          Meet Tovo Voice — a privacy-first voice app that transcribes speech
+          into useful AI insights, entirely on your device.
         </motion.p>
 
         {/* CTAs */}
         <motion.div
-          initial={{ opacity: 0, y: 24 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.7, delay: 0.28 }}
+          {...rise(0.24)}
           className="mt-10 flex flex-col items-center justify-center gap-4 sm:flex-row"
         >
           <a
             href="https://pwa.tovo.dev"
             target="_blank"
             rel="noopener noreferrer"
-            className="group relative inline-flex items-center justify-center gap-2 rounded-full bg-[#0090EE] px-8 py-4 text-base font-semibold text-white shadow-[0_8px_30px_rgba(0,144,238,0.25)] transition-all duration-300 hover:bg-[#007acc] hover:shadow-[0_8px_44px_rgba(0,144,238,0.45)]"
+            className="group bg-ink text-surface hover:bg-ink/85 inline-flex min-h-[46px] items-center justify-center gap-2 rounded-xl px-8 text-base font-semibold transition-all active:scale-[0.98]"
           >
             Launch Tovo Voice
-            <span className="transition-transform duration-300 group-hover:translate-x-0.5">
-              &rarr;
-            </span>
+            <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" />
           </a>
 
           <a
             href="https://github.com/OpenTovo/tovo-voice"
             target="_blank"
             rel="noopener noreferrer"
-            aria-label="View source on GitHub"
-            className="flex items-center gap-2 rounded-full border border-white/10 bg-white/[0.03] px-6 py-4 text-base font-medium text-neutral-300 transition-all duration-300 hover:bg-white/[0.07] hover:text-white backdrop-blur-sm"
+            className="border-ink/25 text-ink hover:border-ink/40 hover:bg-ink/[0.04] inline-flex min-h-[46px] items-center gap-2 rounded-xl border px-6 text-base font-medium transition-all active:scale-[0.98]"
           >
-            <svg
-              viewBox="0 0 24 24"
-              fill="currentColor"
-              className="h-5 w-5"
-              aria-hidden="true"
-            >
-              <path d="M12 .297c-6.63 0-12 5.373-12 12 0 5.303 3.438 9.8 8.205 11.385.6.113.82-.258.82-.577 0-.285-.01-1.04-.015-2.04-3.338.724-4.042-1.61-4.042-1.61C4.422 18.07 3.633 17.7 3.633 17.7c-1.087-.744.084-.729.084-.729 1.205.084 1.838 1.236 1.838 1.236 1.07 1.835 2.809 1.305 3.495.998.108-.776.419-1.305.762-1.605-2.665-.3-5.466-1.332-5.466-5.93 0-1.31.465-2.38 1.235-3.22-.135-.303-.54-1.523.105-3.176 0 0 1.005-.322 3.3 1.23.96-.267 1.98-.399 3-.405 1.02.006 2.04.138 3 .405 2.28-1.552 3.285-1.23 3.285-1.23.645 1.653.24 2.873.12 3.176.765.84 1.23 1.91 1.23 3.22 0 4.61-2.805 5.625-5.475 5.92.42.36.81 1.096.81 2.22 0 1.606-.015 2.896-.015 3.286 0 .315.21.69.825.57C20.565 22.092 24 17.592 24 12.297c0-6.627-5.373-12-12-12" />
-            </svg>
+            <Github className="h-5 w-5" />
             GitHub
           </a>
         </motion.div>
 
         {/* Stats */}
         <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ duration: 0.8, delay: 0.5 }}
-          className="mx-auto mt-12 flex max-w-md items-center justify-center divide-x divide-white/10"
+          {...rise(0.36)}
+          className="divide-hairline mx-auto mt-12 flex max-w-md items-center justify-center divide-x"
         >
           {stats.map((s) => (
             <div
               key={s.label}
               className="flex flex-1 flex-col items-center px-4"
             >
-              <span className="text-2xl font-bold text-white">{s.value}</span>
-              <span className="mt-1 text-xs uppercase tracking-wider text-neutral-500">
+              <span className="text-ink text-2xl font-semibold">{s.value}</span>
+              <span className="text-ink-muted mt-1 text-xs uppercase tracking-wider">
                 {s.label}
               </span>
             </div>
@@ -123,13 +109,8 @@ export default function HeroSection() {
         </motion.div>
 
         {/* Demo Video */}
-        <motion.div
-          initial={{ opacity: 0, y: 40 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.8, delay: 0.7 }}
-          className="mt-16 flex justify-center"
-        >
-          <div className="relative max-w-2xl overflow-hidden rounded-2xl border border-white/[0.08] bg-neutral-900/60 p-3 shadow-2xl backdrop-blur-xl">
+        <motion.div {...rise(0.48)} className="mt-16 flex justify-center">
+          <div className="border-hairline bg-surface shadow-card relative max-w-2xl overflow-hidden rounded-2xl border p-3">
             <video
               className="w-full rounded-xl"
               autoPlay
@@ -138,31 +119,12 @@ export default function HeroSection() {
               playsInline
               poster="/tovo-screenshots/tovo-desktop-new-session.png"
             >
-              <source
-                src="/tovo-screenshots/tovo-short-desktop.mov"
-                type="video/mp4"
-              />
+              <source src="/tovo-screenshots/tovo-short-desktop.mov" />
               Your browser does not support the video tag.
             </video>
           </div>
         </motion.div>
       </div>
-
-      {/* Scroll indicator */}
-      <motion.div
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ duration: 1, delay: 1.2 }}
-        className="absolute bottom-6 left-1/2 -translate-x-1/2"
-      >
-        <div className="flex h-10 w-6 justify-center rounded-full border border-white/15">
-          <motion.div
-            animate={{ y: [0, 12, 0] }}
-            transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
-            className="mt-2 h-3 w-1 rounded-full bg-white/30"
-          />
-        </div>
-      </motion.div>
     </section>
   )
 }

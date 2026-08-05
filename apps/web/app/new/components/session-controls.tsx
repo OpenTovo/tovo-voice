@@ -49,7 +49,7 @@ export function SessionControls({
   }
 
   return (
-    <div className="bg-background justify-end p-2">
+    <div className="bg-background/95 supports-[backdrop-filter]:bg-background/60 justify-end p-2 backdrop-blur">
       <div className="mx-auto max-w-md sm:max-w-lg md:max-w-xl lg:max-w-2xl">
         {/* Session Action Buttons */}
         <div className="mb-2 flex gap-2">
@@ -57,7 +57,7 @@ export function SessionControls({
             sessionStatus !== SessionStatus.Paused && (
               <Button
                 onClick={handleStartSession}
-                className="h-11 flex-1"
+                className="h-11 flex-1 shadow-card"
                 disabled={
                   !isModelLoaded || transcriptionLoading || !isAIModelReady
                 }
@@ -69,7 +69,7 @@ export function SessionControls({
                       : "Start recording session"
                 }
               >
-                <Mic className="mr-2 h-4 w-4" />
+                <Mic className="h-4 w-4" />
                 Start Session
               </Button>
             )}
@@ -79,17 +79,17 @@ export function SessionControls({
               <Button
                 onClick={handlePauseSession}
                 variant="outline"
-                className="h-11 flex-1"
+                className="h-11 flex-1 shadow-card"
               >
-                <Pause className="mr-2 h-4 w-4" />
+                <Pause className="h-4 w-4" />
                 Pause
               </Button>
               <Button
                 onClick={handleEndSession}
                 variant="destructive"
-                className="h-11 flex-1"
+                className="h-11 flex-1 shadow-card"
               >
-                <MicOff className="mr-2 h-4 w-4" />
+                <MicOff className="h-4 w-4" />
                 End Session
               </Button>
             </>
@@ -97,16 +97,19 @@ export function SessionControls({
 
           {sessionStatus === SessionStatus.Paused && (
             <>
-              <Button onClick={handleContinueSession} className="h-11 flex-1">
-                <Play className="mr-2 h-4 w-4" />
+              <Button
+                onClick={handleContinueSession}
+                className="h-11 flex-1 shadow-card"
+              >
+                <Play className="h-4 w-4" />
                 Continue
               </Button>
               <Button
                 onClick={handleEndSession}
                 variant="destructive"
-                className="h-11 flex-1"
+                className="h-11 flex-1 shadow-card"
               >
-                <MicOff className="mr-2 h-4 w-4" />
+                <MicOff className="h-4 w-4" />
                 End Session
               </Button>
             </>
@@ -117,17 +120,17 @@ export function SessionControls({
         <div className="text-muted-foreground flex h-6 items-center justify-center gap-2 text-sm">
           {sessionStatus === SessionStatus.Recording ? (
             <>
-              <div className="h-2 w-2 animate-pulse rounded-full bg-red-500"></div>
+              <div className="h-2 w-2 animate-pulse rounded-full bg-status-recording"></div>
               Session in progress...
             </>
           ) : sessionStatus === SessionStatus.Paused ? (
             <>
-              <div className="h-2 w-2 rounded-full bg-yellow-500"></div>
+              <div className="h-2 w-2 rounded-full bg-status-processing"></div>
               Session paused
             </>
           ) : (
             <>
-              <div className="h-2 w-2 rounded-full bg-gray-400"></div>
+              <div className="h-2 w-2 rounded-full bg-status-idle"></div>
               {!isModelLoaded
                 ? "Loading a model..."
                 : !isAIModelReady

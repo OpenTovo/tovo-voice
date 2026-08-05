@@ -1,10 +1,17 @@
 import type { Metadata } from "next"
-import { Outfit } from "next/font/google"
+import { Geist, Outfit } from "next/font/google"
 import "./globals.css"
 import { GoogleAnalytics } from "@next/third-parties/google"
+import { SiteNav } from "../components/site-nav"
 import { StructuredData } from "../components/structured-data"
+import { TryBanner } from "../components/try-banner"
 
-const outfit = Outfit({ subsets: ["latin"], variable: "--font-outfit" })
+const geistSans = Geist({ subsets: ["latin"], variable: "--font-geist-sans" })
+const outfit = Outfit({
+  subsets: ["latin"],
+  weight: ["700", "900"],
+  variable: "--font-outfit",
+})
 const landingUrl = "https://voice.tovo.dev"
 const landingTitle = "Tovo Voice | Private AI Sidekick with Local Transcription"
 
@@ -86,7 +93,11 @@ export default function RootLayout({
       <head>
         <StructuredData />
       </head>
-      <body className={outfit.className}>
+      <body
+        className={`${geistSans.variable} ${outfit.variable} font-sans antialiased`}
+      >
+        <TryBanner />
+        <SiteNav />
         {children}
 
         <GoogleAnalytics gaId="G-Z3V8CNTNBG" />

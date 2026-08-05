@@ -1,6 +1,6 @@
 "use client"
 
-import { motion } from "framer-motion"
+import { motion, useReducedMotion } from "framer-motion"
 import {
   Headphones,
   MessageSquare,
@@ -29,7 +29,7 @@ const features = [
   },
   {
     icon: Headphones,
-    title: "No Type & Send",
+    title: "Hands-Free Insights",
     description:
       "Auto extracts key points from your conversation in real time.",
   },
@@ -40,57 +40,58 @@ const features = [
   },
   {
     icon: Mic,
-    title: "Always Listening",
-    description: "Ready when you are, works across all your devices.",
+    title: "Always Ready",
+    description: "Runs on Android and desktop browsers, no install required.",
   },
 ]
 
 export default function FeaturesSection() {
+  const reduceMotion = useReducedMotion()
+
   return (
-    <section className="px-4 py-28">
-      <div className="mx-auto max-w-6xl">
+    <section className="px-4 py-24 sm:px-8">
+      <div className="mx-auto max-w-[1120px]">
         <motion.div
-          initial={{ opacity: 0, y: 40 }}
+          initial={reduceMotion ? false : { opacity: 0, y: 14 }}
           whileInView={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.7 }}
-          viewport={{ once: true }}
-          className="mb-16 text-center"
+          transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
+          viewport={{ once: true, amount: 0.4 }}
+          className="mb-14"
         >
-          <span className="mb-4 inline-block text-xs font-semibold uppercase tracking-[0.18em] text-[#0090EE]">
+          <span className="text-accent-strong mb-4 inline-block text-xs font-semibold uppercase tracking-[0.2em]">
             Features
           </span>
-          <h2 className="mb-5 text-4xl font-bold tracking-tight md:text-5xl">
-            Why choose <span className="text-gradient-zima">Tovo Voice</span>?
+          <h2 className="text-ink mb-5 max-w-xl text-4xl font-semibold tracking-[-0.02em] md:text-5xl">
+            Everything stays on your device
           </h2>
-          <p className="mx-auto max-w-2xl text-lg text-neutral-500">
-            Complete privacy and local AI capabilities — no cloud, no
-            compromise.
+          <p className="text-ink-muted max-w-2xl text-lg leading-relaxed">
+            Transcription and AI analysis run locally in your browser — no
+            cloud, no compromise.
           </p>
         </motion.div>
 
-        <div className="grid grid-cols-1 gap-5 md:grid-cols-2 lg:grid-cols-3">
-          {features.map((feature, index) => (
-            <motion.div
-              key={feature.title}
-              initial={{ opacity: 0, y: 40 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.5, delay: index * 0.08 }}
-              viewport={{ once: true }}
-              whileHover={{ y: -6 }}
-              className="glow-card glass group rounded-2xl p-8 transition-colors duration-300 hover:border-white/10"
-            >
-              <div className="mb-5 inline-flex h-12 w-12 items-center justify-center rounded-xl bg-[#0090EE]/10 ring-1 ring-[#0090EE]/20 transition-colors duration-300 group-hover:bg-[#0090EE]/20">
-                <feature.icon className="h-6 w-6 text-[#0090EE]" />
+        {/* TovoType signature hairline-ruled grid */}
+        <motion.div
+          initial={reduceMotion ? false : { opacity: 0, y: 14 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
+          viewport={{ once: true, amount: 0.2 }}
+          className="border-hairline bg-hairline grid grid-cols-1 gap-px overflow-hidden rounded-2xl border md:grid-cols-2 lg:grid-cols-3"
+        >
+          {features.map((feature) => (
+            <div key={feature.title} className="bg-surface p-8">
+              <div className="bg-accent-soft mb-5 inline-flex h-11 w-11 items-center justify-center rounded-xl">
+                <feature.icon className="text-accent-strong h-5 w-5" />
               </div>
-              <h3 className="mb-3 text-lg font-semibold text-white">
+              <h3 className="text-ink mb-2 text-lg font-semibold tracking-tight">
                 {feature.title}
               </h3>
-              <p className="text-sm leading-relaxed text-neutral-500">
+              <p className="text-ink-muted text-sm leading-relaxed">
                 {feature.description}
               </p>
-            </motion.div>
+            </div>
           ))}
-        </div>
+        </motion.div>
       </div>
     </section>
   )

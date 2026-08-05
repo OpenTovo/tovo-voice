@@ -16,6 +16,7 @@ export function SessionTypeSelector() {
 
   const currentConfig =
     SESSION_TYPE_CONFIG[sessionType] ?? SESSION_TYPE_CONFIG[SessionType.GENERAL]
+  const CurrentIcon = currentConfig.icon
 
   const handleTypeChange = (newType: string) => {
     setSessionType(newType as SessionType)
@@ -26,7 +27,7 @@ export function SessionTypeSelector() {
       <SelectTrigger className="h-11! w-fit">
         <SelectValue>
           <div className="flex items-center gap-2">
-            <span className="text-base">{currentConfig.icon}</span>
+            <CurrentIcon className="text-muted-foreground h-4 w-4" />
             <span className="text-sm">{currentConfig.name}</span>
           </div>
         </SelectValue>
@@ -35,7 +36,7 @@ export function SessionTypeSelector() {
         {Object.entries(SESSION_TYPE_CONFIG).map(([type, config]) => (
           <SelectItem key={type} value={type}>
             <div className="w-45 flex items-center gap-3">
-              <span className="-mt-[2px] text-base">{config.icon}</span>
+              <config.icon className="text-muted-foreground h-4 w-4 shrink-0" />
               <div className="flex-1">
                 <div className="font-medium">{config.name}</div>
                 <div className="text-muted-foreground text-xs">
