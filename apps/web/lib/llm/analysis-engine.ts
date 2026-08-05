@@ -64,6 +64,7 @@ export interface AnalysisRequest {
   transform?: MessageTransformName
   previousResponses?: AnalysisResponse[]
   userProvidedContext?: string // Optional user-provided context
+  enableThinking?: boolean // Enable LLM thinking mode (Qwen3 models only)
   onStreamChunk?: (chunk: string) => void
 }
 
@@ -591,6 +592,9 @@ export class LLMAnalysisEngine {
       repetition_penalty: 1.1,
       max_tokens: sessionConfig.maxTokens,
       stream: true,
+      extra_body: {
+        enable_thinking: request.enableThinking ?? true,
+      },
     })
 
     return this.handleStreamingResponse(response, request.onStreamChunk)

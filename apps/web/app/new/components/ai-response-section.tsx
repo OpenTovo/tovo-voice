@@ -22,7 +22,7 @@ import { useRouter } from "next/navigation"
 import { useCallback, useEffect, useRef, useState } from "react"
 import { AIResponseMarkdown } from "@/components/ai/ai-response-markdown"
 import { WebGPUSetupDialog } from "@/components/dialogs/webgpu-setup"
-import { defaultAnalysisModelAtom, sessionContextAtom } from "@/lib/atoms"
+import { defaultAnalysisModelAtom, enableThinkingAtom, sessionContextAtom } from "@/lib/atoms"
 import {
   analysisLoadingAtom,
   analysisResponsesAtom,
