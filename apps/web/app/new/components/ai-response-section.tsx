@@ -71,6 +71,7 @@ export function AIResponseSection({
   )
   const [currentStreamingResponse, setCurrentStreamingResponse] =
     useState<string>("")
+  const [isThinking, setIsThinking] = useState(false)
   const [sessionContext, setSessionContext] = useAtom(sessionContextAtom)
   const [enableThinking, setEnableThinking] = useAtom(enableThinkingAtom)
   const scrollAreaRef = useRef<HTMLDivElement>(null)
@@ -237,6 +238,7 @@ export function AIResponseSection({
         previousResponses: analysisResponses,
         userProvidedContext: sessionContext.trim() || undefined, // Include user context if provided
         enableThinking,
+        onThinkingChange: setIsThinking,
         onStreamChunk: (content: string) => {
           // Check if analysis should be aborted
           if (abortController.signal.aborted) {
@@ -250,11 +252,13 @@ export function AIResponseSection({
       // Check if aborted before processing response
       if (abortController.signal.aborted) {
         setCurrentStreamingResponse("")
+        setIsThinking(false)
         return
       }
 
       if (response.content?.trim() && response.content.trim() !== "none") {
         setCurrentStreamingResponse("")
+        setIsThinking(false)
 
         // Save AI response to database
         if (aiResponseManagerRef.current && sessionId) {
@@ -275,12 +279,14 @@ export function AIResponseSection({
         })
       } else {
         setCurrentStreamingResponse("")
+        setIsThinking(false)
       }
     } catch (error) {
       if (!abortController.signal.aborted) {
         console.error("Analysis failed:", error)
       }
       setCurrentStreamingResponse("")
+      setIsThinking(false)
     } finally {
       setIsAnalyzing(false)
       currentAnalysisAbortRef.current = null
@@ -370,6 +376,7 @@ export function AIResponseSection({
     // Clear ONLY the displayed AI responses and UI state - leave session/LLM memory intact
     setAnalysisResponses([])
     setCurrentStreamingResponse("") // Clear any ongoing streaming response
+    setIsThinking(false)
     setIsUserScrolling(false) // Reset scroll tracking
     setIsAnalyzing(false) // Stop analyzing indicator
 
@@ -403,6 +410,7 @@ export function AIResponseSection({
 
       clearSessionData()
       setCurrentStreamingResponse("") // Clear streaming state
+      setIsThinking(false)
       setIsAnalyzing(false) // Also stop any ongoing analysis
       setIsUserScrolling(false) // Reset scroll state
       llmAnalysisEngine.clearConversationHistory() // Clear LLM conversation memory
@@ -441,6 +449,7 @@ export function AIResponseSection({
 
       // Clear streaming state
       setCurrentStreamingResponse("")
+      setIsThinking(false)
       setIsAnalyzing(false)
 
       // Clear timeouts
@@ -453,7 +462,7 @@ export function AIResponseSection({
 
   return (
     <Card className="mb-4 flex min-h-0 w-full flex-1 flex-col gap-4 py-4 shadow-card">
-      <CardHeader className="flex-shrink-0 px-4 sm:px-6 md:px-8">
+      <CardHeader className="flex-shrink-0 px-4 sm:px-4 md:px-4">
         <CardTitle className="flex justify-between gap-3">
           <div className="flex items-start justify-between">
             <div className="flex flex-col items-start gap-2">
@@ -494,7 +503,7 @@ export function AIResponseSection({
           </div>
           <div className="flex items-center gap-3">
             {defaultAnalysisModel && isThinkingCapableModel(defaultAnalysisModel) && (
-              <label className="flex cursor-pointer items-center gap-2">
+              <div className="flex items-center gap-2">
                 <span className="text-muted-foreground text-xs font-medium">
                   Thinking
                 </span>
@@ -503,13 +512,13 @@ export function AIResponseSection({
                   onCheckedChange={setEnableThinking}
                   aria-label="Enable model thinking"
                 />
-              </label>
+              </div>
             )}
             <SessionTypeSelector />
           </div>
         </CardTitle>
       </CardHeader>
-      <CardContent className="flex-1 overflow-hidden px-4 sm:px-6 md:px-8">
+      <CardContent className="flex-1 overflow-hidden px-4 sm:px-4 md:px-4">
         {!webgpuInfo?.isEnabled ? (
           <div className="space-y-4">
             <p className="text-muted-foreground text-sm">
@@ -568,7 +577,7 @@ export function AIResponseSection({
           <div className="relative flex h-full min-h-0 flex-col">
             {/* Static Clear Button - positioned absolutely at top right */}
             {analysisResponses.length > 0 && (
-              <div className="absolute bottom-0 right-0 z-10 flex gap-2">
+              <div className="absolute bottom-1 right-2 z-10 flex gap-2">
                 {/* Scroll to bottom indicator when user has scrolled up */}
                 {isUserScrolling && (
                     <Button
@@ -596,7 +605,14 @@ export function AIResponseSection({
               </div>
             )}
 
-            {isAnalyzing ? (
+            {isThinking ? (
+              <div className="text-muted-foreground mb-3 flex flex-shrink-0 items-center gap-2">
+                <Brain className="h-4 w-4 animate-pulse" />
+                <span className="shimmer-text text-sm font-medium">
+                  Thinking...
+                </span>
+              </div>
+            ) : isAnalyzing ? (
               <div className="text-muted-foreground mb-3 flex flex-shrink-0 items-center gap-2">
                 <Brain className="h-4 w-4 animate-pulse" />
                 <span className="text-sm">Analyzing...</span>
@@ -606,7 +622,7 @@ export function AIResponseSection({
             {/* Scrollable responses area */}
             <div
               ref={scrollAreaRef}
-              className={`h-full min-h-0 flex-1 space-y-4 overflow-y-auto pr-2 ${
+              className={`h-full min-h-0 flex-1 space-y-4 overflow-y-auto ${
                 currentStreamingResponse ? "" : "scroll-smooth"
               }`}
               onScroll={handleScroll}

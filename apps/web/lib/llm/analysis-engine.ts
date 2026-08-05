@@ -55,6 +55,9 @@ import {
 const MAX_CHAT_MESSAGES = 20 // Maximum messages before summarization
 const MIN_TRANSCRIPTION_LENGTH = 6
 const SUMMARY_REPLACEMENT_THRESHOLD = 15 // Replace old messages with summary after this many messages
+// Extra token budget for thinking mode (Qwen3). Thinking tokens count against
+// max_tokens, so give them room without starving the final answer.
+const THINKING_TOKEN_BUDGET = 200
 
 // Types
 export interface AnalysisRequest {
@@ -65,6 +68,7 @@ export interface AnalysisRequest {
   previousResponses?: AnalysisResponse[]
   userProvidedContext?: string // Optional user-provided context
   enableThinking?: boolean // Enable LLM thinking mode (Qwen3 models only)
+  onThinkingChange?: (isThinking: boolean) => void // Called when model starts/stops thinking
   onStreamChunk?: (chunk: string) => void
 }
 
@@ -586,19 +590,30 @@ export class LLMAnalysisEngine {
       })),
     })
 
+    const thinkingCapable = isThinkingCapableModel(request.modelName)
+    const enableThinking = request.enableThinking ?? true
+
     const response = await this.engine.chat.completions.create({
       messages: chatMessages,
       temperature: sessionConfig.temperature,
       repetition_penalty: 1.1,
-      max_tokens: sessionConfig.maxTokens,
+      // Reserve extra tokens for thinking so the answer isn't truncated
+      max_tokens:
+        sessionConfig.maxTokens +
+        (thinkingCapable && enableThinking ? THINKING_TOKEN_BUDGET : 0),
       stream: true,
       // Qwen3 models think by default; only pass the flag to thinking-capable models
-      ...(isThinkingCapableModel(request.modelName)
-        ? { extra_body: { enable_thinking: request.enableThinking ?? true } }
+      ...(thinkingCapable
+        ? { extra_body: { enable_thinking: enableThinking } }
         : {}),
     })
 
-    return this.handleStreamingResponse(response, request.onStreamChunk)
+    return this.handleStreamingResponse(
+      response,
+      request.onStreamChunk,
+      request.onThinkingChange,
+      thinkingCapable
+    )
   }
 
   /**
@@ -606,28 +621,66 @@ export class LLMAnalysisEngine {
    */
   private async handleStreamingResponse(
     response: any,
-    onStreamChunk?: (chunk: string) => void
+    onStreamChunk?: (chunk: string) => void,
+    onThinkingChange?: (isThinking: boolean) => void,
+    stripThinking = false
   ): Promise<string> {
-    let content = ""
+    let rawContent = ""
+    let answerContent = ""
     let chunkCount = 0
+    let notifyingThinking = false
 
     for await (const chunk of response) {
       chunkCount++
       const delta = chunk.choices?.[0]?.delta?.content || ""
-      if (delta) {
-        content += delta
-        onStreamChunk?.(content)
+      if (!delta) continue
+
+      rawContent += delta
+
+      // When thinking is enabled, Qwen3 output wraps reasoning in a
+      // " thinking... response " block. Extract only the final answer.
+      const inThinkingBlock =
+        stripThinking && rawContent.trimStart().startsWith(" think")
+      let visible = inThinkingBlock
+        ? this.extractAnswerFromThinking(rawContent)
+        : rawContent
+
+      // Notify the UI while the model is still thinking (no answer yet)
+      const isThinking = visible === "" && rawContent.trim() !== ""
+      if (isThinking !== notifyingThinking) {
+        notifyingThinking = isThinking
+        onThinkingChange?.(isThinking)
+      }
+
+      if (visible) {
+        answerContent = visible
+        onStreamChunk?.(answerContent)
       }
     }
+
+    onThinkingChange?.(false)
 
     console.log("💬 WebLLM Response:", {
       model: this.currentModel,
       chunksReceived: chunkCount,
-      contentLength: content.length,
-      content: process.env.NODE_ENV === "development" ? content : "[HIDDEN]",
+      contentLength: answerContent.length,
+      content: process.env.NODE_ENV === "development" ? answerContent : "[HIDDEN]",
     })
 
-    return content
+    return answerContent
+  }
+
+  /**
+   * Strip the " thinking ... response " reasoning block from Qwen3 output.
+   * Returns the final answer, or "" while the model is still thinking.
+   */
+  private extractAnswerFromThinking(raw: string): string {
+    const endMarker = " response"
+    const endIdx = raw.indexOf(endMarker)
+    if (endIdx === -1) {
+      return "" // still thinking, no answer yet
+    }
+    return raw.slice(endIdx + endMarker.length).replace(/^\s+/, "")
   }
 
   /**
