@@ -664,7 +664,7 @@ export function AIResponseSection({
                         id="session-context"
                         value={sessionContext}
                         onChange={(e) => setSessionContext(e.target.value)}
-                        placeholder="(Optional) Enter session topic, number of speakers, your role, what tips do you want, etc. This helps improve accuracy."
+                        placeholder="Optional: e.g. team standup, 4 speakers, your role, and what you want to focus on. More context means more accurate insights."
                         className="border-border focus:border-ring min-h-[100px] w-full resize-none border-2 pr-16"
                         maxLength={200}
                       />
