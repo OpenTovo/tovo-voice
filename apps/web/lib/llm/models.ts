@@ -9,14 +9,16 @@
 import { prebuiltAppConfig } from "@mlc-ai/web-llm"
 
 export const WEBLLM_MODELS = {
-  // this one is not good but it's the only one ios safari can handle
-  "SmolLM2-135M-Instruct-q0f16-MLC": {
-    name: "SmolLM2 135M",
-    description: "Tiny SmolLM-135M instruct model.",
-    config: prebuiltAppConfig.model_list.find(
-      (m) => m.model_id === "SmolLM2-135M-Instruct-q0f16-MLC"
-    ),
-  },
+  // Dev-only: tiny model for testing, not suitable for real use
+  ...(process.env.NODE_ENV === "development" && {
+    "SmolLM2-135M-Instruct-q0f16-MLC": {
+      name: "SmolLM2 135M",
+      description: "Tiny SmolLM-135M instruct model. (dev only)",
+      config: prebuiltAppConfig.model_list.find(
+        (m) => m.model_id === "SmolLM2-135M-Instruct-q0f16-MLC"
+      ),
+    },
+  }),
   "gemma3-1b-it-q4f16_1-MLC": {
     name: "Gemma 3 1B",
     description: "Google's compact Gemma 3 instruct model.",

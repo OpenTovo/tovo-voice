@@ -9,6 +9,7 @@ import { useCallback, useEffect, useState } from "react"
 import { toast } from "@workspace/ui/components/sonner"
 import { useUnifiedTranscription } from "@/hooks/use-unified-transcription"
 import { defaultTranscriptionModelAtom } from "@/lib/atoms"
+import { transcriptionDownloadProgressAtom } from "@/lib/atoms/settings"
 import { showConfirmDialogAtom } from "@/lib/atoms/dialog"
 import { storageQuotaManager } from "@/lib/storage/storage-quota-manager"
 import { TranscriptionEngine } from "@/lib/transcription/constants"
@@ -32,12 +33,7 @@ export function TranscriptionModelDownload({
   const [availableModels, setAvailableModels] = useState<UnifiedModelConfig[]>(
     []
   )
-  const [downloadingModels, setDownloadingModels] = useState<Set<string>>(
-    new Set()
-  )
-  const [downloadProgress, setDownloadProgress] = useState<
-    Record<string, number>
-  >({})
+  const [asrDownload, setAsrDownload] = useAtom(transcriptionDownloadProgressAtom)
   const [downloadedModels, setDownloadedModels] = useState<Set<string>>(
     new Set()
   )
@@ -93,11 +89,7 @@ export function TranscriptionModelDownload({
     }
 
     // Prevent multiple simultaneous downloads
-    if (
-      downloadingModels.has(model.id) ||
-      isLoading ||
-      downloadingModels.size > 0
-    ) {
+    if (asrDownload.isDownloading) {
       return
     }
 
@@ -156,12 +148,19 @@ This will be stored on your device for offline use.`
       await storageQuotaManager.requestPersistentStorage()
     }
 
-    setDownloadingModels((prev) => new Set([...prev, model.id]))
-    setDownloadProgress((prev) => ({ ...prev, [model.id]: 0 }))
+    setAsrDownload({
+      modelName: model.id,
+      progress: 0,
+      isDownloading: true,
+    })
 
     try {
       await downloadModelFiles(model.id, (progress) => {
-        setDownloadProgress((prev) => ({ ...prev, [model.id]: progress }))
+        setAsrDownload({
+          modelName: model.id,
+          progress,
+          isDownloading: true,
+        })
       })
 
       // Set as default model if this is the first downloaded model
@@ -180,22 +179,17 @@ This will be stored on your device for offline use.`
       console.error(`Failed to download ${model.id}:`, error)
       toast.error(`Failed to download "${model.name}". Please try again.`)
     } finally {
-      setDownloadingModels((prev) => {
-        const newSet = new Set(prev)
-        newSet.delete(model.id)
-        return newSet
-      })
-      setDownloadProgress((prev) => {
-        const newProgress = { ...prev }
-        delete newProgress[model.id]
-        return newProgress
+      setAsrDownload({
+        modelName: null,
+        progress: 0,
+        isDownloading: false,
       })
     }
   }
 
   const deleteModel = async (model: UnifiedModelConfig) => {
     // Don't delete if currently downloading
-    if (downloadingModels.has(model.id) || deletingModels.has(model.id)) {
+    if (asrDownload.isDownloading || deletingModels.has(model.id)) {
       return
     }
 
@@ -248,10 +242,12 @@ This will permanently remove the model from your device. You can download it aga
   }
 
   const ModelCard = ({ model }: { model: UnifiedModelConfig }) => {
-    const isDownloading = downloadingModels.has(model.id)
+    const isDownloading = asrDownload.isDownloading && asrDownload.modelName === model.id
     const isDownloaded = downloadedModels.has(model.id)
     const isDeleting = deletingModels.has(model.id)
-    const progress = downloadProgress[model.id] || 0
+    const progress = asrDownload.isDownloading && asrDownload.modelName === model.id
+      ? asrDownload.progress
+      : 0
 
     const displayName = model.name.replace(/^Sherpa[\s-]*/, "")
 
