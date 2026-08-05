@@ -21,8 +21,9 @@ const fontMono = Geist_Mono({
 })
 
 const appUrl = "https://pwa.tovo.dev"
-const appTitle = "Tovo Voice | Private Voice AI"
-const appDescription = "Private, on-device transcription and AI analysis."
+const appTitle = "Tovo Voice | Private AI Sidekick with Local Transcription"
+const appDescription =
+  "A private voice sidekick for live sessions. Transcribe conversations with local AI while your audio stays on your device."
 
 export const metadata: Metadata = {
   title: appTitle,

@@ -6,7 +6,7 @@ export function StructuredData() {
     applicationCategory: "ProductivityApplication",
     operatingSystem: ["Web Browser", "Android", "Windows", "macOS", "Linux"],
     description:
-      "Private, on-device voice transcription and local AI analysis in your browser.",
+      "A private voice sidekick for live sessions with local transcription and AI analysis in your browser.",
     url: "https://voice.tovo.dev",
     downloadUrl: "https://pwa.tovo.dev",
     author: {

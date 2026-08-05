@@ -6,10 +6,10 @@ import { StructuredData } from "../components/structured-data"
 
 const outfit = Outfit({ subsets: ["latin"], variable: "--font-outfit" })
 const landingUrl = "https://voice.tovo.dev"
-const landingTitle = "Tovo Voice | Private Voice AI"
+const landingTitle = "Tovo Voice | Private AI Sidekick with Local Transcription"
 
 const landingDescription =
-  "Real-time transcription and local AI analysis, all in your browser."
+  "A private voice sidekick for live sessions. Transcribe conversations with local AI while your audio stays on your device."
 
 export const metadata: Metadata = {
   title: landingTitle,
