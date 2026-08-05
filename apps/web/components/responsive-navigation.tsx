@@ -213,6 +213,7 @@ export function ResponsiveNavigation({ mobileOnly = false }: NavigationProps) {
             href="https://voice.tovo.dev"
             target="_blank"
             rel="noopener noreferrer"
+            title="Go to landing page"
             className="flex items-center gap-2.5"
           >
             <Image

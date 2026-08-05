@@ -26,7 +26,7 @@ export function AppHeader() {
           href="https://voice.tovo.dev"
           target="_blank"
           rel="noopener noreferrer"
-          className="flex items-center gap-3"
+          title="Go to landing page"
         >
           <Image
             src="/tovo-icon.png"
@@ -35,10 +35,10 @@ export function AppHeader() {
             height={24}
             className="rounded-md"
           />
-          <h1 className="text-lg font-semibold tracking-tight">
-            {getPageTitle()}
-          </h1>
         </a>
+        <h1 className="text-lg font-semibold tracking-tight">
+          {getPageTitle()}
+        </h1>
       </div>
       <div className="flex items-center gap-1">
         <ThemeToggle />
