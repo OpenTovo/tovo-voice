@@ -168,7 +168,7 @@ function StreamingTranscriptionDisplay({
     <div
       ref={transcriptionRef}
       onScroll={handleScrollWithDetection}
-      className="h-full space-y-2 overflow-y-auto scroll-smooth"
+      className="min-h-0 flex-1 space-y-2 overflow-y-auto scroll-smooth"
     >
       {/* Finalized transcription items */}
       {visibleItems.map((result) => (

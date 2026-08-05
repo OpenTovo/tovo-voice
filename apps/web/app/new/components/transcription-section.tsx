@@ -123,9 +123,7 @@ export function TranscriptionSection({
           : "h-auto gap-0"
       }`}
     >
-      <CardHeader
-        className={`px-4 transition-all duration-200 sm:px-6 md:px-8`}
-      >
+      <CardHeader className={`px-4 transition-all duration-200 sm:px-4 md:px-4`}>
         <CardTitle className="flex items-start justify-between">
           <div className="flex flex-col items-start gap-2">
             <div className="flex items-center gap-2">
@@ -164,8 +162,10 @@ export function TranscriptionSection({
         </CardTitle>
       </CardHeader>
       <CardContent
-        className={`overflow-hidden px-4 transition-all duration-200 sm:px-6 md:px-8 ${
-          isTranscriptionVisible ? "flex-1 opacity-100" : "h-0 py-0 opacity-0"
+        className={`overflow-hidden px-4 transition-all duration-200 sm:px-4 md:px-4 ${
+          isTranscriptionVisible
+            ? "flex min-h-0 flex-1 flex-col opacity-100"
+            : "h-0 py-0 opacity-0"
         }`}
       >
         <StreamingTranscriptionDisplay
