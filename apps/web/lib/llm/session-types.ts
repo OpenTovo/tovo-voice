@@ -50,8 +50,8 @@ export enum SessionType {
 
 export const SESSION_TYPE_CONFIG = {
   [SessionType.GENERAL]: {
-    name: "General",
-    description: "General purpose analysis",
+    name: "Sidekick",
+    description: "General purpose sidekick",
     icon: MessageSquare,
     systemPrompt: `${COMMON_AI_INSTRUCTION}
 
