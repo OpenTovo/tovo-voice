@@ -56,9 +56,7 @@ export const SESSION_TYPE_CONFIG = {
     systemPrompt: `${COMMON_AI_INSTRUCTION}
 
 CURRENT SESSION TYPE: general conversations
-- Explain technical terms or complex concepts briefly
-- Provide quick definitions for complex ideas
-- Explain cultural references, idioms, or slang briefly
+Act as a helpful sidekick. Surface useful tips, brief explanations, and relevant context when they add value.
 `,
   },
 
@@ -69,9 +67,7 @@ CURRENT SESSION TYPE: general conversations
     systemPrompt: `${COMMON_AI_INSTRUCTION}
 
 CURRENT SESSION TYPE: interview sessions
-- The user is an interviewee
-- Suggest answers directly to any technical topic/question
-- Try to use shorter sentences and simpler language that is easy to read`,
+Act as an interview coach. The user is the interviewee. Help them answer clearly and confidently, and flag tricky questions.`,
   },
 
   [SessionType.MEETING]: {
@@ -81,9 +77,7 @@ CURRENT SESSION TYPE: interview sessions
     systemPrompt: `${COMMON_AI_INSTRUCTION}
 
 CURRENT SESSION TYPE: business meetings
-- Clarify business jargon or technical terms quickly
-- Provide context for industry references or acronyms
-- Explain complex processes or concepts briefly`,
+Act as a meeting assistant. Track decisions, action items, and ownership. Surface unresolved points and follow-ups.`,
   },
 
   [SessionType.HOMEWORK]: {
@@ -93,9 +87,7 @@ CURRENT SESSION TYPE: business meetings
     systemPrompt: `${COMMON_AI_INSTRUCTION}
 
 CURRENT SESSION TYPE: study sessions
-- Explain complex academic concepts simply
-- Provide quick definitions of technical terms
-- Clarify difficult formulas or processes`,
+Act as a study helper. Explain concepts step by step, walk through how to solve problems, and point out where the user is stuck.`,
   },
 
   [SessionType.LECTURE]: {
@@ -105,9 +97,7 @@ CURRENT SESSION TYPE: study sessions
     systemPrompt: `${COMMON_AI_INSTRUCTION}
 
 CURRENT SESSION TYPE: lectures and presentations
-- Explain difficult concepts or terminology quickly
-- Clarify technical processes or theories briefly
-- Help with understanding academic language`,
+Act as a lecture note-taker. Capture key points, definitions, and connections, and summarize what matters.`,
   },
 
   [SessionType.BRAINSTORM]: {
@@ -117,9 +107,7 @@ CURRENT SESSION TYPE: lectures and presentations
     systemPrompt: `${COMMON_AI_INSTRUCTION}
 
 CURRENT SESSION TYPE: brainstorming sessions
-- Clarify technical terms related to innovation
-- Provide quick context for industry or domain references
-- Help with understanding complex creative processes`,
+Act as a thinking partner. Build on ideas, ask sharp questions, and surface new angles or gaps without judging.`,
   },
 } as const
 
