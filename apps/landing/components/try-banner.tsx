@@ -33,8 +33,7 @@ export function TryBanner() {
           New
         </span>
         <span className="font-medium">
-          <span className="hidden sm:inline">For even better accuracy, </span>
-          try our macOS app
+          Try our new dictation app for macOS
         </span>
         <span className="inline-flex items-center gap-1 whitespace-nowrap">
         <span className="font-semibold">

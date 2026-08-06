@@ -1,8 +1,9 @@
 "use client"
 
 import { motion, useReducedMotion } from "framer-motion"
-import { ArrowRight, Github } from "lucide-react"
+import { ArrowRight } from "lucide-react"
 import Image from "next/image"
+import { GithubIcon } from "./icons/brand-icons"
 
 const badge = "Privacy-first, on-device voice AI"
 
@@ -85,7 +86,7 @@ export default function HeroSection() {
             rel="noopener noreferrer"
             className="border-ink/25 text-ink hover:border-ink/40 hover:bg-ink/[0.04] inline-flex min-h-[46px] items-center gap-2 rounded-xl border px-6 text-base font-medium transition-all active:scale-[0.98]"
           >
-            <Github className="h-5 w-5" />
+            <GithubIcon className="h-5 w-5" />
             GitHub
           </a>
         </motion.div>
