@@ -87,7 +87,7 @@ export default function HeroSection() {
             className="border-ink/25 text-ink hover:border-ink/40 hover:bg-ink/[0.04] inline-flex min-h-[46px] items-center gap-2 rounded-xl border px-6 text-base font-medium transition-all active:scale-[0.98]"
           >
             <GithubIcon className="h-5 w-5" />
-            GitHub
+            Star
           </a>
         </motion.div>
 
