@@ -9,10 +9,16 @@ import { getCachedFile, hasCachedFile } from "./sherpa-cache"
 // "---encoder---", "attention_dims=..."). These are noise, not errors.
 const SHERPA_STDERR_NOISE = /^(OnlineRecognizerConfig|---|\d+ \S+:|---.*|attention_dims=|encoder_dims=|num_encoder_layers=|cnn_module_kernels=|left_context_len=|onnx\.infer=|model_type=|version=|T[:=]|decode_chunk_len_|vocab_size=|joiner_dim=|context_size=|rule\d?=|lm_config=|provider_config=)/
 
+/**
+ * Global scope that works in both the main thread and Web Workers.
+ */
+const globalScope: any =
+  typeof window !== "undefined" ? window : typeof self !== "undefined" ? self : globalThis
+
 // Export function to get original fetch for downloads
 export function getOriginalFetch(): typeof fetch {
-  if (typeof window !== "undefined" && (window as any).__sherpaOriginalFetch) {
-    return (window as any).__sherpaOriginalFetch
+  if (globalScope.__sherpaOriginalFetch) {
+    return globalScope.__sherpaOriginalFetch
   }
   // Fallback to current fetch if not intercepted yet
   return fetch
@@ -132,7 +138,7 @@ export async function loadSherpaWasm(
         })
 
         // Set up Module configuration with blob URLs to prevent any network requests
-        window.Module = {
+        globalScope.Module = {
           locateFile: (path: string, scriptDirectory: string = "") => {
             // Handle .data files - return local blob URL to prevent downloads
             if (path.includes(SHERPA_ASSET_FILES.data)) {
@@ -279,20 +285,18 @@ export async function loadSherpaWasm(
         ])
 
         // Verify module is properly initialized
-        if (!window.Module?.calledRun) {
+        if (!globalScope.Module?.calledRun) {
           throw new Error("WASM module failed to initialize properly")
         }
 
-        wasmModule = window.Module as SherpaWasmModule
+        wasmModule = globalScope.Module as SherpaWasmModule
 
         // Ensure createOnlineRecognizer is available
         if (
           !wasmModule.createOnlineRecognizer &&
-          typeof (window as any).createOnlineRecognizer === "function"
+          typeof globalScope.createOnlineRecognizer === "function"
         ) {
-          wasmModule.createOnlineRecognizer = (
-            window as any
-          ).createOnlineRecognizer
+          wasmModule.createOnlineRecognizer = globalScope.createOnlineRecognizer
         }
 
         currentProgressCallback?.(95)
@@ -330,13 +334,17 @@ export async function loadSherpaWasm(
  * Load a script dynamically with IndexedDB caching
  */
 async function loadScriptWithCache(src: string): Promise<void> {
-  // Check if script is already loaded in DOM
-  const existingScript = document.querySelector(
-    `script[data-sherpa-src="${src}"]`
-  )
-  if (existingScript) {
-    console.debug("Script already loaded, skipping", { src })
-    return
+  const isWorker = typeof document === "undefined"
+
+  // Check if script is already loaded
+  if (!isWorker) {
+    const existingScript = document.querySelector(
+      `script[data-sherpa-src="${src}"]`
+    )
+    if (existingScript) {
+      console.debug("Script already loaded, skipping", { src })
+      return
+    }
   }
 
   try {
@@ -360,18 +368,32 @@ async function loadScriptWithCache(src: string): Promise<void> {
       )
     }
 
-    // Execute the script content
-    const script = document.createElement("script")
-    script.setAttribute("data-sherpa-src", src) // Mark with our custom attribute
-    script.type = "text/javascript"
-
+    // The wasm loader script needs a blob URL for emscripten pthread spawning.
     if (src.includes(SHERPA_ASSET_FILES.wasmLoader)) {
       revokeWorkerScriptBlobUrl()
       workerScriptBlobUrl = URL.createObjectURL(
         new Blob([scriptContent], { type: "text/javascript" })
       )
-      window.Module.mainScriptUrlOrBlob = workerScriptBlobUrl
+      globalScope.Module.mainScriptUrlOrBlob = workerScriptBlobUrl
     }
+
+    if (isWorker) {
+      // Workers have no DOM; execute via importScripts using a blob URL.
+      const blobUrl = URL.createObjectURL(
+        new Blob([scriptContent], { type: "text/javascript" })
+      )
+      try {
+        importScripts(blobUrl)
+      } finally {
+        URL.revokeObjectURL(blobUrl)
+      }
+      return
+    }
+
+    // Main thread: execute the script content via a <script> element
+    const script = document.createElement("script")
+    script.setAttribute("data-sherpa-src", src) // Mark with our custom attribute
+    script.type = "text/javascript"
 
     return new Promise((resolve, reject) => {
       const cleanup = () => {
@@ -448,8 +470,8 @@ export function resetSherpaWasm(): void {
   removeLoadedSherpaScripts()
 
   // Clean up any existing module
-  if (window.Module) {
-    delete window.Module
+  if (globalScope.Module) {
+    delete globalScope.Module
   }
 
   console.info("Sherpa WASM module state reset")
@@ -465,6 +487,7 @@ function revokeWorkerScriptBlobUrl(): void {
 }
 
 function removeLoadedSherpaScripts(): void {
+  if (typeof document === "undefined") return
   document
     .querySelectorAll<HTMLScriptElement>("script[data-sherpa-src]")
     .forEach((script) => {
@@ -481,18 +504,16 @@ function setupFetchInterception(
   modelAssets: ReturnType<typeof getSherpaModelAssetUrls>
 ): void {
   // Only set up if not already done
-  if ((window as any).__sherpaFetchIntercepted) {
+  if (globalScope.__sherpaFetchIntercepted) {
     return
   }
 
-  const originalFetch = window.fetch
+  const originalFetch = globalScope.fetch
 
   // Store original fetch globally for downloads
-  if (typeof window !== "undefined") {
-    ;(window as any).__sherpaOriginalFetch = originalFetch
-  }
+  globalScope.__sherpaOriginalFetch = originalFetch
 
-  window.fetch = async (
+  globalScope.fetch = async (
     input: RequestInfo | URL,
     init?: RequestInit
   ): Promise<Response> => {
@@ -590,5 +611,5 @@ function setupFetchInterception(
   }
 
   // Mark as intercepted
-  ;(window as any).__sherpaFetchIntercepted = true
+  globalScope.__sherpaFetchIntercepted = true
 }

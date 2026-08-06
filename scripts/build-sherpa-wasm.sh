@@ -26,20 +26,20 @@ case "$MODEL_KEY" in
       "joiner-epoch-99-avg-1.int8.onnx:joiner.onnx"
     )
     ;;
-  nemotron-en)
-    MODEL_ARCHIVE="sherpa-onnx-nemotron-speech-streaming-en-0.6b-560ms-int8-2026-04-25"
+  en-20m)
+    MODEL_ARCHIVE="sherpa-onnx-streaming-zipformer-en-20M-2023-02-17"
     MODEL_ARCHIVE_URL="https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/${MODEL_ARCHIVE}.tar.bz2"
-    MODEL_ARCHIVE_SHA256="78e2b79fcf7271553a74402a76b771b09ea40117a39566a79f52235b23db6358"
+    MODEL_ARCHIVE_SHA256="9c559283e8498d3fe95913c79ca1cb454bb26281ac2b102b41306c7d752765d9"
     MODEL_DIR_NAME="$MODEL_ARCHIVE"
     MODEL_RENAMES=(
-      "encoder.int8.onnx:encoder.onnx"
-      "decoder.int8.onnx:decoder.onnx"
-      "joiner.int8.onnx:joiner.onnx"
+      "encoder-epoch-99-avg-1.int8.onnx:encoder.onnx"
+      "decoder-epoch-99-avg-1.onnx:decoder.onnx"
+      "joiner-epoch-99-avg-1.int8.onnx:joiner.onnx"
     )
     ;;
   *)
     echo "Unsupported MODEL_KEY: $MODEL_KEY" >&2
-    echo "Currently supported: bilingual, nemotron-en" >&2
+    echo "Currently supported: bilingual, en-20m" >&2
     exit 2
     ;;
 esac

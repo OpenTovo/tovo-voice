@@ -154,37 +154,37 @@ export const SESSION_ANALYSIS_CONFIG: Record<
 > = {
   [SessionType.GENERAL]: {
     transform: "RECENT_FOCUS",
-    maxTokens: 120,
+    maxTokens: 200,
     temperature: 0.6,
     responseStyle: "balanced and helpful",
   },
   [SessionType.INTERVIEW]: {
     transform: "RECENT_FOCUS",
-    maxTokens: 120,
+    maxTokens: 200,
     temperature: 0.4,
     responseStyle: "professional and strategic",
   },
   [SessionType.MEETING]: {
     transform: "MIDDLE_OUT",
-    maxTokens: 100,
+    maxTokens: 180,
     temperature: 0.5,
     responseStyle: "business-focused and clear",
   },
   [SessionType.HOMEWORK]: {
     transform: "RECENT_FOCUS",
-    maxTokens: 85,
+    maxTokens: 180,
     temperature: 0.4,
     responseStyle: "educational and detailed",
   },
   [SessionType.LECTURE]: {
     transform: "MIDDLE_OUT",
-    maxTokens: 100,
+    maxTokens: 180,
     temperature: 0.5,
     responseStyle: "academic and informative",
   },
   [SessionType.BRAINSTORM]: {
     transform: "RECENT_FOCUS",
-    maxTokens: 80,
+    maxTokens: 160,
     temperature: 0.6,
     responseStyle: "creative and inspiring",
   },

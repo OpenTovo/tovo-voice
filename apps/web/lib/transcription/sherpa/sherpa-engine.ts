@@ -1,7 +1,13 @@
 /**
  * Sherpa-ONNX Transcription Engine Implementation
  *
- * Implements the unified transcription interface for Sherpa-ONNX WASM
+ * Implements the unified transcription interface for Sherpa-ONNX WASM.
+ *
+ * Architecture: the WASM recognizer runs in a dedicated Web Worker
+ * (sherpa-worker.ts) so the heavy ONNX inference never blocks the main
+ * thread. This engine owns mic capture (AudioWorklet) on the main thread
+ * and streams Float32Array audio chunks to the worker; results flow back
+ * as partial/final events.
  */
 
 import { AUDIO_CONFIG, TranscriptionEngine } from "../constants"
@@ -17,15 +23,9 @@ import {
   type ModelLoadCallbacks,
   type UnifiedModelId,
 } from "../unified-models"
-import { loadSherpaWasm, type SherpaWasmModule } from "./sherpa-loader"
+import { hasCachedFile, getCachedFile } from "./sherpa-cache"
+import { getSherpaModelAssetUrls } from "./sherpa-assets"
 import { SHERPA_MODELS } from "./sherpa-model"
-
-// Sherpa is compiled with debug enabled: during recognizer construction its
-// C++ layer dumps the model config to stderr via emscripten's logging, which
-// calls console.error directly and bypasses Module.printErr. These lines are
-// tagged with the C++ source location (e.g. ".../c-api.cc:Func:183 ..." or
-// ".../online-...cc:operator():130 ...").
-const SHERPA_CPP_LOG_LINE = /\.(cc|h):[^:]*:\d+/
 
 /**
  * Sherpa-ONNX transcription engine
@@ -37,16 +37,13 @@ export class SherpaTranscriptionEngine
   readonly engineType = TranscriptionEngine.SHERPA
   readonly supportsRealTime = true
 
-  private wasmModule: SherpaWasmModule | null = null
-  private recognizer: any = null
-  private recognizerStream: any = null
+  private worker: Worker | null = null
   private audioContext: AudioContext | null = null
   private mediaStream: MediaStream | null = null
   private processor: AudioWorkletNode | null = null
   private source: MediaStreamAudioSourceNode | null = null
 
   // State tracking for real-time transcription
-  private lastPartialResult = ""
   private currentUtteranceId = 0
   private partialStartTime: number | null = null
 
@@ -68,69 +65,97 @@ export class SherpaTranscriptionEngine
         throw new Error(`Model ${modelId} missing Sherpa configuration`)
       }
 
-      // Pass progress callback to WASM loader (0-80% for WASM loading)
-      const model = getModelById(modelId)
-      const sherpaConfig = model.sherpaConfig!
+      const sherpaConfig = modelConfig.sherpaConfig
       const modelFolder = SHERPA_MODELS[sherpaConfig.modelName].folder
+      const assets = getSherpaModelAssetUrls(modelFolder)
 
-      this.wasmModule = await loadSherpaWasm(modelFolder, (progress) => {
-        // Map WASM loading progress to 0-80% range
-        callbacks.onProgress(Math.round(progress * 0.8))
-      })
+      // Verify all required files are cached before spawning the worker.
+      callbacks.onProgress(5)
+      const [dataCached, wasmCached, apiCached, loaderCached] =
+        await Promise.all([
+          hasCachedFile(assets.data),
+          hasCachedFile(assets.wasm),
+          hasCachedFile(assets.api),
+          hasCachedFile(assets.wasmLoader),
+        ])
 
-      callbacks.onProgress(80)
-
-      // Verify WASM module is loaded
-      if (!this.wasmModule) {
-        throw new Error("WASM module is null or undefined")
-      }
-
-      callbacks.onProgress(90)
-
-      // Create recognizer using the high-level API (embedded models)
-      // Suppress sherpa's C++ debug config dump (see SHERPA_CPP_LOG_LINE)
-      // only during this synchronous construction; real JS errors still throw.
-      const originalConsoleError = console.error
-      console.error = (...args: unknown[]) => {
-        if (typeof args[0] === "string" && SHERPA_CPP_LOG_LINE.test(args[0])) {
-          return
-        }
-        originalConsoleError(...args)
-      }
-
-      try {
-        this.recognizer =
-          this.wasmModule.createOnlineRecognizer?.(this.wasmModule) ||
-          (window as any).createOnlineRecognizer?.(this.wasmModule)
-
-        if (!this.recognizer) {
-          throw new Error(
-            "Failed to create recognizer - both APIs returned null"
-          )
-        }
-      } catch (error) {
-        throw new Error(`Recognizer creation failed: ${error}`)
-      } finally {
-        console.error = originalConsoleError
-      }
-
-      if (!this.recognizer) {
-        throw new Error("Failed to create Sherpa-ONNX recognizer")
-      }
-
-      // Create stream
-      this.recognizerStream = this.recognizer.createStream()
-      if (!this.recognizerStream) {
+      if (!dataCached || !wasmCached || !apiCached || !loaderCached) {
         throw new Error(
-          "Failed to create Sherpa-ONNX stream - returned null/undefined"
+          "Required model files are not cached. Please download the model first."
         )
       }
+
+      callbacks.onProgress(10)
+
+      // Read all cached files (transferred to the worker).
+      const [data, wasm, api, loader] = await Promise.all([
+        getCachedFile(assets.data),
+        getCachedFile(assets.wasm),
+        getCachedFile(assets.api),
+        getCachedFile(assets.wasmLoader),
+      ])
+
+      if (!data || !wasm || !api || !loader) {
+        throw new Error("Failed to read one or more cached model files")
+      }
+
+      callbacks.onProgress(20)
+
+      // Spawn the worker and transfer the file buffers.
+      this.worker = new Worker(
+        new URL("./sherpa-worker.ts", import.meta.url),
+        { type: "module" }
+      )
+
+      await new Promise<void>((resolve, reject) => {
+        const worker = this.worker
+        if (!worker) {
+          reject(new Error("Worker not initialized"))
+          return
+        }
+        const cleanup = () => {
+          worker.removeEventListener("message", onMessage)
+          worker.removeEventListener("error", onError)
+        }
+        const onMessage = (event: MessageEvent) => {
+          const msg = event.data
+          if (msg?.type === "progress") {
+            // Map worker progress (10-100) to (20-100) range
+            callbacks.onProgress(
+              Math.round(20 + ((msg.progress - 10) / 90) * 80)
+            )
+          } else if (msg?.type === "ready") {
+            cleanup()
+            resolve()
+          } else if (msg?.type === "error") {
+            cleanup()
+            reject(new Error(msg.message))
+          }
+        }
+        const onError = (e: ErrorEvent) => {
+          cleanup()
+          reject(new Error(e.message || "Worker failed to load"))
+        }
+        worker.addEventListener("message", onMessage)
+        worker.addEventListener("error", onError)
+
+        worker.postMessage(
+          {
+            type: "load",
+            data: data,
+            wasm: wasm,
+            api: api,
+            loader: loader,
+          },
+          [data, wasm, api, loader]
+        )
+      })
 
       callbacks.onProgress(100)
 
       this._currentModel = modelConfig
       this._isInitialized = true
-      this.currentUtteranceId = 0 // Reset utterance ID when model loads
+      this.currentUtteranceId = 0
       this.setStatus(TranscriptionStatus.READY)
 
       callbacks.onComplete()
@@ -149,22 +174,16 @@ export class SherpaTranscriptionEngine
 
   async unloadModel(): Promise<void> {
     try {
-      // Clean up in reverse order of creation
-      if (this.recognizerStream) {
-        this.recognizerStream = null
+      if (this.worker) {
+        this.worker.postMessage({ type: "unload" })
+        this.worker.terminate()
+        this.worker = null
       }
 
-      if (this.recognizer) {
-        this.recognizer = null
-      }
-
-      this.wasmModule = null
       this._currentModel = null
       this._isInitialized = false
       this.setStatus(TranscriptionStatus.IDLE)
 
-      // Reset state
-      this.lastPartialResult = ""
       this.currentUtteranceId = 0
       this.partialStartTime = null
 
@@ -175,7 +194,7 @@ export class SherpaTranscriptionEngine
   }
 
   async startRecording(callbacks: TranscriptionCallbacks): Promise<void> {
-    if (!this._isInitialized || !this.recognizer || !this.recognizerStream) {
+    if (!this._isInitialized || !this.worker) {
       throw new Error("Model not loaded")
     }
 
@@ -188,25 +207,24 @@ export class SherpaTranscriptionEngine
       this._callbacks = callbacks
       this._recordingStartTime = Date.now()
 
-      // Reset recognizer stream and state
-      this.recognizer.reset(this.recognizerStream)
       this.currentUtteranceId = 0
-      this.lastPartialResult = ""
       this.partialStartTime = null
 
-      // Clear any lingering UI state
-      if (typeof window !== "undefined") {
-        window.dispatchEvent(
-          new CustomEvent("sherpa-streaming-transcription", {
-            detail: {
-              text: "",
-              isFinal: true,
-              isPartial: false,
-              metadata: { utteranceId: this.currentUtteranceId, clear: true },
-            },
-          })
-        )
+      // Wire worker results to transcription callbacks / streaming events.
+      this.worker.onmessage = (event: MessageEvent) => {
+        this.handleWorkerMessage(event.data)
       }
+
+      // Tell the worker to reset its recognizer stream.
+      this.worker.postMessage({ type: "start" })
+
+      // Clear any lingering UI state
+      this.dispatchStreamingEvent({
+        text: "",
+        isFinal: true,
+        isPartial: false,
+        metadata: { utteranceId: this.currentUtteranceId, clear: true },
+      })
 
       // Setup audio context
       this.audioContext = new (
@@ -240,10 +258,24 @@ export class SherpaTranscriptionEngine
           "sherpa-audio-processor"
         )
 
-        // Handle audio data from worklet
+        // Handle audio data from worklet -> forward to the worker
         this.processor.port.onmessage = (event) => {
-          if (event.data.type === "audioData") {
-            this.processAudioData(event.data)
+          if (
+            event.data.type === "audioData" &&
+            this._status === TranscriptionStatus.RECORDING &&
+            this.worker
+          ) {
+            const samples = event.data.data as Float32Array
+            // Transfer the underlying buffer to avoid a copy.
+            const transfer = [samples.buffer]
+            this.worker.postMessage(
+              {
+                type: "audioData",
+                samples,
+                sampleRate: AUDIO_CONFIG.SAMPLE_RATE,
+              },
+              transfer
+            )
           }
         }
 
@@ -262,14 +294,22 @@ export class SherpaTranscriptionEngine
         )
 
         scriptProcessor.onaudioprocess = (event) => {
+          if (
+            this._status !== TranscriptionStatus.RECORDING ||
+            !this.worker
+          ) {
+            return
+          }
           const inputData = event.inputBuffer.getChannelData(0)
-          this.processAudioData({
-            data: new Float32Array(inputData),
-            sampleRate: this.audioContext!.sampleRate,
-            timestamp: Date.now(),
-            duration: inputData.length / this.audioContext!.sampleRate,
-            chunkSize: inputData.length,
-          })
+          const samples = new Float32Array(inputData)
+          this.worker.postMessage(
+            {
+              type: "audioData",
+              samples,
+              sampleRate: AUDIO_CONFIG.SAMPLE_RATE,
+            },
+            [samples.buffer]
+          )
         }
 
         this.source.connect(scriptProcessor)
@@ -316,16 +356,9 @@ export class SherpaTranscriptionEngine
         this.audioContext = null
       }
 
-      // Get final result if available
-      if (this.recognizer && this.recognizerStream) {
-        try {
-          const finalResult = this.recognizer.getResult(this.recognizerStream)
-          if (finalResult?.text?.trim()) {
-            this.sendTranscriptionResult(finalResult.text.trim(), true)
-          }
-        } catch (error) {
-          console.warn("Error getting final result", { error })
-        }
+      // Ask the worker to flush a final result.
+      if (this.worker) {
+        this.worker.postMessage({ type: "stop" })
       }
 
       this._recordingStartTime = null
@@ -347,74 +380,41 @@ export class SherpaTranscriptionEngine
     this.resetStats()
   }
 
-  private processAudioData(audioData: any): void {
-    if (
-      !this.recognizerStream ||
-      this._status !== TranscriptionStatus.RECORDING
-    ) {
-      return
-    }
+  /**
+   * Handle results posted from the ASR worker.
+   */
+  private handleWorkerMessage(msg: any): void {
+    if (!msg) return
 
-    try {
-      // Feed audio to recognizer
-      this.recognizerStream.acceptWaveform(
-        AUDIO_CONFIG.SAMPLE_RATE,
-        audioData.data
-      )
+    switch (msg.type) {
+      case "partial":
+        if (!this.partialStartTime) this.partialStartTime = Date.now()
+        this.sendTranscriptionResult(msg.text, false)
+        break
 
-      // Process ready frames
-      while (this.recognizer.isReady(this.recognizerStream)) {
-        this.recognizer.decode(this.recognizerStream)
-      }
+      case "final":
+        this.sendTranscriptionResult(msg.text, true, msg.processingTime)
+        if (msg.processingTime) this.recordProcessingTime(msg.processingTime)
+        break
 
-      // Get partial results
-      const result = this.recognizer.getResult(this.recognizerStream)
-      const resultText = result?.text?.trim()
-
-      if (resultText && resultText !== this.lastPartialResult) {
-        if (!this.partialStartTime) {
-          this.partialStartTime = Date.now()
+      case "clear":
+        this.partialStartTime = null
+        if (typeof msg.utteranceId === "number") {
+          this.currentUtteranceId = msg.utteranceId
         }
-        this.sendTranscriptionResult(resultText, false)
-        this.lastPartialResult = resultText
-      }
-
-      // Check for endpoint (end of utterance)
-      if (this.recognizer.isEndpoint(this.recognizerStream)) {
-        const finalResult = this.recognizer.getResult(this.recognizerStream)
-        const finalText = finalResult?.text?.trim()
-
-        if (finalText) {
-          const processingTime = this.partialStartTime
-            ? Date.now() - this.partialStartTime
-            : 0
-          this.sendTranscriptionResult(finalText, true, processingTime)
-          this.recordProcessingTime(processingTime)
-        }
-
-        // Reset for next utterance
-        this.recognizer.reset(this.recognizerStream)
-        this.resetRealTimeState()
-
-        // Clear streaming UI state
-        if (typeof window !== "undefined") {
-          window.dispatchEvent(
-            new CustomEvent("sherpa-streaming-transcription", {
-              detail: {
-                text: "",
-                isFinal: true,
-                isPartial: false,
-                metadata: { utteranceId: this.currentUtteranceId, clear: true },
-              },
-            })
-          )
-        }
-
+        this.dispatchStreamingEvent({
+          text: "",
+          isFinal: true,
+          isPartial: false,
+          metadata: { utteranceId: this.currentUtteranceId, clear: true },
+        })
         this.recordUtterance()
-      }
-    } catch (error) {
-      console.error("Error processing audio data", { error })
-      this._callbacks?.onError(`Audio processing error: ${error}`)
+        break
+
+      case "error":
+        console.error("Sherpa worker error", msg.message)
+        this._callbacks?.onError(msg.message)
+        break
     }
   }
 
@@ -436,19 +436,18 @@ export class SherpaTranscriptionEngine
 
     if (isFinal) {
       this.recordFinalResult()
-    } else if (typeof window !== "undefined") {
-      // Emit streaming event for partial results only
-      window.dispatchEvent(
-        new CustomEvent("sherpa-streaming-transcription", { detail: result })
-      )
+    } else {
+      this.dispatchStreamingEvent(result)
     }
 
     this._callbacks?.onTranscription(result)
   }
 
-  private resetRealTimeState(): void {
-    this.lastPartialResult = ""
-    this.partialStartTime = null
-    this.currentUtteranceId++
+  private dispatchStreamingEvent(detail: any): void {
+    if (typeof window !== "undefined") {
+      window.dispatchEvent(
+        new CustomEvent("sherpa-streaming-transcription", { detail })
+      )
+    }
   }
 }

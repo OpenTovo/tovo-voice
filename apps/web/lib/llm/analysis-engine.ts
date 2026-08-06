@@ -520,7 +520,10 @@ export class LLMAnalysisEngine {
   // ========================================
 
   /**
-   * Build chat messages for LLM from chat history and session config
+   * Build chat messages for LLM from session config.
+   *
+   * Each analysis is independent — past chat history is NOT included so the
+   * model doesn't repeat itself or get distracted by earlier responses.
    */
   private buildChatMessages(
     sessionType: SessionType,
@@ -534,11 +537,6 @@ export class LLMAnalysisEngine {
     // 1. Single system message with all system-level information
     let systemContent = `${promptConfig.systemPrompt}\nResponse style: Be ${sessionConfig.responseStyle} in your assistance.`
 
-    // Add conversation summary if we have one
-    if (this.sessionSummary.conversationSummary) {
-      systemContent += `\n\nCONVERSATION SUMMARY: ${this.sessionSummary.conversationSummary}`
-    }
-
     // Add user-provided context if available
     if (userProvidedContext?.trim()) {
       systemContent += `\n\nUSER-PROVIDED CONTEXT: ${userProvidedContext.trim()}`
@@ -549,14 +547,13 @@ export class LLMAnalysisEngine {
       content: systemContent,
     })
 
-    // 2. Add only user/assistant messages from chat history (no system messages)
-    for (const chatMessage of this.chatHistory) {
-      if (chatMessage.role !== "system") {
-        messages.push({
-          role: chatMessage.role,
-          content: chatMessage.content,
-        })
-      }
+    // 2. Add only the latest transcription as a user message (no history)
+    const latestMessage = this.chatHistory[this.chatHistory.length - 1]
+    if (latestMessage && latestMessage.role === "user") {
+      messages.push({
+        role: "user",
+        content: latestMessage.content,
+      })
     }
 
     return messages
@@ -606,9 +603,12 @@ export class LLMAnalysisEngine {
   /**
    * Handle streaming response from LLM.
    *
-   * For thinking-capable models we force thinking off, but WebLLM still
-   * prepends an empty " thinking\n\n response\n\n" block to the output.
-   * Strip that block so only the answer streams.
+   * For thinking-capable models we force thinking off, but the model may
+   * still emit an empty thinking block at the start of the output. Two
+   * formats are possible depending on the chat template:
+   *   - " thinking\n\n response\n\n<answer>"  (WebLLM token markers)
+   *   - "<think>...</think>\n\n<answer>"      (literal tags)
+   * Strip whichever one appears so only the answer streams.
    */
   private async handleStreamingResponse(
     response: any,
@@ -619,6 +619,7 @@ export class LLMAnalysisEngine {
     let answerContent = ""
     let answerStartIndex = -1 // latched index in rawContent where the answer begins
     let chunkCount = 0
+    let classified = false // whether we've classified the output as thinking or plain
 
     for await (const chunk of response) {
       chunkCount++
@@ -627,27 +628,64 @@ export class LLMAnalysisEngine {
 
       rawContent += delta
 
-      if (stripThinking && rawContent.trimStart().startsWith("thinking")) {
-        // Find the closing tag once; afterwards just grow the answer
-        if (answerStartIndex === -1) {
-          const endIdx = rawContent.indexOf("\n response")
-          if (endIdx === -1) {
-            // Still emitting the thinking block header — buffer, emit nothing
-            continue
+      if (stripThinking) {
+        const trimmed = rawContent.trimStart()
+
+        // Until we have enough chars to classify, buffer silently — don't
+        // leak partial prefixes that could be a thinking block.
+        if (!classified && trimmed.length < "thinking".length) {
+          const couldBeThinking =
+            trimmed === "" ||
+            "thinking".startsWith(trimmed) ||
+            "<think>".startsWith(trimmed)
+          if (couldBeThinking) {
+            continue // still potentially a thinking block, keep buffering
           }
-          answerStartIndex = endIdx + "\n response".length
+          // Definitely not a thinking block — fall through to plain streaming
+          classified = true
         }
 
-        answerContent = rawContent
-          .slice(answerStartIndex)
-          .replace(/^\s+/, "")
-        if (answerContent) {
-          onStreamChunk?.(answerContent)
+        // Format 1: " thinking ... response " token markers
+        if (trimmed.startsWith("thinking")) {
+          classified = true
+          if (answerStartIndex === -1) {
+            const endIdx = rawContent.indexOf("\n response")
+            if (endIdx === -1) {
+              continue // still emitting the thinking block header
+            }
+            answerStartIndex = endIdx + "\n response".length
+          }
+          answerContent = rawContent
+            .slice(answerStartIndex)
+            .replace(/^\s+/, "")
+          if (answerContent) {
+            onStreamChunk?.(answerContent)
+          }
+          continue
         }
-        continue
+
+        // Format 2: "<think>...</think>" literal tags
+        if (trimmed.startsWith("<think>")) {
+          classified = true
+          if (answerStartIndex === -1) {
+            const endIdx = rawContent.indexOf("</think>")
+            if (endIdx === -1) {
+              continue // still inside the thinking block
+            }
+            answerStartIndex = endIdx + "</think>".length
+          }
+          answerContent = rawContent
+            .slice(answerStartIndex)
+            .replace(/^\s+/, "")
+          if (answerContent) {
+            onStreamChunk?.(answerContent)
+          }
+          continue
+        }
       }
 
       // Non-thinking output (or non-thinking-capable model): stream as-is
+      classified = true
       answerContent = rawContent
       onStreamChunk?.(answerContent)
     }

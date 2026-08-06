@@ -8,8 +8,8 @@ Build sherpa-onnx WASM packages for different ASR models.
 # Build the bilingual ZH-EN model
 ./build-sherpa-wasm.sh
 
-# Build the Nemotron EN model
-MODEL_KEY=nemotron-en ./build-sherpa-wasm.sh
+# Build the English 20M model
+MODEL_KEY=en-20m ./build-sherpa-wasm.sh
 ```
 
 Staged artifacts land in `.build/sherpa/staging/v1.13.4/<model-key>/`.
@@ -28,8 +28,8 @@ export R2_SECRET_ACCESS_KEY="<r2-secret-access-key>"
 export R2_ENDPOINT="https://<account-id>.r2.cloudflarestorage.com"
 
 # Upload the model
-./scripts/upload-sherpa-r2.sh nemotron-en
 ./scripts/upload-sherpa-r2.sh bilingual
+./scripts/upload-sherpa-r2.sh en-20m
 ```
 
 Requires `aws-cli` (`brew install awscli`).

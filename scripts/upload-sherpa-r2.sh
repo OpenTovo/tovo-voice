@@ -11,7 +11,6 @@
 #       export R2_ENDPOINT="https://<account-id>.r2.cloudflarestorage.com"
 #
 # Usage:
-#   ./scripts/upload-sherpa-r2.sh nemotron-en
 #   ./scripts/upload-sherpa-r2.sh bilingual
 
 set -euo pipefail
@@ -22,7 +21,7 @@ BUCKET="tovo-sherpa-files"
 MODEL_KEY="${1:-}"
 
 if [[ -z "$MODEL_KEY" ]]; then
-  echo "Usage: $0 <model-key> (e.g. bilingual, nemotron-en)" >&2
+  echo "Usage: $0 <model-key> (e.g. bilingual)" >&2
   exit 1
 fi
 
@@ -37,7 +36,7 @@ fi
 # Determine the CDN folder name for this model
 case "$MODEL_KEY" in
   bilingual)     CDN_FOLDER="sherpa-onnx-bilingual" ;;
-  nemotron-en)   CDN_FOLDER="sherpa-onnx-nemotron-en" ;;
+  en-20m)        CDN_FOLDER="sherpa-onnx-en-20m" ;;
   *)
     echo "Unknown MODEL_KEY: $MODEL_KEY — add a CDN_FOLDER mapping to this script." >&2
     exit 2

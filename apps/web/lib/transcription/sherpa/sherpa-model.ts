@@ -11,15 +11,14 @@ export const SHERPA_MODELS = {
     folder: "sherpa-onnx-bilingual",
     url: "https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherpa-onnx-streaming-zipformer-bilingual-zh-en-2023-02-20.tar.bz2",
   },
-  "nemotron-en-0.6b-560ms-2026-04-25": {
-    size: 632, // MB (encoder int8 ~623MB + decoder/joiner/tokens + WASM runtime)
-    name: "Nemotron EN",
-    description:
-      "NVIDIA Nemotron 0.6B English streaming model with high accuracy",
+  "en-20m-2023-02-17": {
+    size: 122, // MB (complete staged WASM package, rounded up)
+    name: "English 20M",
+    description: "Lightweight English-only model (20M params) with real-time streaming",
     languages: ["en"],
-    type: "nemotron",
-    folder: "sherpa-onnx-nemotron-en",
-    url: "https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherpa-onnx-nemotron-speech-streaming-en-0.6b-560ms-int8-2026-04-25.tar.bz2",
+    type: "zipformer",
+    folder: "sherpa-onnx-en-20m",
+    url: "https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherpa-onnx-streaming-zipformer-en-20M-2023-02-17.tar.bz2",
   },
 } as const
 
@@ -33,8 +32,8 @@ export function getModelShortName(modelId: string): string {
   switch (modelId) {
     case "sherpa-bilingual":
       return "bilingual"
-    case "sherpa-nemotron-en":
-      return "nemotron-en"
+    case "sherpa-en-20m":
+      return "en-20m"
     default:
       return modelId.replace("sherpa-", "")
   }

@@ -51,19 +51,20 @@ export const UNIFIED_MODELS: Record<string, UnifiedModelConfig> = {
       modelName: "bilingual-zh-en-2023-02-20",
     },
   },
-  "sherpa-nemotron-en": {
-    id: "sherpa-nemotron-en",
-    name: "Nemotron EN",
-    displayName: "EN",
-    description: "NVIDIA Nemotron 0.6B English streaming model with high accuracy",
-    engine: TranscriptionEngine.SHERPA,
-    size: SHERPA_MODELS["nemotron-en-0.6b-560ms-2026-04-25"].size,
-    languages: ["en"],
-    isRealTime: true,
-    sherpaConfig: {
-      modelName: "nemotron-en-0.6b-560ms-2026-04-25",
-    },
-  },
+  // NOTE: Accuracy not good enough — kept for reference, not exposed in the UI.
+  // "sherpa-en-20m": {
+  //   id: "sherpa-en-20m",
+  //   name: "English 20M",
+  //   displayName: "EN",
+  //   description: "Lightweight English-only model (20M params) with real-time streaming",
+  //   engine: TranscriptionEngine.SHERPA,
+  //   size: SHERPA_MODELS["en-20m-2023-02-17"].size,
+  //   languages: ["en"],
+  //   isRealTime: true,
+  //   sherpaConfig: {
+  //     modelName: "en-20m-2023-02-17",
+  //   },
+  // },
 } as const
 
 export type UnifiedModelId = keyof typeof UNIFIED_MODELS
