@@ -80,13 +80,24 @@ if (typeof window === "undefined") {
     window.sessionStorage.removeItem("coiReloadedBySelf")
     const coepDegrading = reloadedBySelf == "coepdegrade"
 
+    // Persistent one-shot guard: the reload dance may only run once per
+    // browser. Chrome can kill and restore tabs under memory pressure,
+    // which clears sessionStorage; without this guard the page can reload
+    // forever (restore -> reload -> memory spike -> kill -> restore...).
+    const reloadAttempted = !!window.localStorage.getItem("coiReloadAttempted")
+
     // You can customize the behavior of this script through a global `coi` variable.
     const coi = {
-      shouldRegister: () => !reloadedBySelf,
+      shouldRegister: () => !reloadedBySelf && !reloadAttempted,
       shouldDeregister: () => false,
       coepCredentialless: () => true,
       coepDegrade: () => true,
-      doReload: () => window.location.reload(),
+      doReload: () => {
+        // Never reload more than once per browser.
+        if (reloadAttempted) return
+        window.localStorage.setItem("coiReloadAttempted", "1")
+        window.location.reload()
+      },
       quiet: false,
       ...window.coi,
     }
