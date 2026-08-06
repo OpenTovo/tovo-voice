@@ -9,7 +9,6 @@ import {
   CardTitle,
 } from "@workspace/ui/components/card"
 import { Textarea } from "@workspace/ui/components/textarea"
-import { Switch } from "@workspace/ui/components/switch"
 import { useAtom } from "jotai"
 import {
   ArrowDown,
@@ -23,7 +22,7 @@ import { useRouter } from "next/navigation"
 import { useCallback, useEffect, useRef, useState } from "react"
 import { AIResponseMarkdown } from "@/components/ai/ai-response-markdown"
 import { WebGPUSetupDialog } from "@/components/dialogs/webgpu-setup"
-import { defaultAnalysisModelAtom, enableThinkingAtom, sessionContextAtom } from "@/lib/atoms"
+import { defaultAnalysisModelAtom, sessionContextAtom } from "@/lib/atoms"
 import {
   analysisLoadingAtom,
   analysisResponsesAtom,
@@ -40,7 +39,7 @@ import {
   type AnalysisProgress,
   llmAnalysisEngine,
 } from "@/lib/llm/analysis-engine"
-import { WEBLLM_MODELS, isThinkingCapableModel, type WebLLMModelName } from "@/lib/llm/models"
+import { WEBLLM_MODELS, type WebLLMModelName } from "@/lib/llm/models"
 import { SessionTypeSelector } from "./session-type-selector"
 
 // Maximum number of AI responses to display in the UI
@@ -71,9 +70,7 @@ export function AIResponseSection({
   )
   const [currentStreamingResponse, setCurrentStreamingResponse] =
     useState<string>("")
-  const [isThinking, setIsThinking] = useState(false)
   const [sessionContext, setSessionContext] = useAtom(sessionContextAtom)
-  const [enableThinking, setEnableThinking] = useAtom(enableThinkingAtom)
   const scrollAreaRef = useRef<HTMLDivElement>(null)
   const [isUserScrolling, setIsUserScrolling] = useState(false)
   const lastScrollTop = useRef(0)
@@ -237,8 +234,6 @@ export function AIResponseSection({
         modelName: defaultAnalysisModel as WebLLMModelName,
         previousResponses: analysisResponses,
         userProvidedContext: sessionContext.trim() || undefined, // Include user context if provided
-        enableThinking,
-        onThinkingChange: setIsThinking,
         onStreamChunk: (content: string) => {
           // Check if analysis should be aborted
           if (abortController.signal.aborted) {
@@ -252,13 +247,11 @@ export function AIResponseSection({
       // Check if aborted before processing response
       if (abortController.signal.aborted) {
         setCurrentStreamingResponse("")
-        setIsThinking(false)
         return
       }
 
       if (response.content?.trim() && response.content.trim() !== "none") {
         setCurrentStreamingResponse("")
-        setIsThinking(false)
 
         // Save AI response to database
         if (aiResponseManagerRef.current && sessionId) {
@@ -279,14 +272,12 @@ export function AIResponseSection({
         })
       } else {
         setCurrentStreamingResponse("")
-        setIsThinking(false)
       }
     } catch (error) {
       if (!abortController.signal.aborted) {
         console.error("Analysis failed:", error)
       }
       setCurrentStreamingResponse("")
-      setIsThinking(false)
     } finally {
       setIsAnalyzing(false)
       currentAnalysisAbortRef.current = null
@@ -299,7 +290,6 @@ export function AIResponseSection({
     isAnalyzing,
     analysisResponses,
     sessionContext,
-    enableThinking,
     setAnalysisResponses,
     setIsAnalyzing,
     sessionId,
@@ -376,7 +366,6 @@ export function AIResponseSection({
     // Clear ONLY the displayed AI responses and UI state - leave session/LLM memory intact
     setAnalysisResponses([])
     setCurrentStreamingResponse("") // Clear any ongoing streaming response
-    setIsThinking(false)
     setIsUserScrolling(false) // Reset scroll tracking
     setIsAnalyzing(false) // Stop analyzing indicator
 
@@ -410,7 +399,6 @@ export function AIResponseSection({
 
       clearSessionData()
       setCurrentStreamingResponse("") // Clear streaming state
-      setIsThinking(false)
       setIsAnalyzing(false) // Also stop any ongoing analysis
       setIsUserScrolling(false) // Reset scroll state
       llmAnalysisEngine.clearConversationHistory() // Clear LLM conversation memory
@@ -449,7 +437,6 @@ export function AIResponseSection({
 
       // Clear streaming state
       setCurrentStreamingResponse("")
-      setIsThinking(false)
       setIsAnalyzing(false)
 
       // Clear timeouts
@@ -502,18 +489,6 @@ export function AIResponseSection({
             </div>
           </div>
           <div className="flex items-center gap-3">
-            {defaultAnalysisModel && isThinkingCapableModel(defaultAnalysisModel) && (
-              <div className="flex items-center gap-2">
-                <span className="text-muted-foreground text-xs font-medium">
-                  Thinking
-                </span>
-                <Switch
-                  checked={enableThinking}
-                  onCheckedChange={setEnableThinking}
-                  aria-label="Enable model thinking"
-                />
-              </div>
-            )}
             <SessionTypeSelector />
           </div>
         </CardTitle>
@@ -605,14 +580,7 @@ export function AIResponseSection({
               </div>
             )}
 
-            {isThinking ? (
-              <div className="text-muted-foreground mb-3 flex flex-shrink-0 items-center gap-2">
-                <Brain className="h-4 w-4 animate-pulse" />
-                <span className="shimmer-text text-sm font-medium">
-                  Thinking...
-                </span>
-              </div>
-            ) : isAnalyzing ? (
+            {isAnalyzing ? (
               <div className="text-muted-foreground mb-3 flex flex-shrink-0 items-center gap-2">
                 <Brain className="h-4 w-4 animate-pulse" />
                 <span className="text-sm">Analyzing...</span>

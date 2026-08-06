@@ -66,9 +66,3 @@ export const sessionContextAtom = atomWithStorage<string>(
   "tovo-user-session-context",
   ""
 )
-
-// LLM thinking mode (Qwen3 models only)
-export const enableThinkingAtom = atomWithStorage<boolean>(
-  "tovo-enable-thinking",
-  true
-)

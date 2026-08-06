@@ -55,9 +55,6 @@ import {
 const MAX_CHAT_MESSAGES = 20 // Maximum messages before summarization
 const MIN_TRANSCRIPTION_LENGTH = 6
 const SUMMARY_REPLACEMENT_THRESHOLD = 15 // Replace old messages with summary after this many messages
-// Extra token budget for thinking mode (Qwen3). Thinking tokens count against
-// max_tokens, so give them room without starving the final answer.
-const THINKING_TOKEN_BUDGET = 200
 
 // Types
 export interface AnalysisRequest {
@@ -67,8 +64,6 @@ export interface AnalysisRequest {
   transform?: MessageTransformName
   previousResponses?: AnalysisResponse[]
   userProvidedContext?: string // Optional user-provided context
-  enableThinking?: boolean // Enable LLM thinking mode (Qwen3 models only)
-  onThinkingChange?: (isThinking: boolean) => void // Called when model starts/stops thinking
   onStreamChunk?: (chunk: string) => void
 }
 
@@ -591,44 +586,39 @@ export class LLMAnalysisEngine {
     })
 
     const thinkingCapable = isThinkingCapableModel(request.modelName)
-    const enableThinking = request.enableThinking ?? true
 
     const response = await this.engine.chat.completions.create({
       messages: chatMessages,
       temperature: sessionConfig.temperature,
       repetition_penalty: 1.1,
-      // Reserve extra tokens for thinking so the answer isn't truncated
-      max_tokens:
-        sessionConfig.maxTokens +
-        (thinkingCapable && enableThinking ? THINKING_TOKEN_BUDGET : 0),
+      max_tokens: sessionConfig.maxTokens,
       stream: true,
-      // Qwen3 models think by default; only pass the flag to thinking-capable models
+      // Qwen3 models think by default; force thinking off (we strip the
+      // empty " thinking ... response " block WebLLM prepends when disabled)
       ...(thinkingCapable
-        ? { extra_body: { enable_thinking: enableThinking } }
+        ? { extra_body: { enable_thinking: false } }
         : {}),
     })
 
-    return this.handleStreamingResponse(
-      response,
-      request.onStreamChunk,
-      request.onThinkingChange,
-      thinkingCapable
-    )
+    return this.handleStreamingResponse(response, request.onStreamChunk, thinkingCapable)
   }
 
   /**
-   * Handle streaming response from LLM
+   * Handle streaming response from LLM.
+   *
+   * For thinking-capable models we force thinking off, but WebLLM still
+   * prepends an empty " thinking\n\n response\n\n" block to the output.
+   * Strip that block so only the answer streams.
    */
   private async handleStreamingResponse(
     response: any,
     onStreamChunk?: (chunk: string) => void,
-    onThinkingChange?: (isThinking: boolean) => void,
     stripThinking = false
   ): Promise<string> {
     let rawContent = ""
     let answerContent = ""
+    let answerStartIndex = -1 // latched index in rawContent where the answer begins
     let chunkCount = 0
-    let notifyingThinking = false
 
     for await (const chunk of response) {
       chunkCount++
@@ -637,28 +627,30 @@ export class LLMAnalysisEngine {
 
       rawContent += delta
 
-      // When thinking is enabled, Qwen3 output wraps reasoning in a
-      // " thinking... response " block. Extract only the final answer.
-      const inThinkingBlock =
-        stripThinking && rawContent.trimStart().startsWith(" think")
-      let visible = inThinkingBlock
-        ? this.extractAnswerFromThinking(rawContent)
-        : rawContent
+      if (stripThinking && rawContent.trimStart().startsWith("thinking")) {
+        // Find the closing tag once; afterwards just grow the answer
+        if (answerStartIndex === -1) {
+          const endIdx = rawContent.indexOf("\n response")
+          if (endIdx === -1) {
+            // Still emitting the thinking block header — buffer, emit nothing
+            continue
+          }
+          answerStartIndex = endIdx + "\n response".length
+        }
 
-      // Notify the UI while the model is still thinking (no answer yet)
-      const isThinking = visible === "" && rawContent.trim() !== ""
-      if (isThinking !== notifyingThinking) {
-        notifyingThinking = isThinking
-        onThinkingChange?.(isThinking)
+        answerContent = rawContent
+          .slice(answerStartIndex)
+          .replace(/^\s+/, "")
+        if (answerContent) {
+          onStreamChunk?.(answerContent)
+        }
+        continue
       }
 
-      if (visible) {
-        answerContent = visible
-        onStreamChunk?.(answerContent)
-      }
+      // Non-thinking output (or non-thinking-capable model): stream as-is
+      answerContent = rawContent
+      onStreamChunk?.(answerContent)
     }
-
-    onThinkingChange?.(false)
 
     console.log("💬 WebLLM Response:", {
       model: this.currentModel,
@@ -668,19 +660,6 @@ export class LLMAnalysisEngine {
     })
 
     return answerContent
-  }
-
-  /**
-   * Strip the " thinking ... response " reasoning block from Qwen3 output.
-   * Returns the final answer, or "" while the model is still thinking.
-   */
-  private extractAnswerFromThinking(raw: string): string {
-    const endMarker = " response"
-    const endIdx = raw.indexOf(endMarker)
-    if (endIdx === -1) {
-      return "" // still thinking, no answer yet
-    }
-    return raw.slice(endIdx + endMarker.length).replace(/^\s+/, "")
   }
 
   /**
