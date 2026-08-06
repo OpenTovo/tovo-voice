@@ -52,9 +52,22 @@ let globalWorker: Worker | null = null
 let globalCurrentModel: WebLLMModelName | null = null
 
 const WEBLLM_WORKER_INACTIVITY_TIMEOUT_MS = 30_000
+const GEMMA_MODEL_ID = "gemma3-1b-it-q4f16_1-MLC"
+
 const WEBLLM_APP_CONFIG: webllm.AppConfig = {
   ...webllm.prebuiltAppConfig,
   cacheBackend: "cache",
+  model_list: webllm.prebuiltAppConfig.model_list.map((model) =>
+    model.model_id === GEMMA_MODEL_ID
+      ? {
+          ...model,
+          overrides: {
+            ...model.overrides,
+            sliding_window_size: -1,
+          },
+        }
+      : model
+  ),
 }
 
 /**
