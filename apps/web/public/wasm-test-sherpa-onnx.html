@@ -161,11 +161,18 @@ best practices for handling real-time transcription results.
     <div class="test-card">
       <h3>Environment Check</h3>
       <div id="env-status"></div>
+      <div class="controls">
+        <button onclick="testWorkerSupport()">Test Dedicated Worker</button>
+        <button onclick="copyDiagnostics()">Copy Diagnostics</button>
+      </div>
+      <div id="worker-status" class="status info" style="display: none"></div>
     </div>
 
     <div class="test-card">
       <h3>Sherpa-ONNX Module Test</h3>
-      <button onclick="testSherpaModule()">Test Sherpa Module</button>
+      <button id="module-test-btn" onclick="testSherpaModule()">
+        Test Sherpa Module
+      </button>
       <div id="sherpa-status" class="status info" style="display: none">
         Initializing...
       </div>
@@ -244,11 +251,25 @@ best practices for handling real-time transcription results.
         currentUtteranceId: 0,
       }
 
-      function log(message) {
+      function formatDiagnosticValue(value) {
+        if (value instanceof Error) {
+          return `${value.name}: ${value.message}${value.stack ? `\n${value.stack}` : ""}`
+        }
+        if (typeof value === "string") return value
+        try {
+          const serialized = JSON.stringify(value)
+          return serialized === undefined ? String(value) : serialized
+        } catch {
+          return String(value)
+        }
+      }
+
+      function log(...messages) {
+        const message = messages.map(formatDiagnosticValue).join(" ")
         console.log(message)
         if (logDiv) {
           logDiv.textContent +=
-            new Date().toLocaleTimeString() + ": " + message + "\\n"
+            new Date().toLocaleTimeString() + ": " + message + "\n"
           logDiv.scrollTop = logDiv.scrollHeight
         }
       }
@@ -262,6 +283,32 @@ best practices for handling real-time transcription results.
 
       function checkEnvironment() {
         const envDiv = document.getElementById("env-status")
+        const memory = performance.memory
+        const environment = {
+          url: window.location.href,
+          protocol: location.protocol,
+          crossOriginIsolated: window.crossOriginIsolated,
+          sharedArrayBuffer: typeof SharedArrayBuffer !== "undefined",
+          webAssembly: typeof WebAssembly !== "undefined",
+          worker: typeof Worker !== "undefined",
+          audioContext: !!window.AudioContext,
+          mediaDevices: !!navigator.mediaDevices,
+          hardwareConcurrency: navigator.hardwareConcurrency || "unknown",
+          deviceMemoryGB: navigator.deviceMemory || "not exposed",
+          jsHeap: memory
+            ? {
+                usedMB: Math.round(memory.usedJSHeapSize / 1024 / 1024),
+                limitMB: Math.round(memory.jsHeapSizeLimit / 1024 / 1024),
+              }
+            : "not exposed",
+          serviceWorkerController:
+            navigator.serviceWorker?.controller?.scriptURL || "none",
+          displayMode: window.matchMedia("(display-mode: standalone)").matches
+            ? "standalone"
+            : "browser",
+          userAgent: navigator.userAgent,
+        }
+
         let html = ""
 
         html += `<p>Protocol: <strong>${location.protocol}</strong></p>`
@@ -269,16 +316,159 @@ best practices for handling real-time transcription results.
         html += `<p>SharedArrayBuffer: <strong>${typeof SharedArrayBuffer !== "undefined" ? "Available" : "Not Available"}</strong></p>`
         html += `<p>AudioContext: <strong>${window.AudioContext ? "Available" : "Not Available"}</strong></p>`
         html += `<p>MediaDevices: <strong>${navigator.mediaDevices ? "Available" : "Not Available"}</strong></p>`
+        html += `<pre id="environment-details"></pre>`
 
         envDiv.innerHTML = html
+        document.getElementById("environment-details").textContent = JSON.stringify(
+          environment,
+          null,
+          2
+        )
+        log("Environment:", environment)
+
+        if (!environment.crossOriginIsolated || !environment.sharedArrayBuffer) {
+          log(
+            "⚠️ This page cannot run the pthread-enabled Sherpa build. A green script-load status alone is not enough; the app page may have different headers."
+          )
+        }
+      }
+
+      window.addEventListener("error", (event) => {
+        if (event.target && event.target !== window) {
+          const target = event.target
+          const resource = target.src || target.href || target.tagName || "unknown resource"
+          log(`❌ Resource error: ${resource}`)
+          updateStatus("sherpa-status", `Resource error: ${resource}`, "error")
+          return
+        }
+
+        const details = [
+          event.message,
+          event.filename ? `${event.filename}:${event.lineno}:${event.colno}` : "",
+        ]
+          .filter(Boolean)
+          .join(" — ")
+        log(`❌ Uncaught browser error: ${details || "unknown error"}`, event.error)
+        updateStatus(
+          "sherpa-status",
+          `Browser error: ${details || "unknown error"}`,
+          "error"
+        )
+      })
+
+      window.addEventListener("unhandledrejection", (event) => {
+        const reason = formatDiagnosticValue(event.reason)
+        log(`❌ Unhandled promise rejection: ${reason}`)
+        updateStatus("sherpa-status", `Promise error: ${reason}`, "error")
+      })
+
+      function testWorkerSupport() {
+        if (typeof Worker === "undefined") {
+          const message = "Web Workers are not available in this browser"
+          log(`❌ ${message}`)
+          updateStatus("worker-status", message, "error")
+          return
+        }
+
+        const workerSource = `
+          self.onmessage = () => {
+            self.postMessage({
+              crossOriginIsolated: self.crossOriginIsolated,
+              sharedArrayBuffer: typeof SharedArrayBuffer !== "undefined",
+              userAgent: self.navigator?.userAgent || "unknown"
+            })
+          }
+        `
+        const workerUrl = URL.createObjectURL(
+          new Blob([workerSource], { type: "text/javascript" })
+        )
+        const worker = new Worker(workerUrl)
+        let timeoutId
+
+        const finish = () => {
+          clearTimeout(timeoutId)
+          worker.terminate()
+          URL.revokeObjectURL(workerUrl)
+        }
+
+        worker.onmessage = (event) => {
+          finish()
+          log("✅ Dedicated Worker responded:", event.data)
+          updateStatus(
+            "worker-status",
+            `Dedicated Worker started successfully (crossOriginIsolated=${event.data.crossOriginIsolated}; SharedArrayBuffer=${event.data.sharedArrayBuffer})`,
+            "success"
+          )
+        }
+
+        worker.onerror = (event) => {
+          finish()
+          const details = [
+            event.message,
+            event.filename ? `${event.filename}:${event.lineno}:${event.colno}` : "",
+          ]
+            .filter(Boolean)
+            .join(" — ")
+          log(`❌ Dedicated Worker error: ${details || "unknown error"}`)
+          updateStatus(
+            "worker-status",
+            `Dedicated Worker error: ${details || "unknown error"}`,
+            "error"
+          )
+        }
+
+        timeoutId = setTimeout(() => {
+          finish()
+          const message = "Dedicated Worker did not respond within 10 seconds"
+          log(`❌ ${message}`)
+          updateStatus("worker-status", message, "error")
+        }, 10_000)
+
+        log("Starting basic Dedicated Worker test...")
+        worker.postMessage("probe")
+      }
+
+      async function copyDiagnostics() {
+        const environment = document.getElementById("environment-details")
+          ?.textContent || "Environment details unavailable"
+        const logs = logDiv?.textContent || "No log output yet"
+        const diagnostics = `${environment}\n\nLog:\n${logs}`
+
+        try {
+          await navigator.clipboard.writeText(diagnostics)
+          log("✅ Diagnostics copied to clipboard")
+        } catch (error) {
+          log("❌ Could not copy diagnostics; select the visible log manually.", error)
+          updateStatus(
+            "worker-status",
+            "Clipboard permission was denied. Please copy the visible log manually.",
+            "warning"
+          )
+        }
       }
 
       async function testSherpaModule() {
         logDiv = document.getElementById("sherpa-log")
         logDiv.style.display = "block"
+        document.getElementById("module-test-btn").disabled = true
         updateStatus("sherpa-status", "Loading Sherpa-ONNX module...", "info")
 
         log("Starting Sherpa-ONNX module test...")
+
+        let runtimeTimeout
+        let resolveRuntime
+        let rejectRuntime
+        const runtimeReady = new Promise((resolve, reject) => {
+          resolveRuntime = resolve
+          rejectRuntime = reject
+        })
+        runtimeTimeout = setTimeout(() => {
+          rejectRuntime(
+            new Error(
+              "WASM runtime did not initialize within 90 seconds after the scripts loaded"
+            )
+          )
+        }, 90_000)
 
         try {
           // First check if files exist
@@ -346,11 +536,18 @@ best practices for handling real-time transcription results.
             log(`Module error: ${text}`)
           }
 
+          window.Module.onAbort = function (reason) {
+            const message = `WASM runtime aborted: ${formatDiagnosticValue(reason)}`
+            log(`❌ ${message}`)
+            rejectRuntime(new Error(message))
+          }
+
           // Set up ready callback
           window.Module.onRuntimeInitialized = function () {
             log("✅ Module runtime initialized!")
             sherpaModule = window.Module
             enableRecordingButtons()
+            resolveRuntime()
           }
 
           // Try to load the main module
@@ -368,15 +565,22 @@ best practices for handling real-time transcription results.
           )
           log("✅ Loaded sherpa-onnx-wasm-main-asr.js")
 
+          log("Scripts loaded; waiting for the WASM runtime callback...")
+          await runtimeReady
+
           updateStatus(
             "sherpa-status",
-            "Module loaded successfully!",
+            "WASM runtime initialized successfully!",
             "success"
           )
           document.getElementById("transcription-test").style.display = "block"
         } catch (error) {
-          log(`❌ Error: ${error.message}`)
-          updateStatus("sherpa-status", `Error: ${error.message}`, "error")
+          const message = formatDiagnosticValue(error)
+          log(`❌ Module test failed: ${message}`)
+          updateStatus("sherpa-status", `Module test failed: ${message}`, "error")
+          document.getElementById("module-test-btn").disabled = false
+        } finally {
+          clearTimeout(runtimeTimeout)
         }
       }
 
@@ -392,6 +596,9 @@ best practices for handling real-time transcription results.
 
       // Initialize page
       window.addEventListener("load", () => {
+        logDiv = document.getElementById("sherpa-log")
+        logDiv.style.display = "block"
+        log("Diagnostic page loaded")
         checkEnvironment()
 
         // Set up UI handlers (these will be implemented once we have the module working)

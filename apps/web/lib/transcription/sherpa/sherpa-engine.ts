@@ -27,6 +27,8 @@ import { getSherpaModelAssetUrls } from "./sherpa-assets"
 import { getCachedFile, hasCachedFile } from "./sherpa-cache"
 import { SHERPA_MODELS } from "./sherpa-model"
 
+const SHERPA_WORKER_LOAD_TIMEOUT_MS = 90_000
+
 /**
  * Sherpa-ONNX transcription engine
  */
@@ -63,6 +65,22 @@ export class SherpaTranscriptionEngine
 
       if (!modelConfig.sherpaConfig) {
         throw new Error(`Model ${modelId} missing Sherpa configuration`)
+      }
+
+      if (typeof Worker === "undefined") {
+        throw new Error(
+          "Sherpa transcription requires Web Worker support in this browser"
+        )
+      }
+
+      if (
+        typeof window !== "undefined" &&
+        (!window.crossOriginIsolated ||
+          typeof SharedArrayBuffer === "undefined")
+      ) {
+        throw new Error(
+          "Sherpa transcription requires cross-origin isolation and SharedArrayBuffer. Reload from the configured production or local server before trying again."
+        )
       }
 
       const sherpaConfig = modelConfig.sherpaConfig
@@ -115,9 +133,12 @@ export class SherpaTranscriptionEngine
           reject(new Error("Worker not initialized"))
           return
         }
+        let timeoutId: ReturnType<typeof setTimeout> | undefined
         const cleanup = () => {
+          if (timeoutId) clearTimeout(timeoutId)
           worker.removeEventListener("message", onMessage)
           worker.removeEventListener("error", onError)
+          worker.removeEventListener("messageerror", onMessageError)
         }
         const onMessage = (event: MessageEvent) => {
           const msg = event.data
@@ -136,10 +157,44 @@ export class SherpaTranscriptionEngine
         }
         const onError = (e: ErrorEvent) => {
           cleanup()
-          reject(new Error(e.message || "Worker failed to load"))
+          const details = [
+            e.message,
+            e.error instanceof Error ? e.error.message : "",
+            e.filename ? `${e.filename}:${e.lineno}:${e.colno}` : "",
+          ]
+            .filter(Boolean)
+            .join(" — ")
+
+          const runtime =
+            typeof window !== "undefined"
+              ? `crossOriginIsolated=${window.crossOriginIsolated}; SharedArrayBuffer=${typeof SharedArrayBuffer !== "undefined"}`
+              : "runtime details unavailable"
+
+          reject(
+            new Error(
+              `Sherpa worker stopped before loading (${details || "the browser returned no error details"}; ${runtime})`
+            )
+          )
+        }
+        const onMessageError = () => {
+          cleanup()
+          reject(
+            new Error(
+              "Sherpa worker could not receive the model buffers (message cloning failed)"
+            )
+          )
         }
         worker.addEventListener("message", onMessage)
         worker.addEventListener("error", onError)
+        worker.addEventListener("messageerror", onMessageError)
+        timeoutId = setTimeout(() => {
+          cleanup()
+          reject(
+            new Error(
+              `Sherpa worker did not respond within ${SHERPA_WORKER_LOAD_TIMEOUT_MS / 1000} seconds (crossOriginIsolated=${window.crossOriginIsolated}; SharedArrayBuffer=${typeof SharedArrayBuffer !== "undefined"})`
+            )
+          )
+        }, SHERPA_WORKER_LOAD_TIMEOUT_MS)
 
         worker.postMessage(
           {

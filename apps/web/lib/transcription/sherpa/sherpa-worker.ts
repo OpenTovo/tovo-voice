@@ -71,6 +71,20 @@ function withTimeout<T>(ms: number, msg: string): Promise<never> {
   )
 }
 
+function describeError(error: unknown): string {
+  if (error instanceof Error) {
+    return `${error.name}: ${error.message}`
+  }
+  return String(error)
+}
+
+function postRuntimeError(message: string): void {
+  post({
+    type: "error",
+    message: `${message} (crossOriginIsolated=${self.crossOriginIsolated}; SharedArrayBuffer=${typeof SharedArrayBuffer !== "undefined"})`,
+  })
+}
+
 async function loadModel(payload: LoadPayload) {
   try {
     post({ type: "progress", progress: 10 })
@@ -165,9 +179,9 @@ async function loadModel(payload: LoadPayload) {
     post({ type: "progress", progress: 100 })
     post({ type: "ready" })
   } catch (error) {
-    const message = error instanceof Error ? error.message : String(error)
+    const message = describeError(error)
     console.error("Sherpa worker load failed", message)
-    post({ type: "error", message })
+    postRuntimeError(`Sherpa worker load failed: ${message}`)
   }
 }
 
@@ -218,9 +232,9 @@ function processAudio(payload: AudioPayload) {
       post({ type: "clear", utteranceId: currentUtteranceId })
     }
   } catch (error) {
-    const message = error instanceof Error ? error.message : String(error)
+    const message = describeError(error)
     console.error("Sherpa worker audio error", message)
-    post({ type: "error", message })
+    postRuntimeError(`Sherpa worker audio error: ${message}`)
   }
 }
 
@@ -249,6 +263,27 @@ function unload() {
   partialStartTime = null
   currentUtteranceId = 0
 }
+
+self.addEventListener("error", (event) => {
+  const detail =
+    event instanceof ErrorEvent
+      ? [
+          event.message,
+          event.filename
+            ? `${event.filename}:${event.lineno}:${event.colno}`
+            : "",
+        ]
+          .filter(Boolean)
+          .join(" — ")
+      : String(event)
+  postRuntimeError(`Sherpa worker runtime error: ${detail || "unknown error"}`)
+})
+
+self.addEventListener("unhandledrejection", (event) => {
+  postRuntimeError(
+    `Sherpa worker unhandled rejection: ${describeError(event.reason)}`
+  )
+})
 
 self.onmessage = (event: MessageEvent<InMessage>) => {
   const msg = event.data
