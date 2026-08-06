@@ -315,9 +315,12 @@ async function getFileWithChunking(url: string): Promise<ArrayBuffer | null> {
       const metadata = JSON.parse(metadataStr)
 
       if (metadata.isChunked) {
-        const chunks = new Array(metadata.totalChunks)
+        // Allocate the final buffer once and copy each chunk as it is read.
+        // Holding every chunk while reconstructing a large model briefly
+        // doubles the model's resident memory on mobile browsers.
+        const reconstructed = new Uint8Array(metadata.originalSize)
+        let offset = 0
 
-        // Load all chunks
         for (let i = 0; i < metadata.totalChunks; i++) {
           const chunkKey = `${url}:chunk:${i}`
           const chunkData = await tovoDB.getModel(chunkKey)
@@ -326,35 +329,29 @@ async function getFileWithChunking(url: string): Promise<ArrayBuffer | null> {
             throw new Error(`Missing chunk ${i} for ${url}`)
           }
 
-          chunks[i] = chunkData
+          reconstructed.set(chunkData, offset)
+          offset += chunkData.byteLength
         }
 
-        // Reconstruct the original file
-        const totalSize = chunks.reduce(
-          (sum, chunk) => sum + chunk.byteLength,
-          0
-        )
-        const reconstructed = new Uint8Array(totalSize)
-
-        let offset = 0
-        for (const chunk of chunks) {
-          reconstructed.set(new Uint8Array(chunk), offset)
-          offset += chunk.byteLength
-        }
-
-        return reconstructed.buffer.slice(
-          reconstructed.byteOffset,
-          reconstructed.byteOffset + reconstructed.byteLength
-        )
+        return reconstructed.buffer
       }
     }
 
     // Not chunked, get normally
     const data = await tovoDB.getModel(url)
     if (data) {
-      const arrayBuffer = new ArrayBuffer(data.byteLength)
-      new Uint8Array(arrayBuffer).set(data)
-      return arrayBuffer
+      // IndexedDB returns a standalone Uint8Array. Reuse its ArrayBuffer when
+      // it covers the complete view instead of copying a 200MB model again.
+      // The copy fallback is only needed for a sliced or shared view.
+      if (
+        data.byteOffset === 0 &&
+        data.byteLength === data.buffer.byteLength &&
+        data.buffer instanceof ArrayBuffer
+      ) {
+        return data.buffer
+      }
+
+      return data.slice().buffer
     }
 
     return null

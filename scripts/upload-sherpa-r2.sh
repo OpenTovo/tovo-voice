@@ -54,6 +54,21 @@ if [[ -z "${R2_ENDPOINT:-}" || -z "${R2_ACCESS_KEY_ID:-}" || -z "${R2_SECRET_ACC
   exit 1
 fi
 
+data_path="$STAGE_DIR/sherpa-onnx-wasm-main-asr.data"
+loader_path="$STAGE_DIR/sherpa-onnx-wasm-main-asr.js"
+if [[ ! -f "$data_path" || ! -f "$loader_path" ]]; then
+  echo "Error: missing .data or loader file in $STAGE_DIR." >&2
+  exit 1
+fi
+data_size="$(wc -c < "$data_path" | tr -d ' ')"
+package_size="$(grep -oE 'remote_package_size:[0-9]+' "$loader_path" | head -n 1 | cut -d: -f2)"
+if [[ -z "$package_size" || "$data_size" != "$package_size" ]]; then
+  echo "Error: .data size does not match the Emscripten loader metadata." >&2
+  echo "  data:   $data_size bytes" >&2
+  echo "  loader: ${package_size:-unknown} bytes" >&2
+  exit 1
+fi
+
 echo "Uploading from: $STAGE_DIR"
 echo "  to R2 bucket: $BUCKET/$R2_PREFIX/"
 echo "  endpoint:     $R2_ENDPOINT"

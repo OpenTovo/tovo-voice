@@ -23,8 +23,8 @@ import {
   type ModelLoadCallbacks,
   type UnifiedModelId,
 } from "../unified-models"
-import { hasCachedFile, getCachedFile } from "./sherpa-cache"
 import { getSherpaModelAssetUrls } from "./sherpa-assets"
+import { getCachedFile, hasCachedFile } from "./sherpa-cache"
 import { SHERPA_MODELS } from "./sherpa-model"
 
 /**
@@ -87,13 +87,16 @@ export class SherpaTranscriptionEngine
 
       callbacks.onProgress(10)
 
-      // Read all cached files (transferred to the worker).
-      const [data, wasm, api, loader] = await Promise.all([
-        getCachedFile(assets.data),
-        getCachedFile(assets.wasm),
-        getCachedFile(assets.api),
-        getCachedFile(assets.wasmLoader),
-      ])
+      // Read the large data file first, then the small runtime files. Keeping
+      // this sequential avoids several IndexedDB copies being live at once on
+      // mobile browsers while the model is being restored.
+      const data = await getCachedFile(assets.data)
+      callbacks.onProgress(14)
+      const wasm = await getCachedFile(assets.wasm)
+      callbacks.onProgress(16)
+      const api = await getCachedFile(assets.api)
+      callbacks.onProgress(18)
+      const loader = await getCachedFile(assets.wasmLoader)
 
       if (!data || !wasm || !api || !loader) {
         throw new Error("Failed to read one or more cached model files")
@@ -102,10 +105,9 @@ export class SherpaTranscriptionEngine
       callbacks.onProgress(20)
 
       // Spawn the worker and transfer the file buffers.
-      this.worker = new Worker(
-        new URL("./sherpa-worker.ts", import.meta.url),
-        { type: "module" }
-      )
+      this.worker = new Worker(new URL("./sherpa-worker.ts", import.meta.url), {
+        type: "module",
+      })
 
       await new Promise<void>((resolve, reject) => {
         const worker = this.worker
@@ -294,10 +296,7 @@ export class SherpaTranscriptionEngine
         )
 
         scriptProcessor.onaudioprocess = (event) => {
-          if (
-            this._status !== TranscriptionStatus.RECORDING ||
-            !this.worker
-          ) {
+          if (this._status !== TranscriptionStatus.RECORDING || !this.worker) {
             return
           }
           const inputData = event.inputBuffer.getChannelData(0)

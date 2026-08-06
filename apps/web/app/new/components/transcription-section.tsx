@@ -123,7 +123,9 @@ export function TranscriptionSection({
           : "h-auto gap-0"
       }`}
     >
-      <CardHeader className={`px-4 transition-all duration-200 sm:px-4 md:px-4`}>
+      <CardHeader
+        className={`px-4 transition-all duration-200 sm:px-4 md:px-4`}
+      >
         <CardTitle className="flex items-start justify-between">
           <div className="flex flex-col items-start gap-2">
             <div className="flex items-center gap-2">
@@ -136,7 +138,9 @@ export function TranscriptionSection({
                 Loading...
               </Badge>
             ) : currentModel ? (
-              <Badge variant="outline">{getModelDisplayName(currentModel)}</Badge>
+              <Badge variant="outline">
+                {getModelDisplayName(currentModel)}
+              </Badge>
             ) : (
               <Badge variant="secondary">No model set</Badge>
             )}
@@ -204,16 +208,23 @@ export function TranscriptionSection({
               </div>
             )}
 
-            {/* No Transcription Results - Show download if needed */}
+            {/* No Transcription Results - Show model setup if needed */}
             {!transcriptionLoading && transcription.length === 0 && (
               <div className="flex h-full flex-col items-center justify-center space-y-2">
-                {/* Show inline model download when no models are available */}
-                {!hasAvailableModels && !isCheckingModels ? (
+                {/* Show setup guidance when a model is missing or was skipped
+                    after a browser restore. */}
+                {!currentModel && !isCheckingModels ? (
                   <div className="w-full max-w-md">
                     <div className="space-y-4 text-center">
                       <p className="text-muted-foreground text-sm">
-                        Download a transcription model (
-                        <span className="font-bold">required</span>).
+                        {hasAvailableModels ? (
+                          "Load a transcription model from Settings."
+                        ) : (
+                          <>
+                            Download a transcription model (
+                            <span className="font-bold">required</span>).
+                          </>
+                        )}
                       </p>
                       <Button
                         variant="outline"

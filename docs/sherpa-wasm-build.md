@@ -64,10 +64,11 @@ The staged output is written to:
 .build/sherpa/staging/v1.13.4/bilingual/
 ```
 
-With the pinned versions, the complete staged package is approximately 208
+With the pinned versions, the bilingual staged package is approximately 208
 MiB (219 MB decimal): about 190 MiB of model data and 18 MiB of WebAssembly.
-A substantially larger `.data` file usually means an extracted model directory
-was accidentally included in the Emscripten assets.
+The English 20M target is smaller. The generated loader records the exact
+packaged filesystem size; the build script now refuses to stage the files if
+that value differs from the `.data` byte count.
 
 It must contain exactly these runtime files:
 
@@ -88,15 +89,16 @@ the build has proved that the generated data is identical for every model.
 
 ## R2 staging layout
 
-Upload the staged bilingual files under a new, immutable prefix. The app uses
-this layout:
+The app uses this immutable layout for the current bilingual release:
 
 ```text
 sherpa/v1.13.4/sherpa-onnx-bilingual/<runtime-file>
 ```
 
-Do not overwrite the existing production Sherpa keys while validating the new
-runtime.
+If a future build changes the generated runtime or model files, publish them
+under a new versioned prefix and update the app configuration together. The
+current rebuild produces the same bilingual package already used in
+production, so it does not need a second R2 copy.
 
 Cloudflare documents the `wrangler r2 object put` command and metadata flags at
 <https://developers.cloudflare.com/r2/objects/upload-objects/>.

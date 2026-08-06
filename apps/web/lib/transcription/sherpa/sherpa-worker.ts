@@ -27,6 +27,8 @@ async function evalScript(blobUrl: string): Promise<void> {
   const code = await response.text()
   // Indirect eval (0, eval) runs in global scope, so top-level `var`/function
   // declarations become globals on `self`.
+  // biome-ignore lint/complexity/noCommaOperator: required for indirect eval.
+  // biome-ignore lint/security/noGlobalEval: Sherpa's generated classic scripts must run in the worker global scope.
   ;(0, eval)(code)
 }
 
@@ -44,7 +46,12 @@ interface AudioPayload {
   sampleRate: number
 }
 
-type InMessage = LoadPayload | AudioPayload | { type: "start" } | { type: "stop" } | { type: "unload" }
+type InMessage =
+  | LoadPayload
+  | AudioPayload
+  | { type: "start" }
+  | { type: "stop" }
+  | { type: "unload" }
 
 const SAMPLE_RATE = 16000
 
@@ -68,12 +75,6 @@ async function loadModel(payload: LoadPayload) {
   try {
     post({ type: "progress", progress: 10 })
 
-    const dataUrl = URL.createObjectURL(
-      new Blob([payload.data], { type: "application/octet-stream" })
-    )
-    const wasmUrl = URL.createObjectURL(
-      new Blob([payload.wasm], { type: "application/wasm" })
-    )
     const apiUrl = URL.createObjectURL(
       new Blob([payload.api], { type: "text/javascript" })
     )
@@ -88,11 +89,10 @@ async function loadModel(payload: LoadPayload) {
 
     const g: any = self as any
     g.Module = {
-      locateFile: (path: string) => {
-        if (path.includes(".data")) return dataUrl
-        if (path.includes(".wasm")) return wasmUrl
-        return path
-      },
+      // The generated Emscripten loader accepts these buffers directly. This
+      // avoids fetching the transferred model package from a Blob URL again.
+      getPreloadedPackage: () => payload.data,
+      wasmBinary: payload.wasm,
       mainScriptUrlOrBlob: loaderUrl,
       onRuntimeInitialized: () => {
         post({ type: "progress", progress: 90 })
@@ -109,7 +109,8 @@ async function loadModel(payload: LoadPayload) {
     // recognizer construction (it bypasses Module.printErr).
     const origError = console.error
     console.error = (...args: unknown[]) => {
-      if (typeof args[0] === "string" && SHERPA_CPP_LOG_LINE.test(args[0])) return
+      if (typeof args[0] === "string" && SHERPA_CPP_LOG_LINE.test(args[0]))
+        return
       origError(...(args as any[]))
     }
 
@@ -124,6 +125,12 @@ async function loadModel(payload: LoadPayload) {
         ready,
         withTimeout(60000, "Timeout waiting for Sherpa WASM to initialize"),
       ])
+
+      // The runtime has copied the packaged files into its filesystem by the
+      // time onRuntimeInitialized fires. Drop the transferred buffers so the
+      // browser can reclaim them before the recognizer is constructed.
+      payload.data = new ArrayBuffer(0)
+      payload.wasm = new ArrayBuffer(0)
 
       if (!g.Module?.calledRun) {
         throw new Error("WASM module failed to initialize")
@@ -151,8 +158,6 @@ async function loadModel(payload: LoadPayload) {
       recognizer.reset(stream)
     } finally {
       console.error = origError
-      URL.revokeObjectURL(dataUrl)
-      URL.revokeObjectURL(wasmUrl)
       URL.revokeObjectURL(apiUrl)
       URL.revokeObjectURL(loaderUrl)
     }
@@ -196,8 +201,15 @@ function processAudio(payload: AudioPayload) {
       const finalResult = recognizer.getResult(stream)
       const finalText = finalResult?.text?.trim()
       if (finalText) {
-        const processingTime = partialStartTime ? Date.now() - partialStartTime : 0
-        post({ type: "final", text: finalText, processingTime, utteranceId: currentUtteranceId })
+        const processingTime = partialStartTime
+          ? Date.now() - partialStartTime
+          : 0
+        post({
+          type: "final",
+          text: finalText,
+          processingTime,
+          utteranceId: currentUtteranceId,
+        })
       }
       recognizer.reset(stream)
       lastPartial = ""
@@ -218,7 +230,12 @@ function stopStream() {
     const finalResult = recognizer.getResult(stream)
     const text = finalResult?.text?.trim()
     if (text) {
-      post({ type: "final", text, processingTime: 0, utteranceId: currentUtteranceId })
+      post({
+        type: "final",
+        text,
+        processingTime: 0,
+        utteranceId: currentUtteranceId,
+      })
     }
   } catch {
     // ignore

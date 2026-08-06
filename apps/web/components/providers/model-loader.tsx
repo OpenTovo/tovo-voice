@@ -10,6 +10,8 @@ import {
   type UnifiedModelId,
 } from "@/lib/transcription/unified-models"
 
+const AUTO_LOAD_MARKER = "tovo-transcription-autoloading"
+
 /**
  * ModelLoader provider that automatically loads default models in the background
  * This ensures models are available regardless of which page the user enters first
@@ -56,6 +58,35 @@ export function ModelLoaderProvider({
         return
       }
 
+      // A mobile browser can kill the tab while the model is being restored.
+      // On the next page boot, do not immediately start the same high-memory
+      // operation again. Clear the default so the user can retry deliberately
+      // from Settings after closing other tabs.
+      let previousAutoLoad: string | null = null
+      let wasDiscarded = false
+      try {
+        previousAutoLoad = window.localStorage.getItem(AUTO_LOAD_MARKER)
+        wasDiscarded =
+          (document as Document & { wasDiscarded?: boolean }).wasDiscarded ===
+          true
+      } catch {
+        // Storage and the optional Page Lifecycle property are best-effort.
+      }
+
+      if (previousAutoLoad === defaultTranscriptionModel || wasDiscarded) {
+        console.warn(
+          "Skipping automatic transcription model restore after a discarded tab"
+        )
+        try {
+          window.localStorage.removeItem(AUTO_LOAD_MARKER)
+        } catch {
+          // Ignore storage failures; the model can still be selected manually.
+        }
+        setDefaultTranscriptionModel(null)
+        lastDefaultModelRef.current = null
+        return
+      }
+
       try {
         // Check if the default model is a valid unified model
         const modelConfig =
@@ -73,8 +104,23 @@ export function ModelLoaderProvider({
         loadingModelRef.current = defaultTranscriptionModel
         lastDefaultModelRef.current = defaultTranscriptionModel
 
+        try {
+          window.localStorage.setItem(
+            AUTO_LOAD_MARKER,
+            defaultTranscriptionModel
+          )
+        } catch {
+          // Storage is only used as a crash-loop guard.
+        }
+
         // Load the model using unified transcription system
         await loadModel(defaultTranscriptionModel as UnifiedModelId)
+
+        try {
+          window.localStorage.removeItem(AUTO_LOAD_MARKER)
+        } catch {
+          // Ignore storage failures after a successful load.
+        }
       } catch (error) {
         console.error("Error loading default transcription model:", error)
 
@@ -93,6 +139,11 @@ export function ModelLoaderProvider({
           )
           setDefaultTranscriptionModel(null)
           lastDefaultModelRef.current = null
+          try {
+            window.localStorage.removeItem(AUTO_LOAD_MARKER)
+          } catch {
+            // Ignore storage failures.
+          }
         }
       } finally {
         loadingModelRef.current = null

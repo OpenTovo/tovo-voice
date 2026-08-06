@@ -138,6 +138,17 @@ for artifact in \
   [[ -f "$OUTPUT_DIR/$artifact" ]] || die "Build artifact missing: $OUTPUT_DIR/$artifact"
 done
 
+# Emscripten records the packaged filesystem size in the generated loader.
+# Keep this check next to the build so an accidentally stale or mismatched
+# .data file cannot be staged for upload.
+data_path="$OUTPUT_DIR/sherpa-onnx-wasm-main-asr.data"
+loader_path="$OUTPUT_DIR/sherpa-onnx-wasm-main-asr.js"
+data_size="$(wc -c < "$data_path" | tr -d ' ')"
+package_size="$(grep -oE 'remote_package_size:[0-9]+' "$loader_path" | head -n 1 | cut -d: -f2)"
+[[ -n "$package_size" ]] || die "Could not read packaged filesystem size from $loader_path"
+[[ "$data_size" == "$package_size" ]] || die \
+  "Emscripten package size mismatch: .data is $data_size bytes, loader declares $package_size"
+
 mkdir -p "$STAGE_DIR"
 cp "$OUTPUT_DIR/sherpa-onnx-wasm-main-asr.js" "$STAGE_DIR/"
 cp "$OUTPUT_DIR/sherpa-onnx-asr.js" "$STAGE_DIR/"
@@ -146,5 +157,6 @@ cp "$OUTPUT_DIR/sherpa-onnx-wasm-main-asr.data" "$STAGE_DIR/"
 
 echo "Built Sherpa $SHERPA_VERSION ($MODEL_KEY)"
 echo "Staged artifacts: $STAGE_DIR"
+echo "Packaged filesystem: $package_size bytes"
 ls -lh "$STAGE_DIR"
 shasum -a 256 "$STAGE_DIR"/*
