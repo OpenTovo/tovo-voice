@@ -4,6 +4,7 @@ import { Provider as JotaiProvider } from "jotai"
 import { ThemeProvider as NextThemesProvider } from "next-themes"
 import type * as React from "react"
 import { ModelLoaderProvider } from "./model-loader"
+import { PWAInstallProvider } from "./pwa-install"
 
 export function Providers({ children }: { children: React.ReactNode }) {
   return (
@@ -15,7 +16,9 @@ export function Providers({ children }: { children: React.ReactNode }) {
         disableTransitionOnChange
         enableColorScheme
       >
-        <ModelLoaderProvider>{children}</ModelLoaderProvider>
+        <PWAInstallProvider>
+          <ModelLoaderProvider>{children}</ModelLoaderProvider>
+        </PWAInstallProvider>
       </NextThemesProvider>
     </JotaiProvider>
   )

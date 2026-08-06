@@ -27,6 +27,7 @@ import {
   Smartphone,
 } from "lucide-react"
 import { useEffect, useState } from "react"
+import { usePWAInstall } from "@/components/providers/pwa-install"
 import { getDeviceType, isPWAInstalled } from "@/lib/utils/pwa"
 
 interface AddToHomeScreenProps {
@@ -38,6 +39,7 @@ export function AddToHomeScreen({ open, onOpenChange }: AddToHomeScreenProps) {
   const [defaultTab, setDefaultTab] = useState<string>("desktop")
   const [isAlreadyInstalled, setIsAlreadyInstalled] = useState(false)
   const [internalOpen, setInternalOpen] = useState(false)
+  const { canInstall, install, isInstalled } = usePWAInstall()
 
   // Use external open state if provided, otherwise use internal
   const isOpen = open !== undefined ? open : internalOpen
@@ -46,8 +48,16 @@ export function AddToHomeScreen({ open, onOpenChange }: AddToHomeScreenProps) {
   useEffect(() => {
     const deviceType = getDeviceType()
     setDefaultTab(deviceType)
-    setIsAlreadyInstalled(isPWAInstalled())
-  }, [])
+    setIsAlreadyInstalled(isPWAInstalled() || isInstalled)
+  }, [isInstalled])
+
+  const handleInstall = async () => {
+    const outcome = await install()
+    if (outcome === "accepted") {
+      setIsAlreadyInstalled(true)
+      setIsOpen(false)
+    }
+  }
 
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
@@ -63,7 +73,9 @@ export function AddToHomeScreen({ open, onOpenChange }: AddToHomeScreenProps) {
               <div className="text-muted-foreground text-sm">
                 {isAlreadyInstalled
                   ? "Already added to home screen"
-                  : "Add for offline access"}
+                  : canInstall
+                    ? "Install now"
+                    : "Add for offline access"}
               </div>
             </div>
           </div>
@@ -78,8 +90,10 @@ export function AddToHomeScreen({ open, onOpenChange }: AddToHomeScreenProps) {
           </DialogTitle>
         </DialogHeader>
         <DialogContentBody
+          canInstall={canInstall}
           isAlreadyInstalled={isAlreadyInstalled}
           defaultTab={defaultTab}
+          onInstall={handleInstall}
         />
       </DialogContent>
     </Dialog>
@@ -87,11 +101,15 @@ export function AddToHomeScreen({ open, onOpenChange }: AddToHomeScreenProps) {
 }
 
 function DialogContentBody({
+  canInstall,
   isAlreadyInstalled,
   defaultTab,
+  onInstall,
 }: {
+  canInstall: boolean
   isAlreadyInstalled: boolean
   defaultTab: string
+  onInstall: () => Promise<void>
 }) {
   if (isAlreadyInstalled) {
     return (
@@ -114,6 +132,13 @@ function DialogContentBody({
         Add Tovo Voice to your home screen for offline access and a native app
         experience.
       </p>
+
+      {canInstall && (
+        <Button onClick={onInstall} className="w-full">
+          <Download className="h-4 w-4" />
+          Install Tovo Voice
+        </Button>
+      )}
 
       <Tabs defaultValue={defaultTab}>
         <TabsList className="grid w-full grid-cols-3">

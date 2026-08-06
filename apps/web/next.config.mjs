@@ -8,6 +8,16 @@ const nextConfig = {
   async headers() {
     return [
       {
+        // The manifest must be revalidated so installability fixes reach devices.
+        source: "/manifest.json",
+        headers: [
+          {
+            key: "Cache-Control",
+            value: "public, max-age=0, must-revalidate",
+          },
+        ],
+      },
+      {
         // Apply headers to all routes
         source: "/(.*)",
         headers: [

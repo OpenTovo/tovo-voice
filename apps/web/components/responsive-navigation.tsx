@@ -12,6 +12,7 @@ import { cn } from "@workspace/ui/lib/utils"
 import { useAtom } from "jotai"
 import {
   ChevronLeft,
+  Download,
   History,
   Menu,
   Pause,
@@ -25,6 +26,7 @@ import { useSessionNavigationGuard } from "@/hooks/use-session-navigation-guard"
 import { SessionStatus, sessionStatusAtom, type TabType } from "@/lib/atoms"
 import { sideMenuExpandedAtom } from "@/lib/atoms/tabs"
 import { GithubIcon, XIcon } from "./icons/brand-icons"
+import { usePWAInstall } from "./providers/pwa-install"
 import { PWARefreshButton } from "./pwa-refresh-button"
 import { ThemeToggle } from "./theme-toggle"
 
@@ -40,6 +42,12 @@ export function ResponsiveNavigation({ mobileOnly = false }: NavigationProps) {
   const [sideMenuExpanded, setSideMenuExpanded] = useAtom(sideMenuExpandedAtom)
   const { navigateWithGuard } = useSessionNavigationGuard()
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
+  const { canInstall, install, isInstalled } = usePWAInstall()
+
+  const handleInstall = async () => {
+    setMobileMenuOpen(false)
+    await install()
+  }
 
   // Determine current tab from pathname
   const getCurrentTab = (): TabType => {
@@ -163,6 +171,16 @@ export function ResponsiveNavigation({ mobileOnly = false }: NavigationProps) {
           </DrawerHeader>
           <div className="flex flex-col space-y-2 p-6 pt-0">
             <NavItems onItemClick={() => setMobileMenuOpen(false)} />
+            {canInstall && !isInstalled && (
+              <Button
+                variant="ghost"
+                onClick={handleInstall}
+                className="flex w-full items-center justify-start gap-3"
+              >
+                <Download className="h-5 w-5" />
+                <span className="font-medium">Install Tovo Voice</span>
+              </Button>
+            )}
             <Button
               variant="ghost"
               asChild
