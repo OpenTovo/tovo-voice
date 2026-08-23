@@ -3,6 +3,7 @@
   "main": ".open-next/worker.js",
   "name": "tovo-pwa",
   "compatibility_date": "2026-03-20",
+  "workers_dev": false,
   "compatibility_flags": [
     "nodejs_compat"
   ],
