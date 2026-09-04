@@ -201,7 +201,7 @@ export function ResponsiveNavigation({ mobileOnly = false }: NavigationProps) {
               className="flex w-full items-center justify-start gap-3"
             >
               <a
-                href="https://x.com/qiweiy"
+                href="https://x.com/qiweiiiy"
                 target="_blank"
                 rel="noopener noreferrer"
               >
@@ -300,10 +300,10 @@ export function ResponsiveNavigation({ mobileOnly = false }: NavigationProps) {
           size="sm"
           asChild
           className="p-2"
-          title="Follow @qiweiy on X"
+          title="Follow @qiweiiiy on X"
         >
           <a
-            href="https://x.com/qiweiy"
+            href="https://x.com/qiweiiiy"
             target="_blank"
             rel="noopener noreferrer"
           >
